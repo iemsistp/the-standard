@@ -693,6 +693,37 @@ function formatSleep(hrs){
   return m>0?h+'h '+m+'min':h+'h';
 }
 
+function loadEntryIntoForm(dateStr){
+  const entry = metrics.find(m => m.date === dateStr);
+  if(!entry) return;
+  el('m-date').value = dateStr;
+  // Weight — show in current unit
+  const unit = v('m-wt-unit') || 'kg';
+  if(entry.weight){
+    const displayWt = unit === 'lbs' ? Math.round(entry.weight * 2.20462 * 10) / 10 : entry.weight;
+    el('m-wt').value = displayWt;
+  } else { el('m-wt').value = ''; }
+  // Sleep — convert decimal hours back to H:MM
+  if(entry.sleep){
+    const h = Math.floor(entry.sleep);
+    const m = Math.round((entry.sleep - h) * 60);
+    el('m-sl').value = h + ':' + String(m).padStart(2,'0');
+  } else { el('m-sl').value = ''; }
+  el('m-re').value = entry.recovery || '';
+  el('m-bu').value = entry.burned || '';
+  el('m-co').value = entry.consumed || '';
+  el('m-pr').value = entry.protein || '';
+  el('m-ca').value = entry.carbs || '';
+  el('m-fa').value = entry.fat || '';
+  el('m-no').value = entry.notes || '';
+  // Show copy btn if entry exists
+  const btn = el('copy-morning-btn');
+  if(btn) btn.style.display = 'inline-flex';
+  // Scroll to form
+  el('m-date').scrollIntoView({behavior:'smooth', block:'center'});
+  toast('Loaded ' + dateStr + ' — edit and Save to update');
+}
+
 function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no'].forEach(id=>{const e=el(id);if(e)e.value='';});el('m-fb').innerHTML='';el('m-date').value=today();const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
 
 function copyMorningLog(){
@@ -948,7 +979,7 @@ function renderMetTable(){
     const fc=l.fat>120?'color:var(--rd)':l.fat>110?'color:var(--or)':'';
     const sc=s!==null&&s<300?'color:var(--or)':s>700?'color:var(--rd)':'color:var(--gn)';
     const rc=l.recovery<50?'color:var(--rd)':l.recovery<70?'color:var(--or)':'color:var(--gn)';
-    return `<tr><td style="font-family:'DM Sans',sans-serif;">${l.date} <button onclick=\"copyEntryLog('${l.date}')\" style=\"background:none;border:1px solid var(--bd);color:var(--mt);border-radius:4px;font-size:.58rem;padding:.1rem .35rem;cursor:pointer;margin-left:.3rem;font-family:JetBrains Mono,monospace;\" title=\"Copy to Claude\">📋</button></td><td>${l.weight?l.weight+'kg':'—'}</td><td>${formatSleep(l.sleep)}</td><td style="${rc}">${l.recovery?l.recovery+'%':'—'}</td><td>${l.burned?.toLocaleString()||'—'}</td><td>${l.consumed?.toLocaleString()||'—'}</td><td style="${sc}">${s!==null?(s>0?'+':'')+Math.round(s):'—'}</td><td>${l.protein?l.protein+'g':'—'}</td><td>${l.carbs?l.carbs+'g':'—'}</td><td style="${fc}">${l.fat?l.fat+'g':'—'}</td></tr>${l.notes?`<tr><td colspan='10' style='font-size:.73rem;color:var(--mt);font-family:DM Sans,sans-serif;white-space:pre-wrap;padding:.35rem .65rem .65rem;border-bottom:1px solid rgba(42,42,56,.5);'>${l.notes}</td></tr>`:''}`;
+    return `<tr style="cursor:pointer;" onclick="loadEntryIntoForm('${l.date}')" title="Click to edit"><td style="font-family:'DM Sans',sans-serif;">${l.date} <button onclick=\"event.stopPropagation();copyEntryLog('${l.date}')\" style=\"background:none;border:1px solid var(--bd);color:var(--mt);border-radius:4px;font-size:.58rem;padding:.1rem .35rem;cursor:pointer;margin-left:.3rem;font-family:JetBrains Mono,monospace;\" title=\"Copy to Claude\">📋</button></td><td>${l.weight?l.weight+'kg':'—'}</td><td>${formatSleep(l.sleep)}</td><td style="${rc}">${l.recovery?l.recovery+'%':'—'}</td><td>${l.burned?.toLocaleString()||'—'}</td><td>${l.consumed?.toLocaleString()||'—'}</td><td style="${sc}">${s!==null?(s>0?'+':'')+Math.round(s):'—'}</td><td>${l.protein?l.protein+'g':'—'}</td><td>${l.carbs?l.carbs+'g':'—'}</td><td style="${fc}">${l.fat?l.fat+'g':'—'}</td></tr>${l.notes?`<tr><td colspan='10' style='font-size:.73rem;color:var(--mt);font-family:DM Sans,sans-serif;white-space:pre-wrap;padding:.35rem .65rem .65rem;border-bottom:1px solid rgba(42,42,56,.5);'>${l.notes}</td></tr>`:''}`;
   }).join('')}</tbody></table></div>`;
 }
 
