@@ -1746,6 +1746,8 @@ async function sbPull() {
     ]);
 
 
+    console.log('[Pull] Remote rows — metrics:', sbMetrics?.length, '| lifts:', sbLifts?.length, '| cardio:', sbCardio?.length);
+    if(sbMetrics?.length) console.log('[Pull] Remote date range:', sbMetrics[sbMetrics.length-1]?.date, '→', sbMetrics[0]?.date);
     if (sbMetrics) {
       const localDates = new Set(metrics.map(m => m.date));
       for (let row of sbMetrics) {
@@ -1852,8 +1854,7 @@ async function syncAfterSave(table, entry) {
       if(tags) clean.notes = clean.notes + '\n[tags:' + tags + ']';
       payload = clean;
     }
-    // Use upsert — POST with merge-duplicates handles both insert and update
-    // Send explicit null fields by including them in the payload
+    console.log('[Save] Pushing to', table, payload.date || payload.ts || '');
     const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
       method: 'POST',
       headers: {
@@ -1864,8 +1865,9 @@ async function syncAfterSave(table, entry) {
       },
       body: JSON.stringify(payload)
     });
-    if(!res.ok) console.warn('[Sync] Save failed:', await res.text());
-  } catch(e) { console.warn('[Sync] Background sync failed', e); }
+    if(res.ok) { console.log('[Save] ✓ pushed', table, res.status); }
+    else { const err = await res.text(); console.error('[Save] ✗ failed', res.status, err); }
+  } catch(e) { console.error('[Save] ✗ exception', e.message); }
 }
 
 // ── EXPORT ───────────────────────────────────────────────
