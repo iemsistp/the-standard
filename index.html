@@ -696,8 +696,13 @@ let cardioLog=JSON.parse(localStorage.getItem('cardio_v2')||'[]');
 let curSets=[], curCardioType='', strFilter='key', cardioFilter='all';
 
 function persist(){
-  // Always keep localStorage as fallback
-  localStorage.setItem('met_v2',JSON.stringify(metrics.filter(l=>l.notes||!HIST.find(h=>h.date===l.date))));
+  // Save any entry that was manually saved (has updated_at) OR has notes OR differs from HIST
+  localStorage.setItem('met_v2',JSON.stringify(metrics.filter(l=>{
+    if(l.updated_at) return true; // manually saved — always persist
+    if(l.notes) return true;
+    const h=HIST.find(h=>h.date===l.date);
+    return !h; // not in HIST at all
+  })));
   localStorage.setItem('lifts_v2',JSON.stringify(lifts));
   localStorage.setItem('cardio_v2',JSON.stringify(cardioLog));
 }
