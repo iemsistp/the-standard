@@ -1744,6 +1744,9 @@ async function sbPull() {
       sbFetch('lifts',   'GET', null, '?order=date.desc&limit=400'),
       sbFetch('cardio_log','GET',null,'?order=date.desc&limit=400'),
     ]);
+    console.log('[Sync] sbMetrics rows:', sbMetrics ? sbMetrics.length : 'null');
+    console.log('[Sync] Most recent remote:', sbMetrics && sbMetrics[0] ? sbMetrics[0].date : 'none');
+    console.log('[Sync] Local metrics count:', metrics.length);
 
     if (sbMetrics) {
       const localDates = new Set(metrics.map(m => m.date));
