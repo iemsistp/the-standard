@@ -1825,17 +1825,17 @@ async function sbPushAll() {
         if(tags) row.notes = row.notes + '\n[tags:' + tags + ']';
         return row;
       });
-      await sbFetch('metrics', 'POST', batch);
+      await sbFetch('metrics', 'POST', batch, '?on_conflict=date');
     }
     // Lifts
     for (let i = 0; i < lifts.length; i += 50) {
       const batch = lifts.slice(i, i+50).map(l => ({...l, ts: l.ts || Date.now()}));
-      await sbFetch('lifts', 'POST', batch);
+      await sbFetch('lifts', 'POST', batch, '?on_conflict=ts');
     }
     // Cardio
     for (let i = 0; i < cardioLog.length; i += 50) {
       const batch = cardioLog.slice(i, i+50).map(c => ({...c, ts: c.ts || Date.now()}));
-      await sbFetch('cardio_log', 'POST', batch);
+      await sbFetch('cardio_log', 'POST', batch, '?on_conflict=ts');
     }
     toast('Uploaded ✓ — ' + metrics.length + ' metrics, ' + lifts.length + ' lifts');
   } catch(e) {
@@ -1855,7 +1855,8 @@ async function syncAfterSave(table, entry) {
       payload = clean;
     }
     console.log('[Save] Pushing to', table, payload.date || payload.ts || '');
-    const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+    const conflictCol = table === 'metrics' ? '?on_conflict=date' : table === 'lifts' ? '?on_conflict=ts' : table === 'cardio_log' ? '?on_conflict=ts' : '';
+    const res = await fetch(`${SB_URL}/rest/v1/${table}${conflictCol}`, {
       method: 'POST',
       headers: {
         'apikey': SB_KEY,
