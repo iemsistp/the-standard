@@ -1806,16 +1806,16 @@ async function sbPull() {
 
     persist();
     refresh();
-    toast('Synced ✓');
+    toast('Synced ✓ — ' + (sbMetrics ? sbMetrics.length : 0) + ' remote entries, newest: ' + (sbMetrics && sbMetrics[0] ? sbMetrics[0].date : 'none'));
   } catch(e) {
     console.error('Sync error', e);
-    toast('Sync failed — offline?');
+    toast('Sync failed: ' + e.message);
   }
 }
 
 // Push all local-only data up to Supabase (first-time or catch-up)
 async function sbPushAll() {
-  toast('Uploading...');
+  toast('Uploading ' + metrics.length + ' entries...');
   try {
         // Metrics: upload in batches of 50 — encode tags into notes
     for (let i = 0; i < metrics.length; i += 50) {
@@ -1837,10 +1837,10 @@ async function sbPushAll() {
       const batch = cardioLog.slice(i, i+50).map(c => ({...c, ts: c.ts || Date.now()}));
       await sbFetch('cardio_log', 'POST', batch);
     }
-    toast('Upload complete ✓');
+    toast('Uploaded ✓ — ' + metrics.length + ' metrics, ' + lifts.length + ' lifts');
   } catch(e) {
     console.error('Push error', e);
-    toast('Upload failed');
+    toast('Upload failed: ' + e.message);
   }
 }
 
