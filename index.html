@@ -232,10 +232,21 @@ select.if{cursor:pointer;}
   <div id="dash-fb"></div>
   <!-- 3 HERO TILES -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem;">
-    <div class="sc sc-click" style="--ac:var(--bl)" onclick="openStatChart('weight','Weight Trend','kg','var(--bl)')">
-      <div class="sl">Weight</div><div class="sv" id="d-wt">—</div>
-      <div class="su">kg · goal 79.4kg</div>
-      <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.15rem;"><span class="st-badge" id="d-wt-tr" style="position:static;font-size:.6rem;"></span><span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;"></span></div>
+    <div class="sc sc-click" style="--ac:var(--bl);cursor:pointer;" onclick="openStatChart('weight','Weight Trend','kg','var(--bl)')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.35rem;">
+        <div>
+          <div class="sl">Weight</div>
+          <div class="sv" id="d-wt" style="font-size:1.6rem;line-height:1;">—</div>
+          <div class="su" style="margin-top:.15rem;">kg · goal 79.4kg</div>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.25rem;">
+            <span class="st-badge" id="d-wt-tr" style="position:static;font-size:.6rem;"></span>
+            <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;"></span>
+          </div>
+        </div>
+      </div>
+      <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:52px;margin-top:.35rem;display:block;" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="0" x2="200" y2="0" stroke="none"/>
+      </svg>
     </div>
     <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
       <div class="sl">7d Surplus</div><div class="sv" id="d-sur">—</div>
@@ -708,13 +719,22 @@ function saveMetrics(){
   const sleepRaw=v('m-sl').trim();
   let sleepHrs=null;
   if(sleepRaw){const parts=sleepRaw.split(':');const slH=parseInt(parts[0])||0,slM=parseInt(parts[1])||0;sleepHrs=(slH||slM)?Math.round((slH+slM/60)*100)/100:null;}
+  // Track which numeric fields were explicitly typed (even if 0) vs left blank
+  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa'};
+  const explicitlySet={};
+  Object.entries(numFields).forEach(([key,id])=>{
+    const raw=v(id).trim();
+    explicitlySet[key] = raw !== ''; // true = user typed something (including 0)
+  });
   const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null};
   if(!incoming.date){toast('Enter a date');return;}
-  // Merge — only overwrite fields that have new values, preserve existing
+  // Merge — overwrite if field was typed (even 0 = clear), skip if left blank
   const existing=metrics.find(l=>l.date===incoming.date)||{};
   const e={...existing};
   Object.keys(incoming).forEach(k=>{
+    const wasTyped = explicitlySet[k]; // undefined for non-numeric fields
     if(incoming[k]!==null&&incoming[k]!==''&&incoming[k]!==undefined) e[k]=incoming[k];
+    else if(wasTyped) e[k]=null; // explicitly typed 0 or cleared — wipe the value
     else if(!(k in existing)||existing[k]===null) e[k]=incoming[k];
   });
   e.date=incoming.date;
@@ -1474,7 +1494,9 @@ function openStatChart(key, label, unit, color) {
   let data = metrics.filter(m => {
     if(key === 'surplus') return m.consumed && m.burned;
     return m[key] !== null && m[key] !== undefined;
-  }).slice(0, 30).reverse();
+  });
+  if(key !== 'weight') data = data.slice(0, 30);
+  data = data.reverse();
   
   const vals = data.map(m => key === 'surplus' ? m.consumed - m.burned : m[key]);
   const dates = data.map(m => m.date.slice(5)); // MM-DD
@@ -1730,8 +1752,15 @@ async function sbPull() {
           metrics.push(row);
         } else {
           const idx = metrics.findIndex(m => m.date === row.date);
-          if (idx !== -1 && row.updated_at > (metrics[idx].updated_at || '')) {
-            metrics[idx] = row;
+          if (idx !== -1) {
+            // Merge field-by-field: remote wins for non-null fields, keep local for nulls
+            // This prevents Supabase nulls from wiping HIST weight/sleep data
+            const local = metrics[idx];
+            const merged = {...local};
+            Object.keys(row).forEach(k => {
+              if(row[k] !== null && row[k] !== undefined && row[k] !== '') merged[k] = row[k];
+            });
+            metrics[idx] = merged;
           }
         }
       }
@@ -1889,6 +1918,75 @@ function showTargetTip(key, row){
 function hideTargetTip(){
   const tip = document.getElementById('target-tip');
   if(tip) tip.style.display = 'none';
+}
+
+// ── WEIGHT SPARKLINE ─────────────────────────────────────
+function renderWeightSparkline(){
+  const svg = document.getElementById('wt-sparkline');
+  if(!svg) return;
+
+  // All entries with weight, oldest first
+  const pts = metrics.filter(m=>m.weight).slice().reverse();
+  if(pts.length < 2){ svg.innerHTML = '<text x="50%" y="55%" text-anchor="middle" fill="var(--mt)" font-size="9" font-family="DM Sans,sans-serif">Log more entries to see trend</text>'; return; }
+
+  const W = 200, H = 50, PAD = 4;
+  const weights = pts.map(p=>p.weight);
+  const minW = Math.min(...weights), maxW = Math.max(...weights);
+  const goal = 79.4;
+  const allVals = [...weights, goal];
+  const lo = Math.min(...allVals) - 0.3;
+  const hi = Math.max(...allVals) + 0.3;
+  const range = hi - lo || 1;
+
+  const xScale = i => PAD + (i / (pts.length - 1)) * (W - PAD*2);
+  const yScale = v => H - PAD - ((v - lo) / range) * (H - PAD*2);
+
+  // Goal line
+  const gy = yScale(goal).toFixed(1);
+  const goalLine = `<line x1="${PAD}" y1="${gy}" x2="${W-PAD}" y2="${gy}" stroke="rgba(74,122,181,.35)" stroke-width="1" stroke-dasharray="3,3"/>`;
+
+  // Build smooth polyline path
+  const linePoints = pts.map((p,i) => `${xScale(i).toFixed(1)},${yScale(p.weight).toFixed(1)}`).join(' ');
+
+  // Area fill path (close below)
+  const areaPoints = pts.map((p,i) => `${xScale(i).toFixed(1)},${yScale(p.weight).toFixed(1)}`).join(' ');
+  const firstX = xScale(0).toFixed(1), lastX = xScale(pts.length-1).toFixed(1);
+  const bottomY = (H - PAD).toFixed(1);
+  const areaPath = `M ${firstX},${bottomY} L ${areaPoints.split(' ').map((p,i) => (i===0?'':'')+p).join(' L ')} L ${lastX},${bottomY} Z`
+    .replace('M ', 'M ').replace('L L', 'L');
+
+  // Determine trend color: going down = good (green), up = muted red
+  const trend = weights[weights.length-1] - weights[0];
+  const lineColor = trend <= 0 ? 'var(--gn)' : 'var(--rd)';
+  const areaColor = trend <= 0 ? 'rgba(31,122,69,.15)' : 'rgba(160,40,32,.1)';
+
+  // Last point dot
+  const lx = xScale(pts.length-1).toFixed(1);
+  const ly = yScale(pts[pts.length-1].weight).toFixed(1);
+  const dot = `<circle cx="${lx}" cy="${ly}" r="2.5" fill="${lineColor}"/>`;
+
+  // First and last weight labels
+  const firstLabel = `<text x="${PAD}" y="${(parseFloat(yScale(weights[0]))-4).toFixed(1)}" fill="var(--mt)" font-size="7" font-family="JetBrains Mono,monospace">${weights[0]}kg</text>`;
+  const lastLabel = `<text x="${(parseFloat(lx)-2).toFixed(1)}" y="${(parseFloat(ly)-4).toFixed(1)}" text-anchor="end" fill="${lineColor}" font-size="7" font-family="JetBrains Mono,monospace">${pts[pts.length-1].weight}kg</text>`;
+
+  // Goal label
+  const goalLabel = `<text x="${W-PAD}" y="${(parseFloat(gy)-3).toFixed(1)}" text-anchor="end" fill="rgba(74,122,181,.6)" font-size="6.5" font-family="JetBrains Mono,monospace">goal</text>`;
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="wt-grad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${trend<=0?'rgba(31,122,69,.3)':'rgba(160,40,32,.2)'}"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+      </linearGradient>
+    </defs>
+    <path d="${areaPath}" fill="url(#wt-grad)"/>
+    ${goalLine}
+    <polyline points="${linePoints}" fill="none" stroke="${lineColor}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dot}
+    ${firstLabel}
+    ${lastLabel}
+    ${goalLabel}
+  `;
 }
 
 // ── INIT ──────────────────────────────────────────────────
