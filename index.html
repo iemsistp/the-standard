@@ -1744,9 +1744,7 @@ async function sbPull() {
       sbFetch('lifts',   'GET', null, '?order=date.desc&limit=400'),
       sbFetch('cardio_log','GET',null,'?order=date.desc&limit=400'),
     ]);
-    console.log('[Sync] sbMetrics rows:', sbMetrics ? sbMetrics.length : 'null');
-    console.log('[Sync] Most recent remote:', sbMetrics && sbMetrics[0] ? sbMetrics[0].date : 'none');
-    console.log('[Sync] Local metrics count:', metrics.length);
+
 
     if (sbMetrics) {
       const localDates = new Set(metrics.map(m => m.date));
@@ -1853,26 +1851,21 @@ async function syncAfterSave(table, entry) {
       clean.notes = (clean.notes||'').replace(/\n?\[tags:[^\]]*\]/g, '');
       if(tags) clean.notes = clean.notes + '\n[tags:' + tags + ']';
       payload = clean;
-      // Use PATCH to explicitly update all fields including nulls
-      // This ensures zeroed-out fields are actually cleared in Supabase
-      const patched = await fetch(`${SB_URL}/rest/v1/metrics?date=eq.${payload.date}`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SB_KEY,
-          'Authorization': 'Bearer ' + SB_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(payload)
-      });
-      if(!patched.ok) {
-        // Row doesn't exist yet — fall back to INSERT
-        await sbFetch(table, 'POST', payload);
-      }
-    } else {
-      await sbFetch(table, 'POST', payload);
     }
-  } catch(e) { console.warn('Background sync failed', e); }
+    // Use upsert — POST with merge-duplicates handles both insert and update
+    // Send explicit null fields by including them in the payload
+    const res = await fetch(`${SB_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) console.warn('[Sync] Save failed:', await res.text());
+  } catch(e) { console.warn('[Sync] Background sync failed', e); }
 }
 
 // ── EXPORT ───────────────────────────────────────────────
