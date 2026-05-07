@@ -51,7 +51,7 @@ main{padding-top:48px;padding-bottom:64px;}
 .pb{height:5px;background:var(--sf2);border-radius:999px;overflow:hidden;margin-top:.5rem;}
 .pf{height:100%;border-radius:999px;transition:width 1s ease;}
 /* FORMS */
-.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem .85rem;margin-bottom:1.1rem;}@media(max-width:480px){.lg{grid-template-columns:1fr 1fr;}.ig.fw{grid-column:1/-1;}}
+.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;margin-bottom:1.1rem;align-items:start;}@media(max-width:600px){.lg{grid-template-columns:1fr 1fr;gap:.6rem;}.ig.fw{grid-column:1/-1;}}
 .ig{display:flex;flex-direction:column;gap:.3rem;}
 .il{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mt);font-weight:500;}
 .if{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:.55rem .8rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.85rem;transition:border-color .2s;width:100%;min-width:0;box-sizing:border-box;}
@@ -193,8 +193,8 @@ select.if{cursor:pointer;}
     <span class="nav-date" id="nav-date" style="font-size:.6rem;"></span>
   </div>
   <div style="display:flex;gap:.4rem;">
-    <button onclick="sbPull()" class="nav-action-btn" title="Sync">⟳</button>
-    <button onclick="sbPushAll()" class="nav-action-btn" title="Upload">↑</button>
+    <button onclick="sbPull()" class="nav-action-btn" title="Pull latest data from cloud to this device">⟳ Sync</button>
+    <button onclick="sbPushAll()" class="nav-action-btn" title="Push all local data up to cloud (use on new device)">↑ Push</button>
   </div>
 </nav>
 <div id="bottom-tabs">
@@ -1115,7 +1115,7 @@ function renderMetTable(){
   const rows = data.map((l,i) => {
     const s = l.burned&&l.consumed ? l.consumed-l.burned : null;
     const rc = l.recovery<50?'color:var(--rd)':l.recovery<70?'color:var(--or)':'color:var(--gn)';
-    const sc = s!==null&&s<300?'color:var(--or)':s>700?'color:var(--rd)':'color:var(--gn)';
+    const sc = s===null?'':s>=500?'color:var(--gn)':s>=300?'color:var(--or)':'color:var(--rd)';
     const tags = getEntryTags(l);
     const tagHtml = tags.map(t=>`<span class="dtag ${t.c}">${t.l}</span>`).join('');
     const detailId = 'ed-'+l.date.replace(/-/g,'');
@@ -1331,7 +1331,7 @@ function updateDash(){
   }
   const acp2=avg(r7prev,'consumed'),asp2=acp2&&avg(r7prev,'burned')?acp2-avg(r7prev,'burned'):null;
   setRow('t-cal-avg','t-cal-wow','t-cal',ac,acp2,v=>v>=3100?'bg':v>=2700?'bw':'bb',v=>v>=3100?'ON TRACK':`LOW ${Math.round(v)}`,v=>Math.round(v).toLocaleString()+'kcal');
-  setRow('t-su-avg','t-su-wow','t-su',as,asp2,v=>v>=350&&v<=650?'bg':v>=200?'bw':'bb',v=>v>=350&&v<=650?'ON TRACK':v<350?`LOW +${Math.round(v)}`:`HIGH +${Math.round(v)}`,v=>(v>0?'+':'')+Math.round(v)+'kcal');
+  setRow('t-su-avg','t-su-wow','t-su',as,asp2,v=>v>=500?'bg':v>=300?'bw':'bb',v=>v>=500?'ON TRACK':v>=300?`LOW +${Math.round(v)}`:`RED +${Math.round(v)}`,v=>(v>0?'+':'')+Math.round(v)+'kcal');
   setRow('t-pr-avg','t-pr-wow','t-pr',ap,avg(r7prev,'protein'),v=>v>=180?'bg':v>=160?'bw':'bb',v=>v>=180?'ON TRACK':`LOW ${Math.round(v)}g`,v=>Math.round(v)+'g');
   setRow('t-ca-avg','t-ca-wow','t-ca',aca,avg(r7prev,'carbs'),v=>v>=320?'bg':v>=260?'bw':'bb',v=>v>=320?'ON TRACK':`LOW ${Math.round(v)}g`,v=>Math.round(v)+'g');
   setRow('t-fa-avg','t-fa-wow','t-fa',af,avg(r7prev,'fat'),v=>v<=110?'bg':v<=130?'bw':'bb',v=>v<=110?'ON TRACK':`HIGH ${Math.round(v)}g`,v=>Math.round(v)+'g');
@@ -1767,12 +1767,12 @@ async function sbPull() {
 async function sbPushAll() {
   toast('Uploading...');
   try {
-    // Metrics: upload in batches of 50
+        // Metrics: upload in batches of 50 — encode tags into notes
     for (let i = 0; i < metrics.length; i += 50) {
       const batch = metrics.slice(i, i+50).map(m => {
-        const {tags, ...row} = {...m, updated_at: m.updated_at || new Date().toISOString()};
-        if(tags) row.notes = (row.notes||'') + `
-[tags:${tags}]`;
+        const {tags, id, ...row} = {...m, updated_at: m.updated_at || new Date().toISOString()};
+        row.notes = (row.notes||'').replace(/\n?\[tags:[^\]]*\]/g, '');
+        if(tags) row.notes = row.notes + '\n[tags:' + tags + ']';
         return row;
       });
       await sbFetch('metrics', 'POST', batch);
@@ -1798,18 +1798,13 @@ async function sbPushAll() {
 async function syncAfterSave(table, entry) {
   try {
     let payload = {...entry, updated_at: new Date().toISOString()};
-    // Metrics: embed tags into notes for Supabase compat (tags col may not exist)
-    // Try with tags first; if that fails, strip and retry
-    const res = await sbFetch(table, 'POST', payload);
-    if(!res) {
-      // Retry without tags field (column might not exist yet)
-      const {tags, ...safePayload} = payload;
-      if(tags && safePayload.notes !== undefined) {
-        safePayload.notes = (safePayload.notes||'') + (tags ? `
-[tags:${tags}]` : '');
-      }
-      await sbFetch(table, 'POST', safePayload);
+    if(table === 'metrics') {
+      const {tags, id, ...clean} = payload;
+      clean.notes = (clean.notes||'').replace(/\n?\[tags:[^\]]*\]/g, '');
+      if(tags) clean.notes = clean.notes + '\n[tags:' + tags + ']';
+      payload = clean;
     }
+    await sbFetch(table, 'POST', payload);
   } catch(e) { console.warn('Background sync failed', e); }
 }
 
