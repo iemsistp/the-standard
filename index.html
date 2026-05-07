@@ -162,7 +162,8 @@ select.if{cursor:pointer;}
 @media(max-width:768px){.mg{grid-template-columns:1fr}.week{grid-template-columns:repeat(4,1fr)}.hero{grid-template-columns:1fr}.pg{padding:1rem}.cardio-btns{grid-template-columns:repeat(2,1fr)}.sg{grid-template-columns:repeat(3,1fr)}}
 
 .entry-row{cursor:pointer;transition:background .15s;}
-.entry-row:hover{background:var(--sf2);}
+.entry-row:nth-child(odd){background:rgba(255,255,255,.015);}
+.entry-row:hover{background:var(--sf2) !important;}
 .entry-row td{padding:.55rem .65rem;border-bottom:1px solid var(--bd);vertical-align:middle;}
 .entry-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem;}
 .entry-detail{display:none;background:var(--sf2);}
@@ -307,6 +308,12 @@ select.if{cursor:pointer;}
 
 <!-- DAILY METRICS -->
 <div class="pg" id="pg-metrics">
+  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
+    <div>
+      <div class="ht" style="font-size:2rem;">Daily<br><span>Log</span></div>
+      <div class="hs">As per program</div>
+    </div>
+  </div>
   <!-- MORNING CHECK-IN -->
   <div class="cd" style="margin-bottom:1.1rem;">
     <div class="ct">Daily Log</div>
@@ -332,6 +339,7 @@ select.if{cursor:pointer;}
       <div class="ig"><label class="il">Protein (g)</label><input type="number" class="if" id="m-pr" placeholder="185"></div>
       <div class="ig"><label class="il">Carbs (g)</label><input type="number" class="if" id="m-ca" placeholder="340"></div>
       <div class="ig"><label class="il">Fat (g)</label><input type="number" class="if" id="m-fa" placeholder="95"></div>
+      <div class="ig" aria-hidden="true" style="visibility:hidden;"></div>
       <div class="ig fw" style="grid-column:1/-1">
         <label class="il">Workout Tags</label>
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;" id="tag-picker">
@@ -363,7 +371,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveMetrics()" id="save-btn">Save Log</button>
       <button class="btn btn-s" onclick="copyMorningLog()" id="copy-morning-btn" style="display:none;">📋 Copy to Claude</button>
-      <button class="btn btn-s" onclick="clearMetrics()">Clear</button>
+      <button class="btn" onclick="clearMetrics()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:8px;padding:.65rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.5px;">Clear</button>
     </div>
     <div id="copy-confirm" style="display:none;margin-top:.75rem;font-size:.75rem;color:var(--gn);font-family:'JetBrains Mono',monospace;">✓ Copied — paste into Claude chat</div>
   </div>
@@ -786,7 +794,7 @@ function fmtSleepInput(el){
 function formatSleep(hrs){
   if(!hrs) return '—';
   const h=Math.floor(hrs), m=Math.round((hrs-h)*60);
-  return m>0?h+'h '+m+'min':h+'h';
+  return h+':'+(m<10?'0':'')+m;
 }
 
 function loadEntryIntoForm(dateStr){
@@ -1712,11 +1720,15 @@ async function sbPull() {
 
     if (sbMetrics) {
       const localDates = new Set(metrics.map(m => m.date));
-      for (const row of sbMetrics) {
+      for (let row of sbMetrics) {
+        // Parse embedded [tags:...] back out of notes
+        if(row.notes && row.notes.includes('[tags:')) {
+          const tagMatch = row.notes.match(/\[tags:([^\]]+)\]/);
+          if(tagMatch) { row = {...row, tags: tagMatch[1], notes: row.notes.replace(/\n?\[tags:[^\]]+\]/, '')}; }
+        }
         if (!localDates.has(row.date)) {
           metrics.push(row);
         } else {
-          // Remote wins for rows that exist in both (remote = most recently saved from any device)
           const idx = metrics.findIndex(m => m.date === row.date);
           if (idx !== -1 && row.updated_at > (metrics[idx].updated_at || '')) {
             metrics[idx] = row;
@@ -1757,7 +1769,12 @@ async function sbPushAll() {
   try {
     // Metrics: upload in batches of 50
     for (let i = 0; i < metrics.length; i += 50) {
-      const batch = metrics.slice(i, i+50).map(m => ({...m, updated_at: m.updated_at || new Date().toISOString()}));
+      const batch = metrics.slice(i, i+50).map(m => {
+        const {tags, ...row} = {...m, updated_at: m.updated_at || new Date().toISOString()};
+        if(tags) row.notes = (row.notes||'') + `
+[tags:${tags}]`;
+        return row;
+      });
       await sbFetch('metrics', 'POST', batch);
     }
     // Lifts
@@ -1780,7 +1797,19 @@ async function sbPushAll() {
 // Auto-sync on save — called after persist()
 async function syncAfterSave(table, entry) {
   try {
-    await sbFetch(table, 'POST', {...entry, updated_at: new Date().toISOString()});
+    let payload = {...entry, updated_at: new Date().toISOString()};
+    // Metrics: embed tags into notes for Supabase compat (tags col may not exist)
+    // Try with tags first; if that fails, strip and retry
+    const res = await sbFetch(table, 'POST', payload);
+    if(!res) {
+      // Retry without tags field (column might not exist yet)
+      const {tags, ...safePayload} = payload;
+      if(tags && safePayload.notes !== undefined) {
+        safePayload.notes = (safePayload.notes||'') + (tags ? `
+[tags:${tags}]` : '');
+      }
+      await sbFetch(table, 'POST', safePayload);
+    }
   } catch(e) { console.warn('Background sync failed', e); }
 }
 
