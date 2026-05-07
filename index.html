@@ -1753,14 +1753,27 @@ async function sbPull() {
         } else {
           const idx = metrics.findIndex(m => m.date === row.date);
           if (idx !== -1) {
-            // Merge field-by-field: remote wins for non-null fields, keep local for nulls
-            // This prevents Supabase nulls from wiping HIST weight/sleep data
             const local = metrics[idx];
-            const merged = {...local};
-            Object.keys(row).forEach(k => {
-              if(row[k] !== null && row[k] !== undefined && row[k] !== '') merged[k] = row[k];
-            });
-            metrics[idx] = merged;
+            // If local was saved more recently, it wins entirely (preserves explicit nulls)
+            if(local.updated_at && row.updated_at && local.updated_at > row.updated_at) {
+              // local is newer — keep it, don't overwrite with stale remote
+            } else {
+              // Remote is newer: merge field-by-field
+              // For non-HIST fields, let remote nulls win (they were explicitly cleared)
+              // For HIST-only fields (weight, sleep from HIST), preserve if remote is null
+              const histEntry = HIST.find(h => h.date === row.date);
+              const merged = {...local};
+              Object.keys(row).forEach(k => {
+                if(row[k] !== null && row[k] !== undefined && row[k] !== '') {
+                  merged[k] = row[k]; // remote has value — use it
+                } else if(histEntry && histEntry[k] !== null && histEntry[k] !== undefined && !local.updated_at) {
+                  // Keep HIST value if this is a pure HIST entry (never manually saved)
+                } else {
+                  merged[k] = row[k]; // remote explicitly null — honour it
+                }
+              });
+              metrics[idx] = merged;
+            }
           }
         }
       }
@@ -1832,8 +1845,25 @@ async function syncAfterSave(table, entry) {
       clean.notes = (clean.notes||'').replace(/\n?\[tags:[^\]]*\]/g, '');
       if(tags) clean.notes = clean.notes + '\n[tags:' + tags + ']';
       payload = clean;
+      // Use PATCH to explicitly update all fields including nulls
+      // This ensures zeroed-out fields are actually cleared in Supabase
+      const patched = await fetch(`${SB_URL}/rest/v1/metrics?date=eq.${payload.date}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SB_KEY,
+          'Authorization': 'Bearer ' + SB_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(payload)
+      });
+      if(!patched.ok) {
+        // Row doesn't exist yet — fall back to INSERT
+        await sbFetch(table, 'POST', payload);
+      }
+    } else {
+      await sbFetch(table, 'POST', payload);
     }
-    await sbFetch(table, 'POST', payload);
   } catch(e) { console.warn('Background sync failed', e); }
 }
 
