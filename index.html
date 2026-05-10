@@ -52,7 +52,7 @@ main{padding-top:48px;padding-bottom:64px;}
 .pb{height:5px;background:var(–sf2);border-radius:999px;overflow:hidden;margin-top:.5rem;}
 .pf{height:100%;border-radius:999px;transition:width 1s ease;}
 /* FORMS */
-.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.75rem;margin-bottom:1.1rem;align-items:start;}@media(max-width:600px){.lg{grid-template-columns:1fr 1fr;gap:.6rem;}.ig.fw{grid-column:1/-1;}}
+.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem .85rem;margin-bottom:1.1rem;}@media(max-width:480px){.lg{grid-template-columns:1fr 1fr;}.ig.fw{grid-column:1/-1;}}
 .ig{display:flex;flex-direction:column;gap:.3rem;}
 .il{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(–mt);font-weight:500;}
 .if{background:var(–sf2);border:1px solid var(–bd);border-radius:7px;padding:.55rem .8rem;color:var(–tx);font-family:‘JetBrains Mono’,monospace;font-size:.85rem;transition:border-color .2s;width:100%;min-width:0;box-sizing:border-box;}
@@ -195,8 +195,8 @@ select.if{cursor:pointer;}
     <span class="nav-date" id="nav-date" style="font-size:.6rem;"></span>
   </div>
   <div style="display:flex;gap:.4rem;">
-    <button onclick="sbPull()" class="nav-action-btn" title="Pull latest data from cloud to this device">⟳ Sync</button>
-    <button onclick="sbPushAll()" class="nav-action-btn" title="Push all local data up to cloud (use on new device)">↑ Push</button>
+    <button onclick="sbPull()" class="nav-action-btn" title="Sync">⟳</button>
+    <button onclick="sbPushAll()" class="nav-action-btn" title="Upload">↑</button>
   </div>
 </nav>
 <div id="bottom-tabs">
@@ -236,20 +236,14 @@ select.if{cursor:pointer;}
   <!-- 3 HERO TILES -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem;">
     <div class="sc sc-click" style="--ac:var(--bl);cursor:pointer;" onclick="openStatChart('weight','Weight Trend','kg','var(--bl)')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.35rem;">
-        <div>
-          <div class="sl">Weight</div>
-          <div class="sv" id="d-wt" style="font-size:1.6rem;line-height:1;">—</div>
-          <div class="su" style="margin-top:.15rem;">kg · goal 79.4kg</div>
-          <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.25rem;">
-            <span class="st-badge" id="d-wt-tr" style="position:static;font-size:.6rem;"></span>
-            <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;"></span>
-          </div>
-        </div>
+      <div class="sl">Weight</div>
+      <div class="sv" id="d-wt" style="font-size:1.6rem;line-height:1;">—</div>
+      <div class="su" style="margin-top:.1rem;">kg · goal 79.4kg</div>
+      <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.2rem;">
+        <span class="st-badge" id="d-wt-tr" style="position:static;font-size:.6rem;"></span>
+        <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;"></span>
       </div>
-      <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:52px;margin-top:.35rem;display:block;" xmlns="http://www.w3.org/2000/svg">
-        <line x1="0" y1="0" x2="200" y2="0" stroke="none"/>
-      </svg>
+      <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.4rem;display:block;"></svg>
     </div>
     <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
       <div class="sl">7d Surplus</div><div class="sv" id="d-sur">—</div>
@@ -308,13 +302,13 @@ select.if{cursor:pointer;}
       <div class="pb"><div class="pf" id="g-bar" style="width:0%;background:var(--bl);"></div></div>
       <div class="tip-box" id="g-eta">—</div>
     </div>
-    <div class="cd"><div class="ct">Phase</div>
-      <div class="tl">
-        <div class="ph"><div class="ph-dot" style="background:var(--bl);box-shadow:0 0 7px var(--bl);"></div><div><div class="ph-name" style="color:var(--bl);">Phase 1 — Foundation</div><div class="ph-dt">May → Oct 2026</div><div class="ph-desc">Swim technique · aerobic base · maintain size</div></div></div>
-        <div class="ph"><div class="ph-dot" style="background:var(--bd);"></div><div><div class="ph-name" style="color:var(--mt);">Phase 2 — Build</div><div class="ph-dt">Nov 2026 → Feb 2027</div></div></div>
-        <div class="ph"><div class="ph-dot" style="background:var(--bd);"></div><div><div class="ph-name" style="color:var(--mt);">Phase 3 — Race Specific</div><div class="ph-dt">Mar → Jun 2027</div></div></div>
-        <div class="ph"><div class="ph-dot" style="background:var(--bd);"></div><div><div class="ph-name" style="color:var(--mt);">Taper → Muskoka 70.3</div><div class="ph-dt">July 2027</div></div></div>
+    <div class="cd">
+      <div class="ct">Phase</div>
+      <div style="margin-bottom:.65rem;">
+        <div id="dash-phase-name" style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:1px;color:var(--tx);">—</div>
+        <div id="dash-phase-date" style="font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;margin-top:.1rem;">—</div>
       </div>
+      <div id="dash-phase-next"></div>
     </div>
     <div class="cd"><div class="week" id="dash-week"></div></div>
   </div>
@@ -529,11 +523,10 @@ Add any notes: planning upper hypertrophy after, shoulder felt good…”></text
       <button id="week-edit-btn" onclick="toggleWeekEdit()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:6px;padding:.2rem .65rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Edit</button>
     </div>
     <div class="week" id="prog-week"></div>
-    <!-- Edit mode grid — hidden by default -->
     <div id="week-edit-grid" style="display:none;margin-top:.85rem;border-top:1px solid var(--bd);padding-top:.85rem;">
-      <div style="font-size:.65rem;color:var(--mt);margin-bottom:.65rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Tap sessions to toggle on/off for each day</div>
-      <div id="week-edit-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.5rem;"></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:.75rem;">
+      <div style="font-size:.62rem;color:var(--mt);margin-bottom:.6rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Tap to toggle sessions per day</div>
+      <div id="week-edit-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:.7rem;">
         <button onclick="saveWeekStructure()" style="background:var(--sf2);border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:.3rem .85rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Save</button>
       </div>
     </div>
@@ -674,7 +667,7 @@ notes:[{c:‘ng’,m:‘2nd swim of the week — non-negotiable for 70.3 progres
 };
 
 // ── HISTORICAL DATA ───────────────────────────────────────
-const HIST=[{“date”:“2026-05-06”,“weight”:75.8,“sleep”:8.52,“recovery”:57.0,“hrv”:74.0,“burned”:2455.0,“consumed”:3347.0,“protein”:231.0,“carbs”:336.0,“fat”:119.0,“notes”:””},{“date”:“2026-05-05”,“weight”:75.9,“sleep”:10.45,“recovery”:66.0,“hrv”:81.0,“burned”:2857.0,“consumed”:3149.0,“protein”:210.0,“carbs”:334.0,“fat”:109.0,“notes”:””},{“date”:“2026-05-04”,“weight”:null,“sleep”:10.52,“recovery”:94.0,“hrv”:107.0,“burned”:1262.0,“consumed”:2475.0,“protein”:164.0,“carbs”:349.0,“fat”:null,“notes”:””},{“date”:“2026-05-03”,“weight”:null,“sleep”:4.47,“recovery”:2.0,“hrv”:23.0,“burned”:4430.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:46.0,“notes”:””},{“date”:“2026-05-02”,“weight”:75.9,“sleep”:7.28,“recovery”:76.0,“hrv”:90.0,“burned”:2951.0,“consumed”:3775.0,“protein”:192.0,“carbs”:532.0,“fat”:93.0,“notes”:””},{“date”:“2026-05-01”,“weight”:75.3,“sleep”:8.33,“recovery”:30.0,“hrv”:61.0,“burned”:1521.0,“consumed”:3143.0,“protein”:142.0,“carbs”:356.0,“fat”:90.0,“notes”:””},{“date”:“2026-04-30”,“weight”:76.2,“sleep”:8.6,“recovery”:51.0,“hrv”:77.0,“burned”:2090.0,“consumed”:2509.0,“protein”:175.0,“carbs”:300.0,“fat”:69.0,“notes”:””},{“date”:“2026-04-29”,“weight”:75.7,“sleep”:8.0,“recovery”:41.0,“hrv”:74.0,“burned”:2580.0,“consumed”:2487.0,“protein”:163.0,“carbs”:307.0,“fat”:65.0,“notes”:””},{“date”:“2026-04-28”,“weight”:77.2,“sleep”:10.15,“recovery”:79.0,“hrv”:99.0,“burned”:2880.0,“consumed”:2915.0,“protein”:186.0,“carbs”:355.0,“fat”:79.0,“notes”:””},{“date”:“2026-04-27”,“weight”:76.2,“sleep”:7.17,“recovery”:59.0,“hrv”:89.0,“burned”:1991.0,“consumed”:3255.0,“protein”:185.0,“carbs”:410.0,“fat”:101.0,“notes”:””},{“date”:“2026-04-26”,“weight”:75.9,“sleep”:5.77,“recovery”:54.0,“hrv”:87.0,“burned”:2760.0,“consumed”:3585.0,“protein”:188.0,“carbs”:439.0,“fat”:113.0,“notes”:””},{“date”:“2026-04-25”,“weight”:76.1,“sleep”:9.02,“recovery”:49.0,“hrv”:79.0,“burned”:2645.0,“consumed”:2745.0,“protein”:182.0,“carbs”:308.0,“fat”:83.0,“notes”:””},{“date”:“2026-04-24”,“weight”:78.1,“sleep”:9.12,“recovery”:83.0,“hrv”:100.0,“burned”:2246.0,“consumed”:3086.0,“protein”:195.0,“carbs”:351.0,“fat”:97.0,“notes”:””},{“date”:“2026-04-23”,“weight”:76.8,“sleep”:10.18,“recovery”:82.0,“hrv”:101.0,“burned”:2939.0,“consumed”:3190.0,“protein”:195.0,“carbs”:347.0,“fat”:110.0,“notes”:””},{“date”:“2026-04-22”,“weight”:77.4,“sleep”:11.28,“recovery”:76.0,“hrv”:97.0,“burned”:2285.0,“consumed”:3109.0,“protein”:172.0,“carbs”:424.0,“fat”:83.0,“notes”:””},{“date”:“2026-04-21”,“weight”:76.3,“sleep”:9.72,“recovery”:89.0,“hrv”:108.0,“burned”:2236.0,“consumed”:3260.0,“protein”:172.0,“carbs”:328.0,“fat”:141.0,“notes”:””},{“date”:“2026-04-20”,“weight”:77.3,“sleep”:7.02,“recovery”:71.0,“hrv”:95.0,“burned”:2457.0,“consumed”:2899.0,“protein”:174.0,“carbs”:313.0,“fat”:109.0,“notes”:””},{“date”:“2026-04-19”,“weight”:76.3,“sleep”:8.42,“recovery”:37.0,“hrv”:70.0,“burned”:2612.0,“consumed”:3583.0,“protein”:213.0,“carbs”:381.0,“fat”:130.0,“notes”:””},{“date”:“2026-04-18”,“weight”:null,“sleep”:7.53,“recovery”:89.0,“hrv”:105.0,“burned”:2783.0,“consumed”:3435.0,“protein”:218.0,“carbs”:334.0,“fat”:133.0,“notes”:””},{“date”:“2026-04-17”,“weight”:76.5,“sleep”:6.92,“recovery”:82.0,“hrv”:96.0,“burned”:2606.0,“consumed”:2933.0,“protein”:172.0,“carbs”:367.0,“fat”:87.0,“notes”:””},{“date”:“2026-04-16”,“weight”:76.8,“sleep”:7.67,“recovery”:82.0,“hrv”:98.0,“burned”:2203.0,“consumed”:3264.0,“protein”:210.0,“carbs”:317.0,“fat”:128.0,“notes”:””},{“date”:“2026-04-15”,“weight”:76.2,“sleep”:8.05,“recovery”:47.0,“hrv”:78.0,“burned”:2921.0,“consumed”:3202.0,“protein”:202.0,“carbs”:336.0,“fat”:118.0,“notes”:””},{“date”:“2026-04-14”,“weight”:77.1,“sleep”:6.95,“recovery”:76.0,“hrv”:95.0,“burned”:2499.0,“consumed”:3867.0,“protein”:189.0,“carbs”:391.0,“fat”:177.0,“notes”:””},{“date”:“2026-04-13”,“weight”:76.2,“sleep”:7.9,“recovery”:54.0,“hrv”:79.0,“burned”:2291.0,“consumed”:2923.0,“protein”:188.0,“carbs”:309.0,“fat”:104.0,“notes”:””},{“date”:“2026-04-12”,“weight”:75.4,“sleep”:9.33,“recovery”:65.0,“hrv”:88.0,“burned”:2096.0,“consumed”:2354.0,“protein”:137.0,“carbs”:209.0,“fat”:106.0,“notes”:””},{“date”:“2026-04-11”,“weight”:76.6,“sleep”:6.55,“recovery”:77.0,“hrv”:99.0,“burned”:2401.0,“consumed”:3352.0,“protein”:199.0,“carbs”:290.0,“fat”:152.0,“notes”:””},{“date”:“2026-04-10”,“weight”:76.6,“sleep”:9.17,“recovery”:65.0,“hrv”:90.0,“burned”:2649.0,“consumed”:3668.0,“protein”:225.0,“carbs”:341.0,“fat”:156.0,“notes”:””},{“date”:“2026-04-09”,“weight”:null,“sleep”:8.92,“recovery”:95.0,“hrv”:105.0,“burned”:1748.0,“consumed”:2521.0,“protein”:169.0,“carbs”:262.0,“fat”:89.0,“notes”:””},{“date”:“2026-04-08”,“weight”:75.7,“sleep”:6.62,“recovery”:61.0,“hrv”:91.0,“burned”:2786.0,“consumed”:3129.0,“protein”:185.0,“carbs”:332.0,“fat”:125.0,“notes”:””},{“date”:“2026-04-07”,“weight”:null,“sleep”:6.1,“recovery”:44.0,“hrv”:78.0,“burned”:2721.0,“consumed”:3402.0,“protein”:193.0,“carbs”:367.0,“fat”:134.0,“notes”:””},{“date”:“2026-04-06”,“weight”:77.2,“sleep”:8.2,“recovery”:79.0,“hrv”:97.0,“burned”:1792.0,“consumed”:2449.0,“protein”:178.0,“carbs”:233.0,“fat”:89.0,“notes”:””},{“date”:“2026-04-05”,“weight”:76.3,“sleep”:8.37,“recovery”:75.0,“hrv”:97.0,“burned”:2044.0,“consumed”:2441.0,“protein”:196.0,“carbs”:189.0,“fat”:100.0,“notes”:””},{“date”:“2026-04-04”,“weight”:78.8,“sleep”:7.93,“recovery”:75.0,“hrv”:99.0,“burned”:2586.0,“consumed”:3614.0,“protein”:230.0,“carbs”:378.0,“fat”:129.0,“notes”:””},{“date”:“2026-04-03”,“weight”:78.8,“sleep”:8.15,“recovery”:72.0,“hrv”:93.0,“burned”:2481.0,“consumed”:3160.0,“protein”:190.0,“carbs”:300.0,“fat”:130.0,“notes”:””},{“date”:“2026-04-02”,“weight”:77.5,“sleep”:8.42,“recovery”:65.0,“hrv”:88.0,“burned”:2611.0,“consumed”:3280.0,“protein”:199.0,“carbs”:327.0,“fat”:129.0,“notes”:””},{“date”:“2026-04-01”,“weight”:75.7,“sleep”:7.08,“recovery”:81.0,“hrv”:102.0,“burned”:2286.0,“consumed”:2902.0,“protein”:146.0,“carbs”:346.0,“fat”:105.0,“notes”:””},{“date”:“2026-03-31”,“weight”:76.3,“sleep”:9.65,“recovery”:93.0,“hrv”:113.0,“burned”:2856.0,“consumed”:3346.0,“protein”:211.0,“carbs”:354.0,“fat”:116.0,“notes”:””},{“date”:“2026-03-30”,“weight”:77.1,“sleep”:7.35,“recovery”:72.0,“hrv”:93.0,“burned”:2168.0,“consumed”:1910.0,“protein”:85.0,“carbs”:249.0,“fat”:61.0,“notes”:””},{“date”:“2026-03-29”,“weight”:78.4,“sleep”:8.83,“recovery”:17.0,“hrv”:41.0,“burned”:2921.0,“consumed”:3656.0,“protein”:234.0,“carbs”:259.0,“fat”:184.0,“notes”:””},{“date”:“2026-03-28”,“weight”:75.5,“sleep”:9.05,“recovery”:77.0,“hrv”:92.0,“burned”:2997.0,“consumed”:3131.0,“protein”:183.0,“carbs”:299.0,“fat”:130.0,“notes”:””},{“date”:“2026-03-27”,“weight”:75.4,“sleep”:8.3,“recovery”:63.0,“hrv”:84.0,“burned”:2255.0,“consumed”:2692.0,“protein”:184.0,“carbs”:315.0,“fat”:76.0,“notes”:””},{“date”:“2026-03-26”,“weight”:77.7,“sleep”:7.48,“recovery”:56.0,“hrv”:85.0,“burned”:3197.0,“consumed”:3481.0,“protein”:205.0,“carbs”:354.0,“fat”:142.0,“notes”:””},{“date”:“2026-03-25”,“weight”:75.9,“sleep”:8.22,“recovery”:91.0,“hrv”:102.0,“burned”:2224.0,“consumed”:2922.0,“protein”:172.0,“carbs”:321.0,“fat”:104.0,“notes”:””},{“date”:“2026-03-24”,“weight”:75.8,“sleep”:9.67,“recovery”:82.0,“hrv”:95.0,“burned”:2686.0,“consumed”:3340.0,“protein”:190.0,“carbs”:367.0,“fat”:122.0,“notes”:””},{“date”:“2026-03-23”,“weight”:75.5,“sleep”:9.95,“recovery”:90.0,“hrv”:100.0,“burned”:2028.0,“consumed”:2636.0,“protein”:150.0,“carbs”:308.0,“fat”:93.0,“notes”:””},{“date”:“2026-03-22”,“weight”:74.8,“sleep”:8.27,“recovery”:52.0,“hrv”:79.0,“burned”:2425.0,“consumed”:3326.0,“protein”:183.0,“carbs”:292.0,“fat”:158.0,“notes”:””},{“date”:“2026-03-21”,“weight”:74.8,“sleep”:7.9,“recovery”:47.0,“hrv”:76.0,“burned”:2113.0,“consumed”:2776.0,“protein”:160.0,“carbs”:330.0,“fat”:94.0,“notes”:””},{“date”:“2026-03-20”,“weight”:74.5,“sleep”:7.62,“recovery”:31.0,“hrv”:62.0,“burned”:3299.0,“consumed”:3470.0,“protein”:216.0,“carbs”:396.0,“fat”:116.0,“notes”:””},{“date”:“2026-03-19”,“weight”:74.9,“sleep”:9.13,“recovery”:73.0,“hrv”:94.0,“burned”:2260.0,“consumed”:3087.0,“protein”:213.0,“carbs”:266.0,“fat”:126.0,“notes”:””},{“date”:“2026-03-18”,“weight”:null,“sleep”:6.8,“recovery”:58.0,“hrv”:85.0,“burned”:2700.0,“consumed”:3358.0,“protein”:170.0,“carbs”:428.0,“fat”:104.0,“notes”:””},{“date”:“2026-03-17”,“weight”:75.8,“sleep”:9.13,“recovery”:68.0,“hrv”:92.0,“burned”:2201.0,“consumed”:3035.0,“protein”:181.0,“carbs”:333.0,“fat”:107.0,“notes”:””},{“date”:“2026-03-16”,“weight”:76.1,“sleep”:9.05,“recovery”:78.0,“hrv”:99.0,“burned”:2172.0,“consumed”:3363.0,“protein”:204.0,“carbs”:350.0,“fat”:125.0,“notes”:””},{“date”:“2026-03-15”,“weight”:75.3,“sleep”:8.32,“recovery”:69.0,“hrv”:92.0,“burned”:2486.0,“consumed”:3116.0,“protein”:176.0,“carbs”:353.0,“fat”:133.0,“notes”:””},{“date”:“2026-03-14”,“weight”:75.3,“sleep”:9.23,“recovery”:60.0,“hrv”:87.0,“burned”:2364.0,“consumed”:2615.0,“protein”:187.0,“carbs”:231.0,“fat”:103.0,“notes”:””},{“date”:“2026-03-13”,“weight”:74.9,“sleep”:4.5,“recovery”:21.0,“hrv”:57.0,“burned”:2678.0,“consumed”:2646.0,“protein”:184.0,“carbs”:214.0,“fat”:113.0,“notes”:””},{“date”:“2026-03-12”,“weight”:75.3,“sleep”:8.15,“recovery”:92.0,“hrv”:108.0,“burned”:2803.0,“consumed”:3063.0,“protein”:189.0,“carbs”:351.0,“fat”:103.0,“notes”:””},{“date”:“2026-03-11”,“weight”:74.2,“sleep”:8.93,“recovery”:88.0,“hrv”:103.0,“burned”:2504.0,“consumed”:2888.0,“protein”:155.0,“carbs”:380.0,“fat”:84.0,“notes”:””},{“date”:“2026-03-10”,“weight”:75.7,“sleep”:8.27,“recovery”:81.0,“hrv”:101.0,“burned”:2580.0,“consumed”:3048.0,“protein”:181.0,“carbs”:355.0,“fat”:101.0,“notes”:””},{“date”:“2026-03-09”,“weight”:75.5,“sleep”:9.77,“recovery”:77.0,“hrv”:97.0,“burned”:2157.0,“consumed”:3090.0,“protein”:187.0,“carbs”:308.0,“fat”:127.0,“notes”:””},{“date”:“2026-03-08”,“weight”:75.1,“sleep”:6.8,“recovery”:64.0,“hrv”:94.0,“burned”:3158.0,“consumed”:3318.0,“protein”:200.0,“carbs”:352.0,“fat”:126.0,“notes”:””},{“date”:“2026-03-07”,“weight”:74.5,“sleep”:7.53,“recovery”:90.0,“hrv”:106.0,“burned”:2361.0,“consumed”:2886.0,“protein”:170.0,“carbs”:332.0,“fat”:104.0,“notes”:””},{“date”:“2026-03-06”,“weight”:75.1,“sleep”:9.12,“recovery”:81.0,“hrv”:99.0,“burned”:2501.0,“consumed”:3027.0,“protein”:193.0,“carbs”:372.0,“fat”:93.0,“notes”:””},{“date”:“2026-03-05”,“weight”:null,“sleep”:9.0,“recovery”:95.0,“hrv”:107.0,“burned”:2693.0,“consumed”:3318.0,“protein”:211.0,“carbs”:412.0,“fat”:100.0,“notes”:””},{“date”:“2026-03-04”,“weight”:74.8,“sleep”:9.72,“recovery”:77.0,“hrv”:91.0,“burned”:2267.0,“consumed”:2881.0,“protein”:204.0,“carbs”:356.0,“fat”:75.0,“notes”:””},{“date”:“2026-03-03”,“weight”:74.9,“sleep”:7.37,“recovery”:95.0,“hrv”:112.0,“burned”:2281.0,“consumed”:2897.0,“protein”:212.0,“carbs”:329.0,“fat”:87.0,“notes”:””},{“date”:“2026-03-02”,“weight”:74.4,“sleep”:9.32,“recovery”:81.0,“hrv”:90.0,“burned”:2295.0,“consumed”:3293.0,“protein”:206.0,“carbs”:355.0,“fat”:116.0,“notes”:””},{“date”:“2026-03-01”,“weight”:null,“sleep”:8.72,“recovery”:48.0,“hrv”:73.0,“burned”:2793.0,“consumed”:1980.0,“protein”:122.0,“carbs”:224.0,“fat”:66.0,“notes”:””},{“date”:“2026-02-28”,“weight”:72.9,“sleep”:7.2,“recovery”:63.0,“hrv”:84.0,“burned”:2615.0,“consumed”:2659.0,“protein”:144.0,“carbs”:278.0,“fat”:101.0,“notes”:””},{“date”:“2026-02-27”,“weight”:74.8,“sleep”:6.37,“recovery”:56.0,“hrv”:78.0,“burned”:2760.0,“consumed”:3483.0,“protein”:178.0,“carbs”:338.0,“fat”:153.0,“notes”:””},{“date”:“2026-02-26”,“weight”:73.9,“sleep”:7.68,“recovery”:68.0,“hrv”:84.0,“burned”:2663.0,“consumed”:3545.0,“protein”:208.0,“carbs”:289.0,“fat”:172.0,“notes”:””},{“date”:“2026-02-25”,“weight”:null,“sleep”:8.95,“recovery”:91.0,“hrv”:105.0,“burned”:2266.0,“consumed”:2805.0,“protein”:197.0,“carbs”:255.0,“fat”:109.0,“notes”:””},{“date”:“2026-02-24”,“weight”:null,“sleep”:9.5,“recovery”:75.0,“hrv”:87.0,“burned”:2496.0,“consumed”:2395.0,“protein”:168.0,“carbs”:263.0,“fat”:74.0,“notes”:””},{“date”:“2026-02-23”,“weight”:74.2,“sleep”:8.17,“recovery”:76.0,“hrv”:87.0,“burned”:2190.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””},{“date”:“2026-02-22”,“weight”:null,“sleep”:0.98,“recovery”:4.0,“hrv”:76.0,“burned”:2914.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””},{“date”:“2026-02-21”,“weight”:74.2,“sleep”:8.48,“recovery”:96.0,“hrv”:100.0,“burned”:2236.0,“consumed”:2297.0,“protein”:141.0,“carbs”:216.0,“fat”:96.0,“notes”:””},{“date”:“2026-02-20”,“weight”:74.6,“sleep”:8.68,“recovery”:92.0,“hrv”:96.0,“burned”:2941.0,“consumed”:3038.0,“protein”:174.0,“carbs”:278.0,“fat”:133.0,“notes”:””},{“date”:“2026-02-19”,“weight”:null,“sleep”:8.72,“recovery”:68.0,“hrv”:84.0,“burned”:2471.0,“consumed”:2875.0,“protein”:193.0,“carbs”:227.0,“fat”:128.0,“notes”:””},{“date”:“2026-02-18”,“weight”:75.2,“sleep”:9.2,“recovery”:98.0,“hrv”:106.0,“burned”:3098.0,“consumed”:3748.0,“protein”:246.0,“carbs”:314.0,“fat”:166.0,“notes”:””},{“date”:“2026-02-17”,“weight”:73.7,“sleep”:9.07,“recovery”:58.0,“hrv”:81.0,“burned”:2377.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””},{“date”:“2026-02-16”,“weight”:72.8,“sleep”:8.7,“recovery”:61.0,“hrv”:81.0,“burned”:2221.0,“consumed”:2805.0,“protein”:182.0,“carbs”:181.0,“fat”:144.0,“notes”:””},{“date”:“2026-02-15”,“weight”:null,“sleep”:8.83,“recovery”:69.0,“hrv”:88.0,“burned”:2483.0,“consumed”:1248.0,“protein”:86.0,“carbs”:132.0,“fat”:41.0,“notes”:””},{“date”:“2026-02-14”,“weight”:73.4,“sleep”:8.5,“recovery”:72.0,“hrv”:87.0,“burned”:3131.0,“consumed”:2375.0,“protein”:173.0,“carbs”:198.0,“fat”:98.0,“notes”:””},{“date”:“2026-02-13”,“weight”:null,“sleep”:8.0,“recovery”:72.0,“hrv”:85.0,“burned”:2502.0,“consumed”:2867.0,“protein”:193.0,“carbs”:210.0,“fat”:134.0,“notes”:””},{“date”:“2026-02-12”,“weight”:74.9,“sleep”:7.58,“recovery”:79.0,“hrv”:91.0,“burned”:2692.0,“consumed”:2932.0,“protein”:170.0,“carbs”:249.0,“fat”:136.0,“notes”:””},{“date”:“2026-02-11”,“weight”:null,“sleep”:9.4,“recovery”:51.0,“hrv”:65.0,“burned”:null,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””}];
+const HIST=[{“date”:“2026-05-06”,“weight”:75.8,“sleep”:8.52,“recovery”:57.0,“hrv”:74.0,“burned”:2455.0,“consumed”:3347.0,“protein”:231.0,“carbs”:336.0,“fat”:119.0,“notes”:””},{“date”:“2026-05-05”,“weight”:75.9,“sleep”:10.45,“recovery”:66.0,“hrv”:81.0,“burned”:2857.0,“consumed”:3149.0,“protein”:210.0,“carbs”:334.0,“fat”:109.0,“notes”:””},{“date”:“2026-05-04”,“weight”:null,“sleep”:10.52,“recovery”:94.0,“hrv”:107.0,“burned”:1262.0,“consumed”:2475.0,“protein”:164.0,“carbs”:349.0,“fat”:null,“notes”:””},{“date”:“2026-05-03”,“weight”:null,“sleep”:4.47,“recovery”:2.0,“hrv”:23.0,“burned”:4430.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””},{“date”:“2026-05-02”,“weight”:75.9,“sleep”:7.28,“recovery”:76.0,“hrv”:90.0,“burned”:2951.0,“consumed”:3775.0,“protein”:192.0,“carbs”:532.0,“fat”:93.0,“notes”:””},{“date”:“2026-05-01”,“weight”:75.3,“sleep”:8.33,“recovery”:30.0,“hrv”:61.0,“burned”:1521.0,“consumed”:3143.0,“protein”:142.0,“carbs”:356.0,“fat”:90.0,“notes”:””},{“date”:“2026-04-30”,“weight”:76.2,“sleep”:8.6,“recovery”:51.0,“hrv”:77.0,“burned”:2090.0,“consumed”:2509.0,“protein”:175.0,“carbs”:300.0,“fat”:69.0,“notes”:””},{“date”:“2026-04-29”,“weight”:75.7,“sleep”:8.0,“recovery”:41.0,“hrv”:74.0,“burned”:2580.0,“consumed”:2487.0,“protein”:163.0,“carbs”:307.0,“fat”:65.0,“notes”:””},{“date”:“2026-04-28”,“weight”:77.2,“sleep”:10.15,“recovery”:79.0,“hrv”:99.0,“burned”:2880.0,“consumed”:2915.0,“protein”:186.0,“carbs”:355.0,“fat”:79.0,“notes”:””},{“date”:“2026-04-27”,“weight”:76.2,“sleep”:7.17,“recovery”:59.0,“hrv”:89.0,“burned”:1991.0,“consumed”:3255.0,“protein”:185.0,“carbs”:410.0,“fat”:101.0,“notes”:””},{“date”:“2026-04-26”,“weight”:75.9,“sleep”:5.77,“recovery”:54.0,“hrv”:87.0,“burned”:2760.0,“consumed”:3585.0,“protein”:188.0,“carbs”:439.0,“fat”:113.0,“notes”:””},{“date”:“2026-04-25”,“weight”:76.1,“sleep”:9.02,“recovery”:49.0,“hrv”:79.0,“burned”:2645.0,“consumed”:2745.0,“protein”:182.0,“carbs”:308.0,“fat”:83.0,“notes”:””},{“date”:“2026-04-24”,“weight”:78.1,“sleep”:9.12,“recovery”:83.0,“hrv”:100.0,“burned”:2246.0,“consumed”:3086.0,“protein”:195.0,“carbs”:351.0,“fat”:97.0,“notes”:””},{“date”:“2026-04-23”,“weight”:76.8,“sleep”:10.18,“recovery”:82.0,“hrv”:101.0,“burned”:2939.0,“consumed”:3190.0,“protein”:195.0,“carbs”:347.0,“fat”:110.0,“notes”:””},{“date”:“2026-04-22”,“weight”:77.4,“sleep”:11.28,“recovery”:76.0,“hrv”:97.0,“burned”:2285.0,“consumed”:3109.0,“protein”:172.0,“carbs”:424.0,“fat”:83.0,“notes”:””},{“date”:“2026-04-21”,“weight”:76.3,“sleep”:9.72,“recovery”:89.0,“hrv”:108.0,“burned”:2236.0,“consumed”:3260.0,“protein”:172.0,“carbs”:328.0,“fat”:141.0,“notes”:””},{“date”:“2026-04-20”,“weight”:77.3,“sleep”:7.02,“recovery”:71.0,“hrv”:95.0,“burned”:2457.0,“consumed”:2899.0,“protein”:174.0,“carbs”:313.0,“fat”:109.0,“notes”:””},{“date”:“2026-04-19”,“weight”:76.3,“sleep”:8.42,“recovery”:37.0,“hrv”:70.0,“burned”:2612.0,“consumed”:3583.0,“protein”:213.0,“carbs”:381.0,“fat”:130.0,“notes”:””},{“date”:“2026-04-18”,“weight”:null,“sleep”:7.53,“recovery”:89.0,“hrv”:105.0,“burned”:2783.0,“consumed”:3435.0,“protein”:218.0,“carbs”:334.0,“fat”:133.0,“notes”:””},{“date”:“2026-04-17”,“weight”:76.5,“sleep”:6.92,“recovery”:82.0,“hrv”:96.0,“burned”:2606.0,“consumed”:2933.0,“protein”:172.0,“carbs”:367.0,“fat”:87.0,“notes”:””},{“date”:“2026-04-16”,“weight”:76.8,“sleep”:7.67,“recovery”:82.0,“hrv”:98.0,“burned”:2203.0,“consumed”:3264.0,“protein”:210.0,“carbs”:317.0,“fat”:128.0,“notes”:””},{“date”:“2026-04-15”,“weight”:76.2,“sleep”:8.05,“recovery”:47.0,“hrv”:78.0,“burned”:2921.0,“consumed”:3202.0,“protein”:202.0,“carbs”:336.0,“fat”:118.0,“notes”:””},{“date”:“2026-04-14”,“weight”:77.1,“sleep”:6.95,“recovery”:76.0,“hrv”:95.0,“burned”:2499.0,“consumed”:3867.0,“protein”:189.0,“carbs”:391.0,“fat”:177.0,“notes”:””},{“date”:“2026-04-13”,“weight”:76.2,“sleep”:7.9,“recovery”:54.0,“hrv”:79.0,“burned”:2291.0,“consumed”:2923.0,“protein”:188.0,“carbs”:309.0,“fat”:104.0,“notes”:””},{“date”:“2026-04-12”,“weight”:75.4,“sleep”:9.33,“recovery”:65.0,“hrv”:88.0,“burned”:2096.0,“consumed”:2354.0,“protein”:137.0,“carbs”:209.0,“fat”:106.0,“notes”:””},{“date”:“2026-04-11”,“weight”:76.6,“sleep”:6.55,“recovery”:77.0,“hrv”:99.0,“burned”:2401.0,“consumed”:3352.0,“protein”:199.0,“carbs”:290.0,“fat”:152.0,“notes”:””},{“date”:“2026-04-10”,“weight”:76.6,“sleep”:9.17,“recovery”:65.0,“hrv”:90.0,“burned”:2649.0,“consumed”:3668.0,“protein”:225.0,“carbs”:341.0,“fat”:156.0,“notes”:””},{“date”:“2026-04-09”,“weight”:null,“sleep”:8.92,“recovery”:95.0,“hrv”:105.0,“burned”:1748.0,“consumed”:2521.0,“protein”:169.0,“carbs”:262.0,“fat”:89.0,“notes”:””},{“date”:“2026-04-08”,“weight”:75.7,“sleep”:6.62,“recovery”:61.0,“hrv”:91.0,“burned”:2786.0,“consumed”:3129.0,“protein”:185.0,“carbs”:332.0,“fat”:125.0,“notes”:””},{“date”:“2026-04-07”,“weight”:null,“sleep”:6.1,“recovery”:44.0,“hrv”:78.0,“burned”:2721.0,“consumed”:3402.0,“protein”:193.0,“carbs”:367.0,“fat”:134.0,“notes”:””},{“date”:“2026-04-06”,“weight”:77.2,“sleep”:8.2,“recovery”:79.0,“hrv”:97.0,“burned”:1792.0,“consumed”:2449.0,“protein”:178.0,“carbs”:233.0,“fat”:89.0,“notes”:””},{“date”:“2026-04-05”,“weight”:76.3,“sleep”:8.37,“recovery”:75.0,“hrv”:97.0,“burned”:2044.0,“consumed”:2441.0,“protein”:196.0,“carbs”:189.0,“fat”:100.0,“notes”:””},{“date”:“2026-04-04”,“weight”:78.8,“sleep”:7.93,“recovery”:75.0,“hrv”:99.0,“burned”:2586.0,“consumed”:3614.0,“protein”:230.0,“carbs”:378.0,“fat”:129.0,“notes”:””},{“date”:“2026-04-03”,“weight”:78.8,“sleep”:8.15,“recovery”:72.0,“hrv”:93.0,“burned”:2481.0,“consumed”:3160.0,“protein”:190.0,“carbs”:300.0,“fat”:130.0,“notes”:””},{“date”:“2026-04-02”,“weight”:77.5,“sleep”:8.42,“recovery”:65.0,“hrv”:88.0,“burned”:2611.0,“consumed”:3280.0,“protein”:199.0,“carbs”:327.0,“fat”:129.0,“notes”:””},{“date”:“2026-04-01”,“weight”:75.7,“sleep”:7.08,“recovery”:81.0,“hrv”:102.0,“burned”:2286.0,“consumed”:2902.0,“protein”:146.0,“carbs”:346.0,“fat”:105.0,“notes”:””},{“date”:“2026-03-31”,“weight”:76.3,“sleep”:9.65,“recovery”:93.0,“hrv”:113.0,“burned”:2856.0,“consumed”:3346.0,“protein”:211.0,“carbs”:354.0,“fat”:116.0,“notes”:””},{“date”:“2026-03-30”,“weight”:77.1,“sleep”:7.35,“recovery”:72.0,“hrv”:93.0,“burned”:2168.0,“consumed”:1910.0,“protein”:85.0,“carbs”:249.0,“fat”:61.0,“notes”:””},{“date”:“2026-03-29”,“weight”:78.4,“sleep”:8.83,“recovery”:17.0,“hrv”:41.0,“burned”:2921.0,“consumed”:3656.0,“protein”:234.0,“carbs”:259.0,“fat”:184.0,“notes”:””},{“date”:“2026-03-28”,“weight”:75.5,“sleep”:9.05,“recovery”:77.0,“hrv”:92.0,“burned”:2997.0,“consumed”:3131.0,“protein”:183.0,“carbs”:299.0,“fat”:130.0,“notes”:””},{“date”:“2026-03-27”,“weight”:75.4,“sleep”:8.3,“recovery”:63.0,“hrv”:84.0,“burned”:2255.0,“consumed”:2692.0,“protein”:184.0,“carbs”:315.0,“fat”:76.0,“notes”:””},{“date”:“2026-03-26”,“weight”:77.7,“sleep”:7.48,“recovery”:56.0,“hrv”:85.0,“burned”:3197.0,“consumed”:3481.0,“protein”:205.0,“carbs”:354.0,“fat”:142.0,“notes”:””},{“date”:“2026-03-25”,“weight”:75.9,“sleep”:8.22,“recovery”:91.0,“hrv”:102.0,“burned”:2224.0,“consumed”:2922.0,“protein”:172.0,“carbs”:321.0,“fat”:104.0,“notes”:””},{“date”:“2026-03-24”,“weight”:75.8,“sleep”:9.67,“recovery”:82.0,“hrv”:95.0,“burned”:2686.0,“consumed”:3340.0,“protein”:190.0,“carbs”:367.0,“fat”:122.0,“notes”:””},{“date”:“2026-03-23”,“weight”:75.5,“sleep”:9.95,“recovery”:90.0,“hrv”:100.0,“burned”:2028.0,“consumed”:2636.0,“protein”:150.0,“carbs”:308.0,“fat”:93.0,“notes”:””},{“date”:“2026-03-22”,“weight”:74.8,“sleep”:8.27,“recovery”:52.0,“hrv”:79.0,“burned”:2425.0,“consumed”:3326.0,“protein”:183.0,“carbs”:292.0,“fat”:158.0,“notes”:””},{“date”:“2026-03-21”,“weight”:74.8,“sleep”:7.9,“recovery”:47.0,“hrv”:76.0,“burned”:2113.0,“consumed”:2776.0,“protein”:160.0,“carbs”:330.0,“fat”:94.0,“notes”:””},{“date”:“2026-03-20”,“weight”:74.5,“sleep”:7.62,“recovery”:31.0,“hrv”:62.0,“burned”:3299.0,“consumed”:3470.0,“protein”:216.0,“carbs”:396.0,“fat”:116.0,“notes”:””},{“date”:“2026-03-19”,“weight”:74.9,“sleep”:9.13,“recovery”:73.0,“hrv”:94.0,“burned”:2260.0,“consumed”:3087.0,“protein”:213.0,“carbs”:266.0,“fat”:126.0,“notes”:””},{“date”:“2026-03-18”,“weight”:null,“sleep”:6.8,“recovery”:58.0,“hrv”:85.0,“burned”:2700.0,“consumed”:3358.0,“protein”:170.0,“carbs”:428.0,“fat”:104.0,“notes”:””},{“date”:“2026-03-17”,“weight”:75.8,“sleep”:9.13,“recovery”:68.0,“hrv”:92.0,“burned”:2201.0,“consumed”:3035.0,“protein”:181.0,“carbs”:333.0,“fat”:107.0,“notes”:””},{“date”:“2026-03-16”,“weight”:76.1,“sleep”:9.05,“recovery”:78.0,“hrv”:99.0,“burned”:2172.0,“consumed”:3363.0,“protein”:204.0,“carbs”:350.0,“fat”:125.0,“notes”:””},{“date”:“2026-03-15”,“weight”:75.3,“sleep”:8.32,“recovery”:69.0,“hrv”:92.0,“burned”:2486.0,“consumed”:3116.0,“protein”:176.0,“carbs”:353.0,“fat”:133.0,“notes”:””},{“date”:“2026-03-14”,“weight”:75.3,“sleep”:9.23,“recovery”:60.0,“hrv”:87.0,“burned”:2364.0,“consumed”:2615.0,“protein”:187.0,“carbs”:231.0,“fat”:103.0,“notes”:””},{“date”:“2026-03-13”,“weight”:74.9,“sleep”:4.5,“recovery”:21.0,“hrv”:57.0,“burned”:2678.0,“consumed”:2646.0,“protein”:184.0,“carbs”:214.0,“fat”:113.0,“notes”:””},{“date”:“2026-03-12”,“weight”:75.3,“sleep”:8.15,“recovery”:92.0,“hrv”:108.0,“burned”:2803.0,“consumed”:3063.0,“protein”:189.0,“carbs”:351.0,“fat”:103.0,“notes”:””},{“date”:“2026-03-11”,“weight”:74.2,“sleep”:8.93,“recovery”:88.0,“hrv”:103.0,“burned”:2504.0,“consumed”:2888.0,“protein”:155.0,“carbs”:380.0,“fat”:84.0,“notes”:””},{“date”:“2026-03-10”,“weight”:75.7,“sleep”:8.27,“recovery”:81.0,“hrv”:101.0,“burned”:2580.0,“consumed”:3048.0,“protein”:181.0,“carbs”:355.0,“fat”:101.0,“notes”:””},{“date”:“2026-03-09”,“weight”:75.5,“sleep”:9.77,“recovery”:77.0,“hrv”:97.0,“burned”:2157.0,“consumed”:3090.0,“protein”:187.0,“carbs”:308.0,“fat”:127.0,“notes”:””},{“date”:“2026-03-08”,“weight”:75.1,“sleep”:6.8,“recovery”:64.0,“hrv”:94.0,“burned”:3158.0,“consumed”:3318.0,“protein”:200.0,“carbs”:352.0,“fat”:126.0,“notes”:””},{“date”:“2026-03-07”,“weight”:74.5,“sleep”:7.53,“recovery”:90.0,“hrv”:106.0,“burned”:2361.0,“consumed”:2886.0,“protein”:170.0,“carbs”:332.0,“fat”:104.0,“notes”:””},{“date”:“2026-03-06”,“weight”:75.1,“sleep”:9.12,“recovery”:81.0,“hrv”:99.0,“burned”:2501.0,“consumed”:3027.0,“protein”:193.0,“carbs”:372.0,“fat”:93.0,“notes”:””},{“date”:“2026-03-05”,“weight”:null,“sleep”:9.0,“recovery”:95.0,“hrv”:107.0,“burned”:2693.0,“consumed”:3318.0,“protein”:211.0,“carbs”:412.0,“fat”:100.0,“notes”:””},{“date”:“2026-03-04”,“weight”:74.8,“sleep”:9.72,“recovery”:77.0,“hrv”:91.0,“burned”:2267.0,“consumed”:2881.0,“protein”:204.0,“carbs”:356.0,“fat”:75.0,“notes”:””},{“date”:“2026-03-03”,“weight”:74.9,“sleep”:7.37,“recovery”:95.0,“hrv”:112.0,“burned”:2281.0,“consumed”:2897.0,“protein”:212.0,“carbs”:329.0,“fat”:87.0,“notes”:””},{“date”:“2026-03-02”,“weight”:74.4,“sleep”:9.32,“recovery”:81.0,“hrv”:90.0,“burned”:2295.0,“consumed”:3293.0,“protein”:206.0,“carbs”:355.0,“fat”:116.0,“notes”:””},{“date”:“2026-03-01”,“weight”:null,“sleep”:8.72,“recovery”:48.0,“hrv”:73.0,“burned”:2793.0,“consumed”:1980.0,“protein”:122.0,“carbs”:224.0,“fat”:66.0,“notes”:””},{“date”:“2026-02-28”,“weight”:72.9,“sleep”:7.2,“recovery”:63.0,“hrv”:84.0,“burned”:2615.0,“consumed”:2659.0,“protein”:144.0,“carbs”:278.0,“fat”:101.0,“notes”:””},{“date”:“2026-02-27”,“weight”:74.8,“sleep”:6.37,“recovery”:56.0,“hrv”:78.0,“burned”:2760.0,“consumed”:3483.0,“protein”:178.0,“carbs”:338.0,“fat”:153.0,“notes”:””},{“date”:“2026-02-26”,“weight”:73.9,“sleep”:7.68,“recovery”:68.0,“hrv”:84.0,“burned”:2663.0,“consumed”:3545.0,“protein”:208.0,“carbs”:289.0,“fat”:172.0,“notes”:””},{“date”:“2026-02-25”,“weight”:null,“sleep”:8.95,“recovery”:91.0,“hrv”:105.0,“burned”:2266.0,“consumed”:2805.0,“protein”:197.0,“carbs”:255.0,“fat”:109.0,“notes”:””},{“date”:“2026-02-24”,“weight”:null,“sleep”:9.5,“recovery”:75.0,“hrv”:87.0,“burned”:2496.0,“consumed”:2395.0,“protein”:168.0,“carbs”:263.0,“fat”:74.0,“notes”:””},{“date”:“2026-02-23”,“weight”:74.2,“sleep”:8.17,“recovery”:76.0,“hrv”:87.0,“burned”:2190.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””},{“date”:“2026-02-22”,“weight”:null,“sleep”:0.98,“recovery”:4.0,“hrv”:76.0,“burned”:2914.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””},{“date”:“2026-02-21”,“weight”:74.2,“sleep”:8.48,“recovery”:96.0,“hrv”:100.0,“burned”:2236.0,“consumed”:2297.0,“protein”:141.0,“carbs”:216.0,“fat”:96.0,“notes”:””},{“date”:“2026-02-20”,“weight”:74.6,“sleep”:8.68,“recovery”:92.0,“hrv”:96.0,“burned”:2941.0,“consumed”:3038.0,“protein”:174.0,“carbs”:278.0,“fat”:133.0,“notes”:””},{“date”:“2026-02-19”,“weight”:null,“sleep”:8.72,“recovery”:68.0,“hrv”:84.0,“burned”:2471.0,“consumed”:2875.0,“protein”:193.0,“carbs”:227.0,“fat”:128.0,“notes”:””},{“date”:“2026-02-18”,“weight”:75.2,“sleep”:9.2,“recovery”:98.0,“hrv”:106.0,“burned”:3098.0,“consumed”:3748.0,“protein”:246.0,“carbs”:314.0,“fat”:166.0,“notes”:””},{“date”:“2026-02-17”,“weight”:73.7,“sleep”:9.07,“recovery”:58.0,“hrv”:81.0,“burned”:2377.0,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””},{“date”:“2026-02-16”,“weight”:72.8,“sleep”:8.7,“recovery”:61.0,“hrv”:81.0,“burned”:2221.0,“consumed”:2805.0,“protein”:182.0,“carbs”:181.0,“fat”:144.0,“notes”:””},{“date”:“2026-02-15”,“weight”:null,“sleep”:8.83,“recovery”:69.0,“hrv”:88.0,“burned”:2483.0,“consumed”:1248.0,“protein”:86.0,“carbs”:132.0,“fat”:41.0,“notes”:””},{“date”:“2026-02-14”,“weight”:73.4,“sleep”:8.5,“recovery”:72.0,“hrv”:87.0,“burned”:3131.0,“consumed”:2375.0,“protein”:173.0,“carbs”:198.0,“fat”:98.0,“notes”:””},{“date”:“2026-02-13”,“weight”:null,“sleep”:8.0,“recovery”:72.0,“hrv”:85.0,“burned”:2502.0,“consumed”:2867.0,“protein”:193.0,“carbs”:210.0,“fat”:134.0,“notes”:””},{“date”:“2026-02-12”,“weight”:74.9,“sleep”:7.58,“recovery”:79.0,“hrv”:91.0,“burned”:2692.0,“consumed”:2932.0,“protein”:170.0,“carbs”:249.0,“fat”:136.0,“notes”:””},{“date”:“2026-02-11”,“weight”:null,“sleep”:9.4,“recovery”:51.0,“hrv”:65.0,“burned”:null,“consumed”:null,“protein”:null,“carbs”:null,“fat”:null,“notes”:””}];
 
 // ── HISTORICAL LIFT DATA (pre-loaded from training logs) ─────────────────────
 const HIST_LIFTS = [
@@ -719,13 +712,8 @@ let cardioLog=JSON.parse(localStorage.getItem(‘cardio_v2’)||’[]’);
 let curSets=[], curCardioType=’’, strFilter=‘key’, cardioFilter=‘all’;
 
 function persist(){
-// Save any entry that was manually saved (has updated_at) OR has notes OR differs from HIST
-localStorage.setItem(‘met_v2’,JSON.stringify(metrics.filter(l=>{
-if(l.updated_at) return true; // manually saved — always persist
-if(l.notes) return true;
-const h=HIST.find(h=>h.date===l.date);
-return !h; // not in HIST at all
-})));
+// Always keep localStorage as fallback
+localStorage.setItem(‘met_v2’,JSON.stringify(metrics.filter(l=>{if(l.updated_at)return true;if(l.notes)return true;return!HIST.find(h=>h.date===l.date);})));
 localStorage.setItem(‘lifts_v2’,JSON.stringify(lifts));
 localStorage.setItem(‘cardio_v2’,JSON.stringify(cardioLog));
 }
@@ -746,22 +734,16 @@ const weightKg = rawWt ? (wtUnit===‘lbs’ ? Math.round(rawWt/2.20462*10)/10 :
 const sleepRaw=v(‘m-sl’).trim();
 let sleepHrs=null;
 if(sleepRaw){const parts=sleepRaw.split(’:’);const slH=parseInt(parts[0])||0,slM=parseInt(parts[1])||0;sleepHrs=(slH||slM)?Math.round((slH+slM/60)*100)/100:null;}
-// Track which numeric fields were explicitly typed (even if 0) vs left blank
 const numFields={recovery:‘m-re’,burned:‘m-bu’,consumed:‘m-co’,protein:‘m-pr’,carbs:‘m-ca’,fat:‘m-fa’};
 const explicitlySet={};
-Object.entries(numFields).forEach(([key,id])=>{
-const raw=v(id).trim();
-explicitlySet[key] = raw !== ‘’; // true = user typed something (including 0)
-});
+Object.entries(numFields).forEach(([key,id])=>{explicitlySet[key]=v(id).trim()!==’’;});
 const incoming={date:v(‘m-date’),weight:weightKg,sleep:sleepHrs,recovery:n(‘m-re’),hrv:null,burned:n(‘m-bu’),consumed:n(‘m-co’),protein:n(‘m-pr’),carbs:n(‘m-ca’),fat:n(‘m-fa’),notes:v(‘m-no’),tags:v(‘m-tags’)||null};
 if(!incoming.date){toast(‘Enter a date’);return;}
-// Merge — overwrite if field was typed (even 0 = clear), skip if left blank
 const existing=metrics.find(l=>l.date===incoming.date)||{};
 const e={…existing};
 Object.keys(incoming).forEach(k=>{
-const wasTyped = explicitlySet[k]; // undefined for non-numeric fields
 if(incoming[k]!==null&&incoming[k]!==’’&&incoming[k]!==undefined) e[k]=incoming[k];
-else if(wasTyped) e[k]=null; // explicitly typed 0 or cleared — wipe the value
+else if(explicitlySet[k]) e[k]=null;
 else if(!(k in existing)||existing[k]===null) e[k]=incoming[k];
 });
 e.date=incoming.date;
@@ -1110,7 +1092,7 @@ const recColor=dayMetric&&dayMetric.recovery?(dayMetric.recovery>=70?‘var(–g
 const isTodayCNSRisk=isT&&cnsWarning;
 const hasDualSession=pd.blocks&&pd.blocks.length>1;
 
-// Custom week tags
+// Custom week structure
 const _dayOrder=[1,2,3,4,5,6,0];
 const _colIdx=_dayOrder.indexOf(i);
 const effectiveDayTags=(_colIdx>=0)?getEffectiveTags(i,_colIdx):pd.tags;
@@ -1329,6 +1311,7 @@ setWow(‘d-fat-wow’,af,avg(r7prev,‘fat’),true); // inverse: lower fat = g
 setWow(‘d-rec-wow’,ar,arp,false);
 setWow(‘d-slp-wow’,asl,aslp,false);
 if(metrics.length>=2){const w1=metrics[0]?.weight,w2=metrics.slice(1).find(l=>l.weight)?.weight;if(w1&&w2){const d=w1-w2,badge=document.getElementById(‘d-wt-tr’);if(badge){badge.textContent=(d>=0?’+’:’’)+d.toFixed(1)+‘kg’;badge.className=‘st-badge ‘+(d>0?‘tu’:d<0?‘td’:‘tf’);}}}
+renderWeightSparkline();
 // Weight WoW% — compare 7d avg weight vs prev 7d avg weight
 const wAvg7=avg(r7,‘weight’),wAvg7p=avg(r7prev,‘weight’);
 const wowBadge=document.getElementById(‘d-wt-wow’);
@@ -1479,6 +1462,7 @@ renderMetTable();
 renderMilestones();
 if(typeof renderStrGrid===‘function’) renderStrGrid();
 if(typeof renderEndurance===‘function’) renderEndurance();
+renderPhaseStatus();
 }
 
 // ── STAT CHART POPUP ──────────────────────────────────────
@@ -1490,9 +1474,7 @@ const canvas = document.getElementById(‘stat-canvas’);
 let data = metrics.filter(m => {
 if(key === ‘surplus’) return m.consumed && m.burned;
 return m[key] !== null && m[key] !== undefined;
-});
-if(key !== ‘weight’) data = data.slice(0, 30);
-data = data.reverse();
+});  if(key !== ‘weight’) data = data.slice(0, 30);  data = data.reverse();
 
 const vals = data.map(m => key === ‘surplus’ ? m.consumed - m.burned : m[key]);
 const dates = data.map(m => m.date.slice(5)); // MM-DD
@@ -1715,8 +1697,6 @@ sbFetch(‘cardio_log’,‘GET’,null,’?order=date.desc&limit=400’),
 ]);
 
 ```
-console.log('[Pull] Remote rows — metrics:', sbMetrics?.length, '| lifts:', sbLifts?.length, '| cardio:', sbCardio?.length);
-if(sbMetrics?.length) console.log('[Pull] Remote date range:', sbMetrics[sbMetrics.length-1]?.date, '→', sbMetrics[0]?.date);
 if (sbMetrics) {
   const localDates = new Set(metrics.map(m => m.date));
   for (let row of sbMetrics) {
@@ -1729,28 +1709,8 @@ if (sbMetrics) {
       metrics.push(row);
     } else {
       const idx = metrics.findIndex(m => m.date === row.date);
-      if (idx !== -1) {
-        const local = metrics[idx];
-        // If local was saved more recently, it wins entirely (preserves explicit nulls)
-        if(local.updated_at && row.updated_at && local.updated_at > row.updated_at) {
-          // local is newer — keep it, don't overwrite with stale remote
-        } else {
-          // Remote is newer: merge field-by-field
-          // For non-HIST fields, let remote nulls win (they were explicitly cleared)
-          // For HIST-only fields (weight, sleep from HIST), preserve if remote is null
-          const histEntry = HIST.find(h => h.date === row.date);
-          const merged = {...local};
-          Object.keys(row).forEach(k => {
-            if(row[k] !== null && row[k] !== undefined && row[k] !== '') {
-              merged[k] = row[k]; // remote has value — use it
-            } else if(histEntry && histEntry[k] !== null && histEntry[k] !== undefined && !local.updated_at) {
-              // Keep HIST value if this is a pure HIST entry (never manually saved)
-            } else {
-              merged[k] = row[k]; // remote explicitly null — honour it
-            }
-          });
-          metrics[idx] = merged;
-        }
+      if (idx !== -1 && row.updated_at > (metrics[idx].updated_at || '')) {
+        metrics[idx] = row;
       }
     }
   }
@@ -1775,25 +1735,24 @@ if (sbCardio) {
 
 persist();
 refresh();
-toast('Synced ✓ — ' + (sbMetrics ? sbMetrics.length : 0) + ' remote entries, newest: ' + (sbMetrics && sbMetrics[0] ? sbMetrics[0].date : 'none'));
+toast('Synced ✓');
 ```
 
 } catch(e) {
 console.error(‘Sync error’, e);
-toast(’Sync failed: ’ + e.message);
+toast(‘Sync failed — offline?’);
 }
 }
 
 // Push all local-only data up to Supabase (first-time or catch-up)
 async function sbPushAll() {
-toast(‘Uploading ’ + metrics.length + ’ entries…’);
+toast(‘Uploading…’);
 try {
-// Metrics: upload in batches of 50 — encode tags into notes
+// Metrics: upload in batches of 50
 for (let i = 0; i < metrics.length; i += 50) {
 const batch = metrics.slice(i, i+50).map(m => {
-const {tags, id, …row} = {…m, updated_at: m.updated_at || new Date().toISOString()};
-row.notes = (row.notes||’’).replace(/\n?[tags:[^]]*]/g, ‘’);
-if(tags) row.notes = row.notes + ‘\n[tags:’ + tags + ‘]’;
+const {tags, …row} = {…m, updated_at: m.updated_at || new Date().toISOString()};
+if(tags) row.notes = (row.notes||’’) + ` [tags:${tags}]`;
 return row;
 });
 await sbFetch(‘metrics’, ‘POST’, batch, ‘?on_conflict=date’);
@@ -1808,10 +1767,10 @@ for (let i = 0; i < cardioLog.length; i += 50) {
 const batch = cardioLog.slice(i, i+50).map(c => ({…c, ts: c.ts || Date.now()}));
 await sbFetch(‘cardio_log’, ‘POST’, batch, ‘?on_conflict=ts’);
 }
-toast(‘Uploaded ✓ — ’ + metrics.length + ’ metrics, ’ + lifts.length + ’ lifts’);
+toast(‘Upload complete ✓’);
 } catch(e) {
 console.error(‘Push error’, e);
-toast(’Upload failed: ’ + e.message);
+toast(‘Upload failed’);
 }
 }
 
@@ -1819,27 +1778,18 @@ toast(’Upload failed: ’ + e.message);
 async function syncAfterSave(table, entry) {
 try {
 let payload = {…entry, updated_at: new Date().toISOString()};
-if(table === ‘metrics’) {
-const {tags, id, …clean} = payload;
-clean.notes = (clean.notes||’’).replace(/\n?[tags:[^]]*]/g, ‘’);
-if(tags) clean.notes = clean.notes + ‘\n[tags:’ + tags + ‘]’;
-payload = clean;
+// Metrics: embed tags into notes for Supabase compat (tags col may not exist)
+// Try with tags first; if that fails, strip and retry
+const res = await sbFetch(table, ‘POST’, payload);
+if(!res) {
+// Retry without tags field (column might not exist yet)
+const {tags, …safePayload} = payload;
+if(tags && safePayload.notes !== undefined) {
+safePayload.notes = (safePayload.notes||’’) + (tags ? ` [tags:${tags}]` : ‘’);
 }
-console.log(’[Save] Pushing to’, table, payload.date || payload.ts || ‘’);
-const conflictCol = table === ‘metrics’ ? ‘?on_conflict=date’ : table === ‘lifts’ ? ‘?on_conflict=ts’ : table === ‘cardio_log’ ? ‘?on_conflict=ts’ : ‘’;
-const res = await fetch(`${SB_URL}/rest/v1/${table}${conflictCol}`, {
-method: ‘POST’,
-headers: {
-‘apikey’: SB_KEY,
-‘Authorization’: ‘Bearer ’ + SB_KEY,
-‘Content-Type’: ‘application/json’,
-‘Prefer’: ‘resolution=merge-duplicates,return=minimal’
-},
-body: JSON.stringify(payload)
-});
-if(res.ok) { console.log(’[Save] ✓ pushed’, table, res.status); }
-else { const err = await res.text(); console.error(’[Save] ✗ failed’, res.status, err); }
-} catch(e) { console.error(’[Save] ✗ exception’, e.message); }
+await sbFetch(table, ‘POST’, safePayload);
+}
+} catch(e) { console.warn(‘Background sync failed’, e); }
 }
 
 // ── EXPORT ───────────────────────────────────────────────
@@ -1929,162 +1879,134 @@ if(tip) tip.style.display = ‘none’;
 function renderWeightSparkline(){
 const svg = document.getElementById(‘wt-sparkline’);
 if(!svg) return;
-
-// All entries with weight, oldest first
 const pts = metrics.filter(m=>m.weight).slice().reverse();
-if(pts.length < 2){ svg.innerHTML = ‘<text x="50%" y="55%" text-anchor="middle" fill="var(--mt)" font-size="9" font-family="DM Sans,sans-serif">Log more entries to see trend</text>’; return; }
+if(pts.length < 2){ svg.innerHTML=’<text x="50%" y="60%" text-anchor="middle" fill="var(--mt)" font-size="8" font-family="DM Sans,sans-serif">Log more entries</text>’; return; }
+const W=200,H=50,PAD=4;
+const weights=pts.map(p=>p.weight);
+const goal=79.4;
+const lo=Math.min(…weights,goal)-0.3, hi=Math.max(…weights,goal)+0.3;
+const range=hi-lo||1;
+const xS=i=>PAD+(i/(pts.length-1))*(W-PAD*2);
+const yS=v=>H-PAD-((v-lo)/range)*(H-PAD*2);
+const gy=yS(goal).toFixed(1);
+const linePoints=pts.map((p,i)=>xS(i).toFixed(1)+’,’+yS(p.weight).toFixed(1)).join(’ ‘);
+const firstX=xS(0).toFixed(1),lastX=xS(pts.length-1).toFixed(1),botY=(H-PAD).toFixed(1);
+const areaD=‘M ‘+firstX+’,’+botY+’ L ‘+pts.map((p,i)=>xS(i).toFixed(1)+’,’+yS(p.weight).toFixed(1)).join(’ L ‘)+’ L ‘+lastX+’,’+botY+’ Z’;
+const trend=weights[weights.length-1]-weights[0];
+const lc=trend<=0?‘var(–gn)’:‘var(–rd)’;
+const lx=xS(pts.length-1).toFixed(1),ly=yS(pts[pts.length-1].weight).toFixed(1);
+svg.innerHTML=’<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+(trend<=0?'rgba(31,122,69,.25)':'rgba(160,40,32,.15)')+'"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></linearGradient></defs>’
++’<path d="'+areaD+'" fill="url(#wg)"/>’
++’<line x1="'+PAD+'" y1="'+gy+'" x2="'+(W-PAD)+'" y2="'+gy+'" stroke="rgba(61,107,158,.4)" stroke-width="1" stroke-dasharray="3,3"/>’
++’<polyline points="'+linePoints+'" fill="none" stroke="'+lc+'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>’
++’<circle cx="'+lx+'" cy="'+ly+'" r="2.5" fill="'+lc+'"/>’
++’<text x="'+PAD+'" y="'+(parseFloat(yS(weights[0]))-3).toFixed(1)+'" fill="var(--mt)" font-size="7" font-family="JetBrains Mono,monospace">’+weights[0]+’</text>’
++’<text x="'+(parseFloat(lx)-2).toFixed(1)+'" y="'+(parseFloat(ly)-4).toFixed(1)+'" text-anchor="end" fill="'+lc+'" font-size="7" font-family="JetBrains Mono,monospace">’+pts[pts.length-1].weight+‘kg</text>’
++’<text x="'+(W-PAD)+'" y="'+(parseFloat(gy)-2).toFixed(1)+'" text-anchor="end" fill="rgba(61,107,158,.55)" font-size="6" font-family="JetBrains Mono,monospace">goal</text>’;
+}
 
-const W = 200, H = 50, PAD = 4;
-const weights = pts.map(p=>p.weight);
-const minW = Math.min(…weights), maxW = Math.max(…weights);
-const goal = 79.4;
-const allVals = […weights, goal];
-const lo = Math.min(…allVals) - 0.3;
-const hi = Math.max(…allVals) + 0.3;
-const range = hi - lo || 1;
+// ── PHASE PROGRESSION ────────────────────────────────────
+function getCurrentPhase(){
+const maxSwim=cardioLog.filter(c=>c.type===‘Swim’).reduce((m,s)=>Math.max(m,s.distance_m||0),0);
+const maxBike=cardioLog.filter(c=>c.type===‘Bike’).reduce((m,b)=>Math.max(m,b.duration_min||0),0);
+const maxRun=cardioLog.filter(c=>c.type===‘Run’).reduce((m,r)=>Math.max(m,r.distance_km||0),0);
+const maxWeight=metrics.filter(m=>m.weight).reduce((m,e)=>Math.max(m,e.weight||0),0);
+const now=new Date();
+if(now>=new Date(‘2027-06-01’)&&maxSwim>=1900&&maxBike>=90&&maxRun>=18) return 3;
+if(now>=new Date(‘2027-03-01’)&&maxSwim>=1000&&maxBike>=75&&maxRun>=15) return 2;
+if(now>=new Date(‘2026-11-01’)&&maxSwim>=400&&maxWeight>=79.4) return 1;
+return 0;
+}
 
-const xScale = i => PAD + (i / (pts.length - 1)) * (W - PAD*2);
-const yScale = v => H - PAD - ((v - lo) / range) * (H - PAD*2);
-
-// Goal line
-const gy = yScale(goal).toFixed(1);
-const goalLine = `<line x1="${PAD}" y1="${gy}" x2="${W-PAD}" y2="${gy}" stroke="rgba(74,122,181,.35)" stroke-width="1" stroke-dasharray="3,3"/>`;
-
-// Build smooth polyline path
-const linePoints = pts.map((p,i) => `${xScale(i).toFixed(1)},${yScale(p.weight).toFixed(1)}`).join(’ ’);
-
-// Area fill path (close below)
-const areaPoints = pts.map((p,i) => `${xScale(i).toFixed(1)},${yScale(p.weight).toFixed(1)}`).join(’ ’);
-const firstX = xScale(0).toFixed(1), lastX = xScale(pts.length-1).toFixed(1);
-const bottomY = (H - PAD).toFixed(1);
-const areaPath = `M ${firstX},${bottomY} L ${areaPoints.split(' ').map((p,i) => (i===0?'':'')+p).join(' L ')} L ${lastX},${bottomY} Z`
-.replace(’M ’, ’M ’).replace(‘L L’, ‘L’);
-
-// Determine trend color: going down = good (green), up = muted red
-const trend = weights[weights.length-1] - weights[0];
-const lineColor = trend <= 0 ? ‘var(–gn)’ : ‘var(–rd)’;
-const areaColor = trend <= 0 ? ‘rgba(31,122,69,.15)’ : ‘rgba(160,40,32,.1)’;
-
-// Last point dot
-const lx = xScale(pts.length-1).toFixed(1);
-const ly = yScale(pts[pts.length-1].weight).toFixed(1);
-const dot = `<circle cx="${lx}" cy="${ly}" r="2.5" fill="${lineColor}"/>`;
-
-// First and last weight labels
-const firstLabel = `<text x="${PAD}" y="${(parseFloat(yScale(weights[0]))-4).toFixed(1)}" fill="var(--mt)" font-size="7" font-family="JetBrains Mono,monospace">${weights[0]}kg</text>`;
-const lastLabel = `<text x="${(parseFloat(lx)-2).toFixed(1)}" y="${(parseFloat(ly)-4).toFixed(1)}" text-anchor="end" fill="${lineColor}" font-size="7" font-family="JetBrains Mono,monospace">${pts[pts.length-1].weight}kg</text>`;
-
-// Goal label
-const goalLabel = `<text x="${W-PAD}" y="${(parseFloat(gy)-3).toFixed(1)}" text-anchor="end" fill="rgba(74,122,181,.6)" font-size="6.5" font-family="JetBrains Mono,monospace">goal</text>`;
-
-svg.innerHTML = `<defs> <linearGradient id="wt-grad" x1="0" y1="0" x2="0" y2="1"> <stop offset="0%" stop-color="${trend<=0?'rgba(31,122,69,.3)':'rgba(160,40,32,.2)'}"/> <stop offset="100%" stop-color="rgba(0,0,0,0)"/> </linearGradient> </defs> <path d="${areaPath}" fill="url(#wt-grad)"/> ${goalLine} <polyline points="${linePoints}" fill="none" stroke="${lineColor}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/> ${dot} ${firstLabel} ${lastLabel} ${goalLabel}`;
+function renderPhaseStatus(){
+const phase=getCurrentPhase();
+const NAMES=[‘Phase 1 · Foundation’,‘Phase 2 · Build’,‘Phase 3 · Race Specific’,‘Taper · Race Day’];
+const DATES=[‘May — Oct 2026’,‘Nov 2026 — Feb 2027’,‘Mar — Jun 2027’,‘July 2027’];
+const pn=document.getElementById(‘dash-phase-name’),pd2=document.getElementById(‘dash-phase-date’),pnx=document.getElementById(‘dash-phase-next’);
+if(pn) pn.textContent=NAMES[phase];
+if(pd2) pd2.textContent=DATES[phase];
+if(!pnx) return;
+if(phase>=3){pnx.innerHTML=’<div style="font-size:.75rem;color:var(--gd);">🏁 Race ready. Taper and execute.</div>’;return;}
+const maxSwim=cardioLog.filter(c=>c.type===‘Swim’).reduce((m,s)=>Math.max(m,s.distance_m||0),0);
+const maxBike=cardioLog.filter(c=>c.type===‘Bike’).reduce((m,b)=>Math.max(m,b.duration_min||0),0);
+const maxRun=cardioLog.filter(c=>c.type===‘Run’).reduce((m,r)=>Math.max(m,r.distance_km||0),0);
+const maxWeight=metrics.filter(m=>m.weight).reduce((m,e)=>Math.max(m,e.weight||0),0);
+const now=new Date();
+const allChecks={
+swim400:{done:maxSwim>=400,label:‘Swim 400m (best: ‘+maxSwim+‘m)’},
+weight794:{done:maxWeight>=79.4,label:‘Weight 79.4kg (now: ‘+maxWeight+‘kg)’},
+date1:{done:now>=new Date(‘2026-11-01’),label:‘Past Oct 31 2026’},
+swim1k:{done:maxSwim>=1000,label:‘Swim 1000m (best: ‘+maxSwim+‘m)’},
+bike90:{done:maxBike>=90,label:‘90 min ride (best: ‘+maxBike+’ min)’},
+run15:{done:maxRun>=15,label:‘15km run (best: ‘+maxRun+‘km)’},
+};
+const nextKeys=phase===0?[‘swim400’,‘weight794’,‘date1’]:phase===1?[‘swim1k’,‘bike90’,‘run15’]:[];
+pnx.innerHTML=’<div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem;">Next phase unlocks when</div>’
++nextKeys.map(k=>{const c=allChecks[k];return’<div style="display:flex;align-items:center;gap:.45rem;font-size:.72rem;padding:.18rem 0;"><span style="color:'+(c.done?'var(--gn)':'var(--mt)')+';">’+(c.done?‘✓’:‘○’)+’</span><span style="color:'+(c.done?'var(--mt)':'var(--tx)')+';">’+c.label+’</span></div>’;}).join(’’);
 }
 
 // ── WEEKLY STRUCTURE EDITOR ───────────────────────────────
-const WEEK_SESSION_TAGS = [
-{c:‘tcf’,l:‘CF’}, {c:‘tsw’,l:‘Swim’}, {c:‘tlt’,l:‘Lift’},
-{c:‘tbk’,l:‘Bike’}, {c:‘trt’,l:‘Run’}, {c:‘trt’,l:‘Rest’}
-];
+const WEEK_SESSION_TAGS=[{c:‘tcf’,l:‘CF’},{c:‘tsw’,l:‘Swim’},{c:‘tlt’,l:‘Lift’},{c:‘tbk’,l:‘Bike’},{c:‘trt’,l:‘Run’},{c:‘trt’,l:‘Rest’}];
 
-function loadCustomWeek(){
-try { return JSON.parse(localStorage.getItem(‘custom_week_v1’)||‘null’); } catch(e){ return null; }
+function loadCustomWeek(){try{return JSON.parse(localStorage.getItem(‘custom_week_v1’)||‘null’);}catch(e){return null;}}
+function saveCustomWeek(d){localStorage.setItem(‘custom_week_v1’,JSON.stringify(d));}
+
+function getEffectiveTags(pdayIdx,colIdx){
+const custom=loadCustomWeek();
+if(!custom) return PDAYS[pdayIdx].tags;
+return(custom[colIdx]||[]).map(l=>WEEK_SESSION_TAGS.find(t=>t.l===l)).filter(Boolean);
 }
-function saveCustomWeek(data){ localStorage.setItem(‘custom_week_v1’, JSON.stringify(data)); }
 
 function toggleWeekEdit(){
-const grid = document.getElementById(‘week-edit-grid’);
-const btn = document.getElementById(‘week-edit-btn’);
+const grid=document.getElementById(‘week-edit-grid’);
+const btn=document.getElementById(‘week-edit-btn’);
 if(!grid) return;
-const isOpen = grid.style.display !== ‘none’;
-if(isOpen){
-grid.style.display = ‘none’;
-btn.textContent = ‘Edit’;
-} else {
-grid.style.display = ‘block’;
-btn.textContent = ‘Close’;
-renderWeekEditGrid();
+const open=grid.style.display!==‘none’;
+if(open){grid.style.display=‘none’;btn.textContent=‘Edit’;}
+else{grid.style.display=‘block’;btn.textContent=‘Close’;renderWeekEditGrid();}
 }
-}
+
+let weekEditState=null;
 
 function renderWeekEditGrid(){
-const container = document.getElementById(‘week-edit-days’);
+const container=document.getElementById(‘week-edit-days’);
 if(!container) return;
-const custom = loadCustomWeek();
-const dayNames = [‘Mon’,‘Tue’,‘Wed’,‘Thu’,‘Fri’,‘Sat’,‘Sun’];
-// Get current tags from PDAYS (Sun=0..Sat=6), reorder Mon-Sun
-const dayOrder = [1,2,3,4,5,6,0];
-
-container.innerHTML = dayOrder.map((pdayIdx, colIdx) => {
-const pd = PDAYS[pdayIdx];
-const savedTags = custom ? (custom[colIdx]||[]) : pd.tags.map(t=>t.l);
-const dayName = dayNames[colIdx];
-
-```
-const tagBtns = WEEK_SESSION_TAGS.map(tag => {
-  const active = savedTags.includes(tag.l);
-  return `<button onclick="toggleEditTag(${colIdx},'${tag.l}',this)"
-    class="dtag ${active ? tag.c : ''}"
-    style="opacity:${active?1:.3};cursor:pointer;border:none;margin:.1rem 0;display:block;width:100%;text-align:center;"
-    data-col="${colIdx}" data-tag="${tag.l}">${tag.l}</button>`;
-}).join('');
-
-return `<div style="text-align:center;">
-  <div style="font-size:.62rem;color:var(--mt);font-weight:600;margin-bottom:.4rem;font-family:'DM Sans',sans-serif;">${dayName}</div>
-  ${tagBtns}
-</div>`;
-```
-
+const custom=loadCustomWeek();
+const dayOrder=[1,2,3,4,5,6,0];
+const dayNames=[‘Mon’,‘Tue’,‘Wed’,‘Thu’,‘Fri’,‘Sat’,‘Sun’];
+container.innerHTML=dayOrder.map((pdayIdx,colIdx)=>{
+const savedTags=custom?(custom[colIdx]||[]):PDAYS[pdayIdx].tags.map(t=>t.l);
+return’<div style="text-align:center;">’
++’<div style="font-size:.6rem;color:var(--mt);font-weight:600;margin-bottom:.35rem;font-family:\'DM Sans\',sans-serif;">’+dayNames[colIdx]+’</div>’
++WEEK_SESSION_TAGS.map(tag=>{
+const active=savedTags.includes(tag.l);
+return’<button onclick="toggleEditTag('+colIdx+',\''+tag.l+'\',this)" class="dtag '+(active?tag.c:'')+'" style="opacity:'+(active?1:.3)+';cursor:pointer;border:none;margin:.1rem 0;display:block;width:100%;text-align:center;" data-col="'+colIdx+'" data-tag="'+tag.l+'">’+tag.l+’</button>’;
+}).join(’’)
++’</div>’;
 }).join(’’);
 }
 
-// Track edit state in memory
-let weekEditState = null;
-
-function toggleEditTag(colIdx, tagLabel, btn){
+function toggleEditTag(colIdx,tagLabel,btn){
 if(!weekEditState){
-// Init from current saved or PDAYS
-const custom = loadCustomWeek();
-const dayOrder = [1,2,3,4,5,6,0];
-weekEditState = dayOrder.map((pdayIdx, i) => {
-return custom ? (custom[i]||[]) : PDAYS[pdayIdx].tags.map(t=>t.l);
-});
+const custom=loadCustomWeek();
+const dayOrder=[1,2,3,4,5,6,0];
+weekEditState=dayOrder.map((pdayIdx,i)=>custom?(custom[i]||[]):PDAYS[pdayIdx].tags.map(t=>t.l));
 }
-const tags = weekEditState[colIdx];
-const idx = tags.indexOf(tagLabel);
-const tagDef = WEEK_SESSION_TAGS.find(t=>t.l===tagLabel);
-if(idx === -1){
-tags.push(tagLabel);
-btn.className = ‘dtag ’ + (tagDef?tagDef.c:’’);
-btn.style.opacity = ‘1’;
-} else {
-tags.splice(idx,1);
-btn.className = ‘dtag’;
-btn.style.opacity = ‘.3’;
-}
+const tags=weekEditState[colIdx];
+const idx=tags.indexOf(tagLabel);
+const tagDef=WEEK_SESSION_TAGS.find(t=>t.l===tagLabel);
+if(idx===-1){tags.push(tagLabel);btn.className=‘dtag ‘+(tagDef?tagDef.c:’’);btn.style.opacity=‘1’;}
+else{tags.splice(idx,1);btn.className=‘dtag’;btn.style.opacity=’.3’;}
 }
 
 function saveWeekStructure(){
-if(!weekEditState){
-// Nothing changed — just close
+if(weekEditState) saveCustomWeek(weekEditState);
+weekEditState=null;
 toggleWeekEdit();
-return;
-}
-saveCustomWeek(weekEditState);
-weekEditState = null;
-toggleWeekEdit();
-// Re-render the week view with new tags
-renderWeekWithCustom();
+renderWeek(‘prog-week’,true);
+renderWeek(‘dash-week’,false);
 toast(‘Week structure saved ✓’);
 }
-
-function getEffectiveTags(pdayIdx, colIdx){
-const custom = loadCustomWeek();
-if(!custom) return PDAYS[pdayIdx].tags;
-const labels = custom[colIdx]||[];
-return labels.map(l => WEEK_SESSION_TAGS.find(t=>t.l===l)).filter(Boolean);
-}
-
-function renderWeekWithCustom(){ renderWeek(‘prog-week’,true); renderWeek(‘dash-week’,false); }
 
 // ── INIT ──────────────────────────────────────────────────
 el(‘m-date’).value=today();if(el(‘l-date’))el(‘l-date’).value=today();
