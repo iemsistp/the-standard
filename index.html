@@ -51,7 +51,7 @@ main{padding-top:48px;padding-bottom:64px;}
 .pb{height:5px;background:var(--sf2);border-radius:999px;overflow:hidden;margin-top:.5rem;}
 .pf{height:100%;border-radius:999px;transition:width 1s ease;}
 /* FORMS */
-.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem .85rem;margin-bottom:1.1rem;}@media(max-width:480px){.lg{grid-template-columns:1fr 1fr;}.ig.fw{grid-column:1/-1;}}
+.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem .85rem;margin-bottom:1.1rem;}@media(max-width:480px){.lg{grid-template-columns:1fr 1fr;}.ig.fw{grid-column:1/-1;}.ig-date{grid-column:1/-1;}}
 .ig{display:flex;flex-direction:column;gap:.3rem;}
 .il{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mt);font-weight:500;}
 .if{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:.55rem .8rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.85rem;transition:border-color .2s;width:100%;min-width:0;box-sizing:border-box;}
@@ -233,14 +233,16 @@ select.if{cursor:pointer;}
   <!-- 3 HERO TILES -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem;">
     <div class="sc sc-click" style="--ac:var(--bl);cursor:pointer;" onclick="openStatChart('weight','Weight Trend','kg','var(--bl)')">
-      <div class="sl">Weight</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="sl">Weight</div>
+        <div style="display:flex;gap:.25rem;flex-direction:column;align-items:flex-end;">
+          <span class="st-badge" id="d-wt-tr" style="position:static;font-size:.58rem;"></span>
+          <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.58rem;"></span>
+        </div>
+      </div>
       <div class="sv" id="d-wt" style="font-size:1.6rem;line-height:1;">—</div>
       <div class="su" style="margin-top:.1rem;">kg · goal 79.4kg</div>
-      <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.2rem;">
-        <span class="st-badge" id="d-wt-tr" style="position:static;font-size:.6rem;"></span>
-        <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;"></span>
-      </div>
-      <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.4rem;display:block;"></svg>
+      <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.5rem;display:block;"></svg>
     </div>
     <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
       <div class="sl">7d Surplus</div><div class="sv" id="d-sur">—</div>
@@ -298,6 +300,11 @@ select.if{cursor:pointer;}
       </div>
       <div class="pb"><div class="pf" id="g-bar" style="width:0%;background:var(--bl);"></div></div>
       <div class="tip-box" id="g-eta">—</div>
+      <!-- Desktop extra: 7-day weight history -->
+      <div id="g-history" style="margin-top:.85rem;display:none;">
+        <div style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem;font-family:'JetBrains Mono',monospace;">Last 7 weigh-ins</div>
+        <div id="g-hist-rows"></div>
+      </div>
     </div>
     <div class="cd">
       <div class="ct">Phase</div>
@@ -323,7 +330,7 @@ select.if{cursor:pointer;}
   <div class="cd" style="margin-bottom:1.1rem;">
     <div class="ct">Daily Log</div>
     <div class="lg">
-      <div class="ig"><label class="il">Date</label><input type="date" class="if" id="m-date" style="width:100%;min-width:0;"></div>
+      <div class="ig ig-date"><label class="il">Date</label><input type="date" class="if" id="m-date" style="width:100%;min-width:0;"></div>
       <div class="ig" style="position:relative;">
         <label class="il">Weight</label>
         <div style="display:flex;gap:.4rem;align-items:stretch;">
@@ -1342,7 +1349,25 @@ function updateDash(){
   // Populate t-wt-wow in target row
   const wtWowEl=document.getElementById('t-wt-wow');
   if(wtWowEl&&wAvg7&&wAvg7p){const diff=wAvg7-wAvg7p,pct=Math.round((diff/Math.abs(wAvg7p))*100);if(Math.abs(pct)<1){wtWowEl.textContent='→';wtWowEl.style.color='var(--mt)';}else{wtWowEl.textContent=(diff>0?'+':'')+pct+'%';wtWowEl.style.color='var(--tx)';}}
-  if(lw){const pct=Math.min(100,Math.max(0,(lw-SW)/(GW-SW)*100));const bar=el('g-bar');if(bar)bar.style.width=pct+'%';$('g-cur',lw.toFixed(1)+' kg');const rem=GW-lw,wks=Math.ceil(rem/0.4),eta=new Date();eta.setDate(eta.getDate()+wks*7);$('g-eta',rem>0?`${rem.toFixed(1)}kg to go · ~${wks} weeks at 0.4kg/week · ETA: ${eta.toLocaleDateString('en-CA',{month:'short',year:'numeric'})}`:'🎯 Goal reached!');}
+  if(lw){const pct=Math.min(100,Math.max(0,(lw-SW)/(GW-SW)*100));const bar=el('g-bar');if(bar)bar.style.width=pct+'%';$('g-cur',lw.toFixed(1)+' kg');const rem=GW-lw,wks=Math.ceil(rem/0.4),eta=new Date();eta.setDate(eta.getDate()+wks*7);$('g-eta',rem>0?`${rem.toFixed(1)}kg to go · ~${wks} weeks at 0.4kg/week · ETA: ${eta.toLocaleDateString('en-CA',{month:'short',year:'numeric'})}`:'🎯 Goal reached!');
+  // Desktop: show last 7 weigh-ins
+  const ghist = el('g-history'), ghostRows = el('g-hist-rows');
+  if(ghist && ghostRows) {
+    const wEntries = metrics.filter(m=>m.weight).slice(0,7);
+    if(wEntries.length) {
+      ghist.style.display = 'block';
+      ghostRows.innerHTML = wEntries.map(m => {
+        const delta = m === wEntries[0] ? '' : ((m.weight - wEntries[0].weight) > 0 ? '+' : '') + (m.weight - wEntries[0].weight).toFixed(1) + 'kg';
+        const col = !delta ? 'var(--tx)' : m.weight > wEntries[0].weight ? 'var(--rd)' : 'var(--gn)';
+        return `<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid var(--bd);font-size:.73rem;">
+          <span style="color:var(--mt);font-family:'JetBrains Mono',monospace;">${m.date}</span>
+          <span style="color:var(--bl);font-family:'Bebas Neue',sans-serif;font-size:.95rem;">${m.weight}kg</span>
+          <span style="color:${col};font-family:'JetBrains Mono',monospace;font-size:.65rem;min-width:3rem;text-align:right;">${delta}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+}
   const sb=(id,val,cf,lf)=>{const e=document.getElementById(id);if(!e)return;if(val===null){e.textContent='NO DATA';e.className='badge';return;}e.textContent=lf(val);e.className=`badge ${cf(val)}`;};
   // Helper to set avg + wow + badge for a target row
   function setRow(avgId,wowId,badgeId,curr,prev,cf,lf,fmt){
@@ -1763,6 +1788,21 @@ async function sbPull() {
           }
         }
       }
+      // Extract week structure from special row
+      const weekRow = sbMetrics.find(r => r.date === '_week_structure');
+      if(weekRow && weekRow.notes) {
+        try {
+          const parsed = JSON.parse(weekRow.notes);
+          const local = loadCustomWeek();
+          // Remote wins if newer
+          if(!local || (weekRow.updated_at && weekRow.updated_at > (localStorage.getItem('custom_week_updated')||''))) {
+            localStorage.setItem('custom_week_v1', weekRow.notes);
+            localStorage.setItem('custom_week_updated', weekRow.updated_at||'');
+          }
+        } catch(e){}
+      }
+      // Filter out the settings row from regular metrics
+      metrics = metrics.filter(m => !m.date.startsWith('_'));
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
@@ -1999,7 +2039,21 @@ function renderPhaseStatus(){
 const WEEK_SESSION_TAGS=[{c:'tcf',l:'CF'},{c:'tsw',l:'Swim'},{c:'tlt',l:'Lift'},{c:'tbk',l:'Bike'},{c:'trt',l:'Run'},{c:'trt',l:'Rest'}];
 
 function loadCustomWeek(){try{return JSON.parse(localStorage.getItem('custom_week_v1')||'null');}catch(e){return null;}}
-function saveCustomWeek(d){localStorage.setItem('custom_week_v1',JSON.stringify(d));}
+function saveCustomWeek(d){
+  localStorage.setItem('custom_week_v1',JSON.stringify(d));
+  // Sync to Supabase as a settings row
+  syncWeekStructure(d);
+}
+async function syncWeekStructure(d){
+  try {
+    const payload = {date:'_week_structure', notes: JSON.stringify(d), updated_at: new Date().toISOString()};
+    await fetch(`${SB_URL}/rest/v1/metrics?on_conflict=date`, {
+      method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+      body: JSON.stringify(payload)
+    });
+  } catch(e){ console.warn('Week structure sync failed',e); }
+}
 
 function getEffectiveTags(pdayIdx,colIdx){
   const custom=loadCustomWeek();
