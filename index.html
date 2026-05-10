@@ -1110,17 +1110,17 @@ const recColor=dayMetric&&dayMetric.recovery?(dayMetric.recovery>=70?‘var(–g
 const isTodayCNSRisk=isT&&cnsWarning;
 const hasDualSession=pd.blocks&&pd.blocks.length>1;
 
+// Custom week tags
+const _dayOrder=[1,2,3,4,5,6,0];
+const _colIdx=_dayOrder.indexOf(i);
+const effectiveDayTags=(_colIdx>=0)?getEffectiveTags(i,_colIdx):pd.tags;
+
 return '<div class="dc '+(isT?'today ':'')+' '+(clickable?'click ':'')+'" '+(clickable?'onclick="openModal('+i+')"':'')+' style="'+(hasLog?'border-color:rgba(255,255,255,.15);':'')+'">'
   +'<div class="dn" style="display:flex;justify-content:space-between;align-items:center;">'
   +'<span>'+d+'</span>'
   +(recColor?'<span style="font-size:.52rem;color:'+recColor+';font-family:JetBrains Mono,monospace;">'+dayMetric.recovery+'%</span>':'')
   +'</div>'
-  +(()=>{
-    const dayOrder=[1,2,3,4,5,6,0];
-    const colIdx=dayOrder.indexOf(i);
-    const effectiveTags=(colIdx>=0)?getEffectiveTags(i,colIdx):pd.tags;
-    return effectiveTags.map(t=>'<span class="dtag '+t.c+'">'+t.l+'</span>').join('');
-  })()
+  +effectiveDayTags.map(t=>'<span class="dtag '+t.c+'">'+t.l+'</span>').join('')
   +(isTodayCNSRisk&&hasDualSession?'<div class="dh" style="color:var(--or);opacity:1;font-size:.52rem;">⚡ CNS heavy yesterday</div>':'')
   +(hasLog&&!isTodayCNSRisk?'<div class="dh" style="color:var(--gn);opacity:1;">✓</div>':'')
   +'</div>';
