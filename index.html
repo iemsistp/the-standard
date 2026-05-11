@@ -337,7 +337,7 @@ select.if{cursor:pointer;}
           <input type="number" class="if" id="m-wt" placeholder="75.5" step="0.1" style="flex:1;min-width:0;">
           <select class="if" id="m-wt-unit" style="width:60px;flex-shrink:0;padding:.55rem .4rem;" onchange="updateWeightUnit()">
             <option value="kg">kg</option>
-            <option value="lbs">lbs</option>
+            <option value="lbs" selected>lbs</option>
           </select>
         </div>
       </div>
@@ -2045,7 +2045,7 @@ function renderPhaseStatus(){
 }
 
 // ── WEEKLY STRUCTURE EDITOR ───────────────────────────────
-const WEEK_SESSION_TAGS=[{c:'tcf',l:'CF'},{c:'tsw',l:'Swim'},{c:'tlt',l:'Lift'},{c:'tbk',l:'Bike'},{c:'trt',l:'Run'},{c:'trt',l:'Rest'}];
+const WEEK_SESSION_TAGS=[{c:'tcf',l:'CF'},{c:'tsw',l:'Swim'},{c:'tlt',l:'Upper'},{c:'tlt',l:'Lower'},{c:'tbk',l:'Bike'},{c:'trt',l:'Run'},{c:'trt',l:'Rest'}];
 
 function loadCustomWeek(){try{return JSON.parse(localStorage.getItem('custom_week_v1')||'null');}catch(e){return null;}}
 function saveCustomWeek(d){
@@ -2055,18 +2055,26 @@ function saveCustomWeek(d){
 }
 async function syncWeekStructure(d){
   try {
-    // Store as a special lift entry with ts=1 (reserved for settings)
     const payload = {date:'2000-01-01', exercise:'_week_structure', cat:'settings',
-      sets:[], notes: JSON.stringify(d), ts:1,
+      sets:null, notes: JSON.stringify(d), ts:1,
       updated_at: new Date().toISOString()};
     const res = await fetch(`${SB_URL}/rest/v1/lifts?on_conflict=ts`, {
       method:'POST',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
       body: JSON.stringify(payload)
     });
-    if(!res.ok){const err=await res.text();console.error('[Week] sync failed:',res.status,err);toast('Week sync failed');}
-    else{console.log('[Week] synced ok');}
-  } catch(e){ console.warn('[Week] sync error',e); }
+    if(!res.ok){
+      const err=await res.text();
+      console.error('[Week] sync failed:',res.status,err);
+      toast('Week sync error: '+res.status);
+    } else {
+      console.log('[Week] synced ok');
+      toast('Week structure saved ✓');
+    }
+  } catch(e){
+    console.warn('[Week] sync error',e);
+    toast('Week sync failed: '+e.message);
+  }
 }
 
 function getEffectiveTags(pdayIdx,colIdx){
