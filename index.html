@@ -1724,6 +1724,8 @@ async function sbPull() {
     ]);
 
     if (sbMetrics) {
+      console.log('[Pull] remote rows:', sbMetrics.length, '| newest:', sbMetrics[0]?.date);
+      let merged=0, added=0;
       const localDates = new Set(metrics.map(m => m.date));
       for (let row of sbMetrics) {
         // Parse embedded [tags:...] back out of notes
@@ -1732,14 +1734,19 @@ async function sbPull() {
           if(tagMatch) { row = {...row, tags: tagMatch[1], notes: row.notes.replace(/\n?\[tags:[^\]]+\]/, '')}; }
         }
         if (!localDates.has(row.date)) {
-          metrics.push(row);
+          metrics.push(row); added++;
         } else {
           const idx = metrics.findIndex(m => m.date === row.date);
-          if (idx !== -1 && row.updated_at > (metrics[idx].updated_at || '')) {
-            metrics[idx] = row;
+          if (idx !== -1) {
+            const localUpdated = metrics[idx].updated_at || '';
+            const remoteUpdated = row.updated_at || '';
+            if (remoteUpdated > localUpdated) {
+              metrics[idx] = row; merged++;
+            }
           }
         }
       }
+      console.log('[Pull] added:', added, 'merged:', merged);
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
