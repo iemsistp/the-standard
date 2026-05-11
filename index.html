@@ -1844,6 +1844,10 @@ async function syncAfterSave(table, entry) {
     if(!res.ok) {
       const err = await res.text();
       console.error('[Sync] failed', table, res.status, err);
+      toast('Sync error ' + res.status + ': ' + err.slice(0,80));
+    } else {
+      console.log('[Sync] ok', table);
+      toast('Synced ✓');
     }
   } catch(e) { console.warn('[Sync] exception', e.message); }
 }
