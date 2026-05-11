@@ -1822,20 +1822,30 @@ async function sbPushAll() {
 // Auto-sync on save — called after persist()
 async function syncAfterSave(table, entry) {
   try {
+    const conflictCol = table==='metrics'?'?on_conflict=date':table==='lifts'?'?on_conflict=ts':table==='cardio_log'?'?on_conflict=ts':'';
     let payload = {...entry, updated_at: new Date().toISOString()};
-    // Metrics: embed tags into notes for Supabase compat (tags col may not exist)
-    // Try with tags first; if that fails, strip and retry
-    const res = await sbFetch(table, 'POST', payload);
-    if(!res) {
-      // Retry without tags field (column might not exist yet)
-      const {tags, ...safePayload} = payload;
-      if(tags && safePayload.notes !== undefined) {
-        safePayload.notes = (safePayload.notes||'') + (tags ? `
-[tags:${tags}]` : '');
-      }
-      await sbFetch(table, 'POST', safePayload);
+    if(table === 'metrics') {
+      // Strip tags from payload (no tags column in Supabase) — embed in notes instead
+      const {tags, id, ...clean} = payload;
+      const noteBase = (clean.notes||'').replace(/\n?\[tags:[^\]]+\]/g, '');
+      clean.notes = tags ? noteBase + '\n[tags:' + tags + ']' : noteBase;
+      payload = clean;
     }
-  } catch(e) { console.warn('Background sync failed', e); }
+    const res = await fetch(`${SB_URL}/rest/v1/${table}${conflictCol}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) {
+      const err = await res.text();
+      console.error('[Sync] failed', table, res.status, err);
+    }
+  } catch(e) { console.warn('[Sync] exception', e.message); }
 }
 
 // ── EXPORT ───────────────────────────────────────────────
