@@ -241,7 +241,7 @@ select.if{cursor:pointer;}
         </div>
       </div>
       <div class="sv" id="d-wt" style="font-size:1.6rem;line-height:1;">—</div>
-      <div class="su" style="margin-top:.1rem;">kg · goal 79.4kg</div>
+      <div class="su" style="margin-top:.1rem;">lbs · goal 175lb</div>
       <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.5rem;display:block;"></svg>
     </div>
     <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
@@ -256,56 +256,13 @@ select.if{cursor:pointer;}
     </div>
   </div>
   <div class="mg">
-    <div class="cd">
-      <div class="ct">7-Day Targets</div>
-      <div class="si">
-        <div class="si-row tip-row" onmouseenter="showTargetTip('consumed',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Calories</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-cal-avg">—</span><span class="si-wow" id="t-cal-wow"></span><span class="badge" id="t-cal">—</span></span>
+        <div class="cd">
+      <div class="ct">Week over Week</div>
+      <div id="wow-table" style="display:grid;gap:.35rem;">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.5rem;padding:.3rem .5rem;font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:.8px;">
+          <span>Metric</span><span style="text-align:right;">Last wk</span><span style="text-align:right;">This wk</span><span style="text-align:right;">Change</span>
         </div>
-        <div class="si-row tip-row" onmouseenter="showTargetTip('surplus',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Surplus</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-su-avg">—</span><span class="si-wow" id="t-su-wow"></span><span class="badge" id="t-su">—</span></span>
-        </div>
-        <div class="si-row tip-row" onmouseenter="showTargetTip('protein',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Protein</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-pr-avg">—</span><span class="si-wow" id="t-pr-wow"></span><span class="badge" id="t-pr">—</span></span>
-        </div>
-        <div class="si-row tip-row" onmouseenter="showTargetTip('carbs',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Carbs</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-ca-avg">—</span><span class="si-wow" id="t-ca-wow"></span><span class="badge" id="t-ca">—</span></span>
-        </div>
-        <div class="si-row tip-row" onmouseenter="showTargetTip('fat',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Fat</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-fa-avg">—</span><span class="si-wow" id="t-fa-wow"></span><span class="badge" id="t-fa">—</span></span>
-        </div>
-        <div class="si-row tip-row" onmouseenter="showTargetTip('recovery',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Recovery</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-re-avg">—</span><span class="si-wow" id="t-re-wow"></span><span class="badge" id="t-re">—</span></span>
-        </div>
-        <div class="si-row tip-row" onmouseenter="showTargetTip('sleep',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Sleep</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-sl-avg">—</span><span class="si-wow" id="t-sl-wow"></span><span class="badge" id="t-sl">—</span></span>
-        </div>
-        <div class="si-row tip-row" onmouseenter="showTargetTip('weight',this)" onmouseleave="hideTargetTip()">
-          <span class="si-label">Weight</span>
-          <span style="display:flex;align-items:center;gap:.5rem;"><span class="si-avg" id="t-wt-avg">—</span><span class="si-wow" id="t-wt-wow"></span><span class="badge" id="t-wt">—</span></span>
-        </div>
-      </div>
-    </div>
-    <div class="cd">
-      <div class="ct">Weight to 175lb</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;text-align:center;margin-bottom:.9rem;">
-        <div><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--mt);">START</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;">74.9<span style="font-size:.72rem;color:var(--mt);">kg</span></div></div>
-        <div><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--mt);">NOW</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--bl);" id="g-cur">—</div></div>
-        <div><div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--mt);">GOAL</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gd);">79.4<span style="font-size:.72rem;color:var(--mt);">kg</span></div></div>
-      </div>
-      <div class="pb"><div class="pf" id="g-bar" style="width:0%;background:var(--bl);"></div></div>
-      <div class="tip-box" id="g-eta">—</div>
-      <!-- Desktop extra: 7-day weight history -->
-      <div id="g-history" style="margin-top:.85rem;display:none;">
-        <div style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.5rem;font-family:'JetBrains Mono',monospace;">Last 7 weigh-ins</div>
-        <div id="g-hist-rows"></div>
+        <div id="wow-rows"></div>
       </div>
     </div>
     <div class="cd">
@@ -828,7 +785,7 @@ function copyMorningLog(){
   const s=entry.burned&&entry.consumed?entry.consumed-entry.burned:null;
   const dow=new Date(d+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
   let text=`[MORNING CHECK-IN — ${d} (${dow})]\n`;
-  if(entry.weight) text+=`Weight: ${entry.weight}kg\n`;
+  if(entry.weight) text+=`Weight: ${(entry.weight*2.20462).toFixed(1)}lb (${entry.weight}kg)\n`;
   if(entry.recovery) text+=`Recovery: ${entry.recovery}%\n`;
   if(entry.sleep){const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60);text+=`Sleep: ${sh}h${sm>0?' '+sm+'min':''}\n`;}
   if(entry.burned) text+=`Calories burned yesterday: ${entry.burned}\n`;
@@ -851,7 +808,7 @@ function copyEntryLog(dateStr){
   const s=entry.burned&&entry.consumed?entry.consumed-entry.burned:null;
   const dow=new Date(dateStr+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
   let text=`[TRAINING LOG — ${dateStr} (${dow})]\n`;
-  if(entry.weight) text+=`Weight: ${entry.weight}kg\n`;
+  if(entry.weight) text+=`Weight: ${(entry.weight*2.20462).toFixed(1)}lb (${entry.weight}kg)\n`;
   if(entry.recovery) text+=`Recovery: ${entry.recovery}%\n`;
   if(entry.sleep){const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60);text+=`Sleep: ${sh}h${sm>0?' '+sm+'min':''}\n`;}
   if(entry.burned) text+=`Calories burned: ${entry.burned}\n`;
@@ -1054,7 +1011,7 @@ function renderWeek(id,clickable){
     const hasDualSession=pd.blocks&&pd.blocks.length>1;
 
     // Custom week structure
-    const _dayOrder=[1,2,3,4,5,6,0];
+    const _dayOrder=[0,1,2,3,4,5,6];
     const _colIdx=_dayOrder.indexOf(i);
     const effectiveDayTags=(_colIdx>=0)?getEffectiveTags(i,_colIdx):pd.tags;
 
@@ -1117,7 +1074,7 @@ function renderMetTable(){
       ${dateCell}
       <td style="${rc}">${l.recovery?l.recovery+'%':'—'}</td>
       <td>${formatSleep(l.sleep)}</td>
-      <td>${l.weight?l.weight+'kg':'—'}</td>
+      <td>${l.weight?(l.weight*2.20462).toFixed(1)+'lb':'—'}</td>
       <td style="${sc}">${s!==null?(s>0?'+':'')+Math.round(s):'—'}</td>
       <td>${l.protein?l.protein+'g':'—'}</td>
       <td style="${l.carbs>=320?'color:var(--gn)':l.carbs>=260?'color:var(--or)':l.carbs?'color:var(--rd)':''}">${l.carbs?l.carbs+'g':'—'}</td>
@@ -1275,7 +1232,7 @@ function updateDash(){
   const lw=metrics.find(l=>l.weight)?.weight||null,ac=avg(r7,'consumed'),ab=avg(r7,'burned'),ap=avg(r7,'protein'),aca=avg(r7,'carbs'),af=avg(r7,'fat'),ar=avg(r7,'recovery'),asl=avg(r7,'sleep'),as=ac&&ab?ac-ab:null;
   const acp=avg(r7prev,'consumed'),abp=avg(r7prev,'burned'),app=avg(r7prev,'protein'),arp=avg(r7prev,'recovery'),aslp=avg(r7prev,'sleep');
   const asp=acp&&abp?acp-abp:null;
-  $('d-wt',lw?lw.toFixed(1):'—');$('d-cal',ac?Math.round(ac).toLocaleString():'—');$('d-pro',ap?Math.round(ap):'—');$('d-sur',as?(as>0?'+':'')+Math.round(as):'—');$('d-crb',aca?Math.round(aca):'—');$('d-fat',af?Math.round(af):'—');$('d-rec',ar?Math.round(ar)+'%':'—');$('d-slp',asl?formatSleep(asl):'—');
+  $('d-wt',lw?(lw*2.20462).toFixed(1):'—');$('d-cal',ac?Math.round(ac).toLocaleString():'—');$('d-pro',ap?Math.round(ap):'—');$('d-sur',as?(as>0?'+':'')+Math.round(as):'—');$('d-crb',aca?Math.round(aca):'—');$('d-fat',af?Math.round(af):'—');$('d-rec',ar?Math.round(ar)+'%':'—');$('d-slp',asl?formatSleep(asl):'—');
   // WoW badges
   function setWow(id,curr,prev,isInverse){
     const el2=document.getElementById(id);if(!el2||curr===null||prev===null)return;
@@ -1292,7 +1249,7 @@ function updateDash(){
   setWow('d-fat-wow',af,avg(r7prev,'fat'),true); // inverse: lower fat = good
   setWow('d-rec-wow',ar,arp,false);
   setWow('d-slp-wow',asl,aslp,false);
-  if(metrics.length>=2){const w1=metrics[0]?.weight,w2=metrics.slice(1).find(l=>l.weight)?.weight;if(w1&&w2){const d=w1-w2,badge=document.getElementById('d-wt-tr');if(badge){badge.textContent=(d>=0?'+':'')+d.toFixed(1)+'kg';badge.className='st-badge '+(d>0?'tu':d<0?'td':'tf');}}}
+  if(metrics.length>=2){const w1=metrics[0]?.weight,w2=metrics.slice(1).find(l=>l.weight)?.weight;if(w1&&w2){const d=w1-w2,badge=document.getElementById('d-wt-tr');if(badge){badge.textContent=(d>=0?'+':'')+( d*2.20462).toFixed(1)+'lb';badge.className='st-badge '+(d>0?'tu':d<0?'td':'tf');}}}
   renderWeightSparkline();
   // Surplus sparkline — last 30 entries with surplus value
   const surVals = metrics.filter(m=>m.consumed&&m.burned).slice(0,30).map(m=>m.consumed-m.burned).reverse();
@@ -1307,23 +1264,61 @@ function updateDash(){
   // Populate t-wt-wow in target row
   const wtWowEl=document.getElementById('t-wt-wow');
   if(wtWowEl&&wAvg7&&wAvg7p){const diff=wAvg7-wAvg7p,pct=Math.round((diff/Math.abs(wAvg7p))*100);if(Math.abs(pct)<1){wtWowEl.textContent='→';wtWowEl.style.color='var(--mt)';}else{wtWowEl.textContent=(diff>0?'+':'')+pct+'%';wtWowEl.style.color='var(--tx)';}}
-  if(lw){const pct=Math.min(100,Math.max(0,(lw-SW)/(GW-SW)*100));const bar=el('g-bar');if(bar)bar.style.width=pct+'%';$('g-cur',lw.toFixed(1)+' kg');const rem=GW-lw,wks=Math.ceil(rem/0.4),eta=new Date();eta.setDate(eta.getDate()+wks*7);$('g-eta',rem>0?`${rem.toFixed(1)}kg to go · ~${wks} weeks at 0.4kg/week · ETA: ${eta.toLocaleDateString('en-CA',{month:'short',year:'numeric'})}`:'🎯 Goal reached!');
-  // Desktop: show last 7 weigh-ins
-  const ghist = el('g-history'), ghostRows = el('g-hist-rows');
-  if(ghist && ghostRows) {
-    const wEntries = metrics.filter(m=>m.weight).slice(0,7);
-    if(wEntries.length) {
-      ghist.style.display = 'block';
-      ghostRows.innerHTML = wEntries.map(m => {
-        const delta = m === wEntries[0] ? '' : ((m.weight - wEntries[0].weight) > 0 ? '+' : '') + (m.weight - wEntries[0].weight).toFixed(1) + 'kg';
-        const col = !delta ? 'var(--tx)' : m.weight > wEntries[0].weight ? 'var(--rd)' : 'var(--gn)';
-        return `<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid var(--bd);font-size:.73rem;">
-          <span style="color:var(--mt);font-family:'JetBrains Mono',monospace;">${m.date}</span>
-          <span style="color:var(--bl);font-family:'Bebas Neue',sans-serif;font-size:.95rem;">${m.weight}kg</span>
-          <span style="color:${col};font-family:'JetBrains Mono',monospace;font-size:.65rem;min-width:3rem;text-align:right;">${delta}</span>
-        </div>`;
-      }).join('');
-    }
+  if(lw){const pct=Math.min(100,Math.max(0,(lw-SW)/(GW-SW)*100));const bar=el('g-bar');if(bar)bar.style.width=pct+'%';$('g-cur',lw.toFixed(1)+' kg');const rem=GW-lw,wks=Math.ceil(rem/0.4),eta=new Date();eta.setDate(eta.getDate()+wks*7);$('g-eta',rem>0?`${(rem*2.20462).toFixed(1)}lb to go · ~${wks} weeks · ETA: ${eta.toLocaleDateString('en-CA',{month:'short',year:'numeric'})}`:'🎯 Goal reached!');
+  // Week-over-week averages table
+  const wowEl = el('wow-rows');
+  if(wowEl) {
+    window.wowTipData = [];
+    const wowMetrics = [
+      {label:'Weight', key:'weight', unit:'lb', fmt: v=>(v*2.20462).toFixed(1), inv:false, tgt:null},
+      {label:'Calories', key:'consumed', unit:'kcal', fmt: v=>Math.round(v).toLocaleString(), inv:false, tgt:{low:3100,hi:3500}},
+      {label:'Protein', key:'protein', unit:'g', fmt: v=>Math.round(v), inv:false, tgt:{low:180,hi:200}},
+      {label:'Surplus', key:'surplus', unit:'kcal', fmt: v=>(v>0?'+':'')+Math.round(v), inv:false, tgt:{low:400,hi:600}},
+      {label:'Recovery', key:'recovery', unit:'%', fmt: v=>Math.round(v), inv:false, tgt:{low:70,hi:100}},
+      {label:'Sleep', key:'sleep', unit:'', fmt: v=>formatSleep(v), inv:false, tgt:{low:8,hi:10}},
+    ];
+    const r7 = metrics.slice(0,7), r7p = metrics.slice(7,14);
+    const avgK = (arr,k) => {
+      if(k==='surplus') { const a=arr.filter(m=>m.consumed&&m.burned); return a.length?a.reduce((s,m)=>s+(m.consumed-m.burned),0)/a.length:null; }
+      const v=arr.map(m=>m[k]).filter(x=>x!=null&&!isNaN(x));
+      return v.length?v.reduce((a,b)=>a+b)/v.length:null;
+    };
+    wowEl.innerHTML = wowMetrics.map(({label,key,unit,fmt,inv,tgt})=>{
+      const curr = avgK(r7,key), prev = avgK(r7p,key);
+      if(curr===null) return '';
+      const diff = prev!==null ? curr-prev : null;
+      const pct = diff!==null&&prev!==0 ? Math.round((diff/Math.abs(prev))*100) : null;
+      const up = diff>0;
+      const good = inv ? !up : up;
+      const changeCol = diff===null||Math.abs(pct)<1 ? 'var(--mt)' : good ? 'var(--gn)' : 'var(--rd)';
+      const changeStr = pct===null ? '—' : Math.abs(pct)<1 ? '→' : (up?'+':'')+pct+'%';
+      // Badge
+      let badge='', badgeCls='';
+      if(tgt&&curr!==null){
+        const raw=key==='sleep'?curr:curr;
+        if(inv){badge=curr<=tgt.hi?'ON TRACK':curr<=tgt.hi*1.2?'HIGH':'HIGH';badgeCls=curr<=tgt.hi?'bg':curr<=tgt.hi*1.2?'bw':'bb';}
+        else{badge=curr>=tgt.low?'ON TRACK':curr>=tgt.low*0.88?'LOW':'LOW';badgeCls=curr>=tgt.low?'bg':curr>=tgt.low*0.88?'bw':'bb';}
+      }
+      // Last 7 individual entries for hover
+      const entries7 = r7.map(m=>{
+        let v=key==='surplus'?(m.consumed&&m.burned?m.consumed-m.burned:null):m[key];
+        if(v===null||v===undefined) return null;
+        const disp=fmt(v)+unit;
+        let col='var(--tx)';
+        if(tgt){if(inv)col=v<=tgt.hi?'var(--gn)':v<=tgt.hi*1.2?'var(--or)':'var(--rd)';else col=v>=tgt.low?'var(--gn)':v>=tgt.low*0.88?'var(--or)':'var(--rd)';}
+        return `<div class="tip-entry"><span class="tip-date">${m.date}</span><span class="tip-val" style="color:${col};">${disp}</span></div>`;
+      }).filter(Boolean).join('');
+      const tipHtml = entries7 ? '<div style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem;">Last 7 entries</div>'+entries7 : '';
+      wowTipData.push(tipHtml);
+      const tipIdx = wowTipData.length - 1;
+      return `<div class="tip-row" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.5rem;padding:.32rem .5rem;background:var(--sf2);border-radius:5px;margin-bottom:.2rem;font-size:.72rem;align-items:center;position:relative;"
+        onmouseenter="showWowTip(this,${tipIdx})" onmouseleave="hideTargetTip()">
+        <span style="color:var(--tx);">${label}${badge?` <span class='badge ${badgeCls}' style='font-size:.55rem;'>${badge}</span>`:''}</span>
+        <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--mt);">${prev!==null?fmt(prev)+unit:'—'}</span>
+        <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--bl);">${fmt(curr)}${unit}</span>
+        <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:${changeCol};">${changeStr}</span>
+      </div>`;
+    }).join('');
   }
 }
   const sb=(id,val,cf,lf)=>{const e=document.getElementById(id);if(!e)return;if(val===null){e.textContent='NO DATA';e.className='badge';return;}e.textContent=lf(val);e.className=`badge ${cf(val)}`;};
@@ -1348,8 +1343,8 @@ function updateDash(){
   setRow('t-re-avg','t-re-wow','t-re',ar,avg(r7prev,'recovery'),v=>v>=70?'bg':v>=55?'bw':'bb',v=>v>=70?'ON TRACK':`LOW ${Math.round(v)}%`,v=>Math.round(v)+'%');
   setRow('t-sl-avg','t-sl-wow','t-sl',asl,avg(r7prev,'sleep'),v=>v>=8?'bg':v>=7?'bw':'bb',v=>v>=8?'ON TRACK':'LOW '+formatSleep(v),v=>formatSleep(v));
   const lwt=metrics.find(l=>l.weight)?.weight||null;
-  const wtBadgeEl=document.getElementById('t-wt');if(wtBadgeEl&&lwt){const rem=79.4-lwt;wtBadgeEl.textContent=rem>0?`${rem.toFixed(1)}kg to go`:'GOAL ✓';wtBadgeEl.className='badge '+(rem<=0?'bg':rem<=2?'bw':'bb');}
-  const wtAvgEl=document.getElementById('t-wt-avg');if(wtAvgEl&&lwt)wtAvgEl.textContent=lwt.toFixed(1)+'kg';
+  const wtBadgeEl=document.getElementById('t-wt');if(wtBadgeEl&&lwt){const rem=79.4-lwt;wtBadgeEl.textContent=rem>0?`${(rem*2.20462).toFixed(1)}lb to go`:'GOAL ✓';wtBadgeEl.className='badge '+(rem<=0?'bg':rem<=2?'bw':'bb');}
+  const wtAvgEl=document.getElementById('t-wt-avg');if(wtAvgEl&&lwt)wtAvgEl.textContent=(lwt*2.20462).toFixed(1)+'lb';
   const fb=el('dash-fb');if(!fb)return;const msgs=[];
   if(af&&af>115)msgs.push({t:'fb-b',m:`🔴 Fat avg ${Math.round(af)}g — biggest nutrition leak. Shift to carbs.`});
   if(aca&&aca<300)msgs.push({t:'fb-w',m:`⚠️ Carbs avg ${Math.round(aca)}g — below 320g target.`});
@@ -1921,6 +1916,17 @@ function showTargetTip(key, row){
   tip.style.left = Math.max(8, rect.left - 20) + 'px';
 }
 
+function showWowTip(row, idx){
+  const html = window.wowTipData && window.wowTipData[idx];
+  if(!html) return;
+  const tip = document.getElementById('target-tip');
+  if(!tip) return;
+  tip.innerHTML = html;
+  const rect = row.getBoundingClientRect();
+  tip.style.display = 'block';
+  tip.style.top = (rect.bottom + 4) + 'px';
+  tip.style.left = Math.max(8, rect.left) + 'px';
+}
 function hideTargetTip(){
   const tip = document.getElementById('target-tip');
   if(tip) tip.style.display = 'none';
@@ -2014,7 +2020,7 @@ function saveCustomWeek(d){
 async function syncWeekStructure(d){
   try {
     const payload = {date:'2000-01-01', exercise:'_week_structure', cat:'settings',
-      sets:null, notes: JSON.stringify(d), ts:1,
+      sets:[], notes: JSON.stringify(d), ts:1,
       updated_at: new Date().toISOString()};
     const res = await fetch(`${SB_URL}/rest/v1/lifts?on_conflict=ts`, {
       method:'POST',
@@ -2056,8 +2062,8 @@ function renderWeekEditGrid(){
   const container=document.getElementById('week-edit-days');
   if(!container) return;
   const custom=loadCustomWeek();
-  const dayOrder=[1,2,3,4,5,6,0];
-  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayOrder=[0,1,2,3,4,5,6];
+  const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   container.innerHTML=dayOrder.map((pdayIdx,colIdx)=>{
     const savedTags=custom?(custom[colIdx]||[]):PDAYS[pdayIdx].tags.map(t=>t.l);
     return'<div style="text-align:center;">'
