@@ -6,7 +6,7 @@
 <title>THE STANDARD</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
-:root{--bg:#050505;--sf:#0c0c0c;--sf2:#121212;--bd:#1e1e1e;--tx:#c0c0c0;--mt:#404040;--bl:#3d6b9e;--gn:#1f7a45;--rd:#a02820;--or:#a86530;--pu:#6d44c4;--gd:#9e7820;--cy:#097a8a;}
+:root{--bg:#050505;--sf:#0c0c0c;--sf2:#121212;--bd:#1e1e1e;--tx:#d0d0d0;--mt:#707070;--bl:#3d6b9e;--gn:#1f7a45;--rd:#a02820;--or:#a86530;--pu:#6d44c4;--gd:#9e7820;--cy:#097a8a;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:999;}
@@ -51,7 +51,7 @@ main{padding-top:48px;padding-bottom:64px;}
 .pb{height:5px;background:var(--sf2);border-radius:999px;overflow:hidden;margin-top:.5rem;}
 .pf{height:100%;border-radius:999px;transition:width 1s ease;}
 /* FORMS */
-.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem .85rem;margin-bottom:1.1rem;}@media(max-width:480px){.lg{grid-template-columns:1fr 1fr;}.ig.fw{grid-column:1/-1;}.ig-date{grid-column:1/-1;}}
+.lg{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem;}@media(max-width:420px){.lg{grid-template-columns:1fr;}.ig.fw{grid-column:1/-1;}}.ig.fw{grid-column:1/-1;}.ig-date{grid-column:1/-1;}
 .ig{display:flex;flex-direction:column;gap:.3rem;}
 .il{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mt);font-weight:500;}
 .if{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:.55rem .8rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.85rem;transition:border-color .2s;width:100%;min-width:0;box-sizing:border-box;}
@@ -346,12 +346,12 @@ select.if{cursor:pointer;}
         <input type="text" class="if" id="m-sl" placeholder="8:30" maxlength="5" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
       </div>
       <div class="ig"><label class="il">Recovery %</label><input type="number" class="if" id="m-re" placeholder="82"></div>
-      <div class="ig"><label class="il">Cal Burned (yesterday)</label><input type="number" class="if" id="m-bu" placeholder="2500"></div>
-      <div class="ig"><label class="il">Cal Consumed (yesterday)</label><input type="number" class="if" id="m-co" placeholder="3100"></div>
+      <div class="ig"><label class="il">Cal Burned</label><input type="number" class="if" id="m-bu" placeholder="2500"></div>
+      <div class="ig"><label class="il">Cal Consumed</label><input type="number" class="if" id="m-co" placeholder="3100"></div>
       <div class="ig"><label class="il">Protein (g)</label><input type="number" class="if" id="m-pr" placeholder="185"></div>
       <div class="ig"><label class="il">Carbs (g)</label><input type="number" class="if" id="m-ca" placeholder="340"></div>
       <div class="ig"><label class="il">Fat (g)</label><input type="number" class="if" id="m-fa" placeholder="95"></div>
-      <div class="ig" aria-hidden="true" style="visibility:hidden;"></div>
+
       <div class="ig fw" style="grid-column:1/-1">
         <label class="il">Workout Tags</label>
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;" id="tag-picker">
@@ -1397,7 +1397,6 @@ function updateDash(){
   if(aca&&aca<300)msgs.push({t:'fb-w',m:`⚠️ Carbs avg ${Math.round(aca)}g — below 320g target.`});
   if(as&&as<300)msgs.push({t:'fb-b',m:`🔴 Surplus +${Math.round(as)}/day — basically maintenance. Add calories.`});
   if(ap&&ap>=180&&aca&&aca>=320&&af&&af<=110)msgs.push({t:'fb-g',m:`✅ Macros dialled in this week. Keep this structure.`});
-  if(lw){const rem=GW-lw;if(rem>0)msgs.push({t:'fb-i',m:`📊 ${lw}kg now · ${rem.toFixed(1)}kg to go · ~${Math.ceil(rem/0.4)} weeks at 0.4kg/week pace.`});}
   fb.innerHTML=msgs.map(m=>`<div class="fb ${m.t}">${m.m}</div>`).join('');
   const dlc=el('dash-lifts');
   if(dlc){
@@ -1788,27 +1787,26 @@ async function sbPull() {
           }
         }
       }
-      // Extract week structure from special row
-      const weekRow = sbMetrics.find(r => r.date === '_week_structure');
-      if(weekRow && weekRow.notes) {
-        try {
-          const parsed = JSON.parse(weekRow.notes);
-          const local = loadCustomWeek();
-          // Remote wins if newer
-          if(!local || (weekRow.updated_at && weekRow.updated_at > (localStorage.getItem('custom_week_updated')||''))) {
-            localStorage.setItem('custom_week_v1', weekRow.notes);
-            localStorage.setItem('custom_week_updated', weekRow.updated_at||'');
-          }
-        } catch(e){}
-      }
-      // Filter out the settings row from regular metrics
-      metrics = metrics.filter(m => !m.date.startsWith('_'));
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
     if (sbLifts) {
+      // Restore week structure from special lift entry (ts=1)
+      const weekLift = sbLifts.find(r => r.ts === 1 && r.exercise === '_week_structure');
+      if(weekLift && weekLift.notes) {
+        try {
+          const local = loadCustomWeek();
+          if(!local || (weekLift.updated_at && weekLift.updated_at > (localStorage.getItem('custom_week_updated')||''))) {
+            localStorage.setItem('custom_week_v1', weekLift.notes);
+            localStorage.setItem('custom_week_updated', weekLift.updated_at||'');
+            console.log('[Week] restored from Supabase');
+          }
+        } catch(e){ console.warn('[Week] restore error',e); }
+      }
       const localTs = new Set(lifts.map(l => l.ts));
       for (const row of sbLifts) {
+        // Skip the settings entry from regular lift display
+        if(row.ts === 1 && row.exercise === '_week_structure') continue;
         if (row.ts && !localTs.has(row.ts)) lifts.push(row);
       }
       lifts.sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -1845,7 +1843,13 @@ async function sbPushAll() {
       });
       await sbFetch('metrics', 'POST', batch, '?on_conflict=date');
     }
-    // Lifts
+    // Lifts + week structure
+    const weekData = loadCustomWeek();
+    if(weekData) {
+      const weekPayload = {date:'2000-01-01',exercise:'_week_structure',cat:'settings',
+        sets:[],notes:JSON.stringify(weekData),ts:1,updated_at:new Date().toISOString()};
+      await sbFetch('lifts','POST',weekPayload,'?on_conflict=ts');
+    }
     for (let i = 0; i < lifts.length; i += 50) {
       const batch = lifts.slice(i, i+50).map(l => ({...l, ts: l.ts || Date.now()}));
       await sbFetch('lifts', 'POST', batch, '?on_conflict=ts');
@@ -1985,14 +1989,19 @@ function renderWeightSparkline(){
   const trend=weights[weights.length-1]-weights[0];
   const lc=trend<=0?'var(--gn)':'var(--rd)';
   const lx=xS(pts.length-1).toFixed(1),ly=yS(pts[pts.length-1].weight).toFixed(1);
-  svg.innerHTML='<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+(trend<=0?'rgba(31,122,69,.25)':'rgba(160,40,32,.15)')+'"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></linearGradient></defs>'
+  // 7-point moving average for trend line
+  const maPoints = weights.map((_,i,arr)=>{
+    const win = arr.slice(Math.max(0,i-3), i+4);
+    return win.reduce((a,b)=>a+b,0)/win.length;
+  });
+  const maLine = maPoints.map((v,i)=>xS(i).toFixed(1)+','+yS(v).toFixed(1)).join(' ');
+  const goalLine = PAD+' '+gy+' '+(W-PAD)+' '+gy;
+  svg.innerHTML='<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+(trend<=0?'rgba(31,122,69,.2)':'rgba(160,40,32,.12)')+'"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></linearGradient></defs>'
     +'<path d="'+areaD+'" fill="url(#wg)"/>'
-    +'<line x1="'+PAD+'" y1="'+gy+'" x2="'+(W-PAD)+'" y2="'+gy+'" stroke="rgba(61,107,158,.4)" stroke-width="1" stroke-dasharray="3,3"/>'
-    +'<polyline points="'+linePoints+'" fill="none" stroke="'+lc+'" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>'
-    +'<circle cx="'+lx+'" cy="'+ly+'" r="2.5" fill="'+lc+'"/>'
-    +'<text x="'+PAD+'" y="'+(parseFloat(yS(weights[0]))-3).toFixed(1)+'" fill="var(--mt)" font-size="7" font-family="JetBrains Mono,monospace">'+weights[0]+'</text>'
-    +'<text x="'+(parseFloat(lx)-2).toFixed(1)+'" y="'+(parseFloat(ly)-4).toFixed(1)+'" text-anchor="end" fill="'+lc+'" font-size="7" font-family="JetBrains Mono,monospace">'+pts[pts.length-1].weight+'kg</text>'
-    +'<text x="'+(W-PAD)+'" y="'+(parseFloat(gy)-2).toFixed(1)+'" text-anchor="end" fill="rgba(61,107,158,.55)" font-size="6" font-family="JetBrains Mono,monospace">goal</text>';
+    +'<line x1="'+PAD+'" y1="'+gy+'" x2="'+(W-PAD)+'" y2="'+gy+'" stroke="rgba(61,107,158,.3)" stroke-width="1" stroke-dasharray="2,3"/>'
+    +'<polyline points="'+linePoints+'" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<polyline points="'+maLine+'" fill="none" stroke="'+lc+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<circle cx="'+lx+'" cy="'+ly+'" r="2.5" fill="'+lc+'"/>';
 }
 
 // ── PHASE PROGRESSION ────────────────────────────────────
@@ -2046,13 +2055,18 @@ function saveCustomWeek(d){
 }
 async function syncWeekStructure(d){
   try {
-    const payload = {date:'_week_structure', notes: JSON.stringify(d), updated_at: new Date().toISOString()};
-    await fetch(`${SB_URL}/rest/v1/metrics?on_conflict=date`, {
+    // Store as a special lift entry with ts=1 (reserved for settings)
+    const payload = {date:'2000-01-01', exercise:'_week_structure', cat:'settings',
+      sets:[], notes: JSON.stringify(d), ts:1,
+      updated_at: new Date().toISOString()};
+    const res = await fetch(`${SB_URL}/rest/v1/lifts?on_conflict=ts`, {
       method:'POST',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
       body: JSON.stringify(payload)
     });
-  } catch(e){ console.warn('Week structure sync failed',e); }
+    if(!res.ok){const err=await res.text();console.error('[Week] sync failed:',res.status,err);toast('Week sync failed');}
+    else{console.log('[Week] synced ok');}
+  } catch(e){ console.warn('[Week] sync error',e); }
 }
 
 function getEffectiveTags(pdayIdx,colIdx){
