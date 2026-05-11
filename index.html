@@ -247,10 +247,12 @@ select.if{cursor:pointer;}
     <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
       <div class="sl">7d Surplus</div><div class="sv" id="d-sur">—</div>
       <div class="su">kcal · target +400-500</div><span class="st-badge" id="d-sur-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
+      <svg id="sur-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" style="width:100%;height:38px;margin-top:.4rem;display:block;"></svg>
     </div>
     <div class="sc sc-click" style="--ac:var(--cy)" onclick="openStatChart('recovery','Recovery %','%','var(--cy)')">
       <div class="sl">Recovery</div><div class="sv" id="d-rec">—</div>
       <div class="su">% · target 70%+</div><span class="st-badge" id="d-rec-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
+      <svg id="rec-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" style="width:100%;height:38px;margin-top:.4rem;display:block;"></svg>
     </div>
   </div>
   <div class="mg">
@@ -357,7 +359,8 @@ select.if{cursor:pointer;}
         <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;" id="tag-picker">
           <button type="button" class="tag-btn" data-tag="CF" onclick="toggleTag(this)">CrossFit</button>
           <button type="button" class="tag-btn" data-tag="Swim" onclick="toggleTag(this)">Swim</button>
-          <button type="button" class="tag-btn" data-tag="Lift" onclick="toggleTag(this)">Lift</button>
+          <button type="button" class="tag-btn" data-tag="Upper" onclick="toggleTag(this)">Upper</button>
+          <button type="button" class="tag-btn" data-tag="Lower" onclick="toggleTag(this)">Lower</button>
           <button type="button" class="tag-btn" data-tag="Bike" onclick="toggleTag(this)">Bike</button>
           <button type="button" class="tag-btn" data-tag="Run" onclick="toggleTag(this)">Run</button>
           <button type="button" class="tag-btn" data-tag="Rest" onclick="toggleTag(this)">Rest</button>
@@ -748,63 +751,12 @@ function saveMetrics(){
   e.date=incoming.date;
   metrics=metrics.filter(l=>l.date!==e.date);metrics.push(e);metrics.sort((a,b)=>new Date(b.date)-new Date(a.date));
   persist();
-  metFeedback(e);
   toast('Saved ✓');
+  const mfb=el('m-fb');if(mfb)mfb.innerHTML='';
   refresh();
   syncAfterSave('metrics', e);
   const btn=el('copy-morning-btn');
   if(btn) btn.style.display='inline-flex';
-}
-function metFeedback(e){
-  const fb=document.getElementById('m-fb'),msgs=[];
-  const s=e.burned&&e.consumed?e.consumed-e.burned:null;
-
-  // Recovery feedback
-  if(e.recovery!==null){
-    if(e.recovery<50)msgs.push({t:'fb-b',m:`⚠️ Recovery ${e.recovery}% — low. Zone 2 or rest only. Skip hypertrophy today.`});
-    else if(e.recovery<70)msgs.push({t:'fb-w',m:`🟡 Recovery ${e.recovery}% — moderate. Train controlled, no PRs. Hypertrophy ok if it feels right.`});
-    else msgs.push({t:'fb-g',m:`✅ Recovery ${e.recovery}% — green light. Push intensity and chase progression today.`});
-  }
-
-  // Nutrition feedback
-  if(e.protein&&e.protein<170)msgs.push({t:'fb-w',m:`⚠️ Yesterday protein ${e.protein}g — below 170g. Prioritise a shake or extra lean protein today.`});
-  if(e.fat&&e.fat>120)msgs.push({t:'fb-b',m:`🔴 Yesterday fat ${e.fat}g — too high. Keep fat lean today, shift those calories to carbs.`});
-  if(s!==null&&s<250)msgs.push({t:'fb-w',m:`⚠️ Yesterday surplus only +${Math.round(s)} kcal — close to maintenance. Add easy carbs today (rice, OJ, cereal).`});
-  if(s!==null&&s>700)msgs.push({t:'fb-w',m:`💡 Yesterday surplus +${Math.round(s)} kcal — high. Fine occasionally but watch it doesn't compound.`});
-
-  // Hypertrophy recommendation based on recovery + day of week
-  const dow = new Date(e.date||today()).getDay();
-  const isUpperDay = dow===2||dow===6; // Tue, Sat
-  const isLowerDay = dow===4; // Thu
-  if(e.recovery!==null){
-    if(isUpperDay&&e.recovery>=70)msgs.push({t:'fb-g',m:`💪 Upper hypertrophy day — recovery is good. Do the full session after CrossFit. Run physio activation first.`});
-    else if(isUpperDay&&e.recovery>=50)msgs.push({t:'fb-w',m:`💡 Upper hypertrophy day — recovery moderate. Do it but keep it controlled, no max effort sets.`});
-    else if(isUpperDay&&e.recovery<50)msgs.push({t:'fb-b',m:`⚠️ Upper hypertrophy day — but recovery ${e.recovery}% is too low. Skip it today, just CrossFit.`});
-    if(isLowerDay&&e.recovery>=70)msgs.push({t:'fb-g',m:`💪 Lower hypertrophy day — recovery good. Do the session after CF unless CF already had heavy squats/deads.`});
-    else if(isLowerDay&&e.recovery<70)msgs.push({t:'fb-w',m:`💡 Lower hypertrophy — recovery ${e.recovery}%. See how CF goes first, decide after.`});
-  }
-
-  // Workout notes coaching — scan for CNS-heavy keywords
-  if(e.notes&&e.notes.length>20){
-    const notesLower=e.notes.toLowerCase();
-    const cnsKeywords=['deadlift','snatch','clean','jerk','squat','1rm','max','pr','heavy'];
-    const volKeywords=['amrap','emom','for time','rounds','metcon','wod'];
-    const isCNS=cnsKeywords.some(k=>notesLower.includes(k));
-    const isMetcon=volKeywords.some(k=>notesLower.includes(k));
-    const dow=new Date(e.date||today()).getDay();
-    const isUpperDay=dow===2||dow===6;
-    const isLowerDay=dow===4;
-    if(isCNS&&isUpperDay)
-      msgs.push({t:'fb-w',m:`⚡ Heavy lifting detected in today's plan. After a CNS-demanding strength piece, scale back upper hypertrophy volume — hit the key compound movements but skip extra sets if you're cooked.`});
-    if(isCNS&&isLowerDay)
-      msgs.push({t:'fb-w',m:`⚡ Heavy lower body work detected. If CF already has deadlifts or squats, skip lower hypertrophy or reduce to 2 sets. Don't stack on a fatigued posterior chain.`});
-    if(isMetcon&&!isCNS)
-      msgs.push({t:'fb-i',m:`💪 Metcon day. Pacing is everything — go out controlled in round 1. Paste into Claude chat for exact split strategy.`});
-    else
-      msgs.push({t:'fb-i',m:`📋 Workout logged. Paste into Claude chat for full pacing strategy and hypertrophy guidance.`});
-  }
-
-  fb.innerHTML=msgs.map(m=>`<div class="fb ${m.t}">${m.m}</div>`).join('');
 }
 function updateWeightUnit(){
   const unit=v('m-wt-unit')||'kg';
@@ -1128,7 +1080,7 @@ function setEntryFilter(f, btn){
   renderMetTable();
 }
 
-const TAG_MAP = {CF:{c:'tcf',l:'CF'},Swim:{c:'tsw',l:'Swim'},Lift:{c:'tlt',l:'Lift'},Bike:{c:'tbk',l:'Bike'},Run:{c:'trt',l:'Run'},Rest:{c:'trt',l:'Rest'}};
+const TAG_MAP = {CF:{c:'tcf',l:'CF'},Swim:{c:'tsw',l:'Swim'},Lift:{c:'tlt',l:'Lift'},Upper:{c:'tlt',l:'Upper'},Lower:{c:'tlt',l:'Lower'},Bike:{c:'tbk',l:'Bike'},Run:{c:'trt',l:'Run'},Rest:{c:'trt',l:'Rest'}};
 function getEntryTags(entry){
   if(!entry.tags) return [];
   return entry.tags.split(',').map(t=>t.trim()).filter(Boolean).map(t=>TAG_MAP[t]).filter(Boolean);
@@ -1342,6 +1294,12 @@ function updateDash(){
   setWow('d-slp-wow',asl,aslp,false);
   if(metrics.length>=2){const w1=metrics[0]?.weight,w2=metrics.slice(1).find(l=>l.weight)?.weight;if(w1&&w2){const d=w1-w2,badge=document.getElementById('d-wt-tr');if(badge){badge.textContent=(d>=0?'+':'')+d.toFixed(1)+'kg';badge.className='st-badge '+(d>0?'tu':d<0?'td':'tf');}}}
   renderWeightSparkline();
+  // Surplus sparkline — last 30 entries with surplus value
+  const surVals = metrics.filter(m=>m.consumed&&m.burned).slice(0,30).map(m=>m.consumed-m.burned).reverse();
+  renderMiniSparkline('sur-sparkline', surVals, 'var(--or)', 400, 600);
+  // Recovery sparkline — last 30 entries
+  const recVals = metrics.filter(m=>m.recovery!=null).slice(0,30).map(m=>m.recovery).reverse();
+  renderMiniSparkline('rec-sparkline', recVals, 'var(--cy)', 70, 100);
   // Weight WoW% — compare 7d avg weight vs prev 7d avg weight
   const wAvg7=avg(r7,'weight'),wAvg7p=avg(r7prev,'weight');
   const wowBadge=document.getElementById('d-wt-wow');
@@ -2134,6 +2092,40 @@ function saveWeekStructure(){
   toast('Week structure saved ✓');
 }
 
+
+
+// ── SURPLUS + RECOVERY SPARKLINES ────────────────────────
+function renderMiniSparkline(svgId, vals, color, targetLow, targetHigh){
+  const svg = document.getElementById(svgId);
+  if(!svg || vals.length < 2) return;
+  const W=200, H=40, PAD=3;
+  const lo = Math.min(...vals) - Math.abs(Math.min(...vals)*0.03);
+  const hi = Math.max(...vals) + Math.abs(Math.max(...vals)*0.03);
+  const range = hi - lo || 1;
+  const xS = i => PAD + (i/(vals.length-1))*(W-PAD*2);
+  const yS = v => H - PAD - ((v-lo)/range)*(H-PAD*2);
+  const pts = vals.map((v,i)=>xS(i).toFixed(1)+','+yS(v).toFixed(1)).join(' ');
+  const firstX=xS(0).toFixed(1), lastX=xS(vals.length-1).toFixed(1), botY=(H-PAD).toFixed(1);
+  const areaD='M '+firstX+','+botY+' L '+vals.map((v,i)=>xS(i).toFixed(1)+','+yS(v).toFixed(1)).join(' L ')+' L '+lastX+','+botY+' Z';
+  // Moving average
+  const ma = vals.map((_,i,a)=>{ const w=a.slice(Math.max(0,i-2),i+3); return w.reduce((s,v)=>s+v,0)/w.length; });
+  const maLine = ma.map((v,i)=>xS(i).toFixed(1)+','+yS(v).toFixed(1)).join(' ');
+  // Target band
+  let targetBand = '';
+  if(targetLow !== null && targetHigh !== null){
+    const ty1 = yS(Math.min(targetHigh, hi)).toFixed(1);
+    const ty2 = yS(Math.max(targetLow, lo)).toFixed(1);
+    targetBand = '<rect x="'+PAD+'" y="'+ty1+'" width="'+(W-PAD*2)+'" height="'+(parseFloat(ty2)-parseFloat(ty1)).toFixed(1)+'" fill="rgba(255,255,255,.04)"/>';
+  }
+  svg.innerHTML = '<defs><linearGradient id="sg-'+svgId+'" x1="0" y1="0" x2="0" y2="1">'
+    +'<stop offset="0%" stop-color="'+color.replace('var(--or)','#a86530').replace('var(--cy)','#097a8a')+'44"/>'
+    +'<stop offset="100%" stop-color="rgba(0,0,0,0)"/></linearGradient></defs>'
+    +targetBand
+    +'<path d="'+areaD+'" fill="url(#sg-'+svgId+')"/>'
+    +'<polyline points="'+pts+'" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1" stroke-linejoin="round"/>'
+    +'<polyline points="'+maLine+'" fill="none" stroke="'+color.replace('var(--or)','#a86530').replace('var(--cy)','#097a8a')+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<circle cx="'+xS(vals.length-1).toFixed(1)+'" cy="'+yS(vals[vals.length-1]).toFixed(1)+'" r="2" fill="'+color.replace('var(--or)','#a86530').replace('var(--cy)','#097a8a')+'"/>';
+}
 
 // ── INIT ──────────────────────────────────────────────────
 el('m-date').value=today();if(el('l-date'))el('l-date').value=today();
