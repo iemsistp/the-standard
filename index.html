@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>THE STANDARD</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -54,7 +57,7 @@ main{padding-top:48px;padding-bottom:64px;}
 .lg{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem;}@media(max-width:420px){.lg{grid-template-columns:1fr;}.ig.fw{grid-column:1/-1;}}.ig.fw{grid-column:1/-1;}.ig-date{grid-column:1/-1;}
 .ig{display:flex;flex-direction:column;gap:.3rem;}
 .il{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--mt);font-weight:500;}
-.if{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:.55rem .8rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.85rem;transition:border-color .2s;width:100%;min-width:0;box-sizing:border-box;}
+.if{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:.55rem .8rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.85rem;transition:border-color .2s;width:100%;min-width:0;box-sizing:border-box;color-scheme:dark;}
 .if:focus{outline:none;border-color:var(--bl);background:rgba(59,130,246,.05);}
 .if::placeholder{color:var(--mt);}
 select.if{cursor:pointer;}
@@ -187,6 +190,12 @@ select.if{cursor:pointer;}
 </style>
 </head>
 <body>
+<script>
+// Force unregister any service workers and clear caches
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+}
+</script>
 <nav id="top-nav">
   <div style="display:flex;flex-direction:column;line-height:1.1;">
     <span style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:2px;color:var(--tx);">The Standard</span>
@@ -1317,7 +1326,7 @@ function updateDash(){
       return `<div class="tip-row" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.5rem;padding:.32rem .5rem;background:var(--sf2);border-radius:5px;margin-bottom:.2rem;font-size:.72rem;align-items:center;position:relative;"
         onmouseenter="showWowTip(this,${tipIdx})" onmouseleave="hideTargetTip()">
         <span style="color:var(--tx);">${label}${badge?` <span class='badge ${badgeCls}' style='font-size:.55rem;'>${badge}</span>`:''}</span>
-        <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--mt);">${prev!==null?fmt(prev)+unit:'—'}</span>
+        <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--mt);">${prev!==null?fmt(prev):'—'}</span>
         <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--bl);">${fmt(curr)}${unit}</span>
         <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:${changeCol};">${changeStr}</span>
       </div>`;
@@ -1721,7 +1730,7 @@ async function sbPull() {
   toast('Syncing...');
   try {
     const [sbMetrics, sbLifts, sbCardio] = await Promise.all([
-      sbFetch('metrics', 'GET', null, '?order=date.desc&limit=400'),
+      sbFetch('metrics', 'GET', null, '?order=date.desc&limit=500'),
       sbFetch('lifts',   'GET', null, '?order=date.desc&limit=400'),
       sbFetch('cardio_log','GET',null,'?order=date.desc&limit=400'),
     ]);
@@ -1762,7 +1771,7 @@ async function sbPull() {
 
     if (sbLifts) {
       // Restore week structure from special lift entry (ts=1)
-      const weekLift = sbLifts.find(r => r.ts === 1 && r.exercise === '_week_structure');
+      const weekLift = sbLifts.find(r => r.ts == 1 && r.exercise === '_week_structure');
       if(weekLift && weekLift.notes) {
         try {
           const local = loadCustomWeek();
@@ -1770,13 +1779,14 @@ async function sbPull() {
             localStorage.setItem('custom_week_v1', weekLift.notes);
             localStorage.setItem('custom_week_updated', weekLift.updated_at||'');
             console.log('[Week] restored from Supabase');
+            toast('Week structure synced ✓');
           }
         } catch(e){ console.warn('[Week] restore error',e); }
       }
       const localTs = new Set(lifts.map(l => l.ts));
       for (const row of sbLifts) {
         // Skip the settings entry from regular lift display
-        if(row.ts === 1 && row.exercise === '_week_structure') continue;
+        if(row.ts == 1 && row.exercise === '_week_structure') continue;
         if (row.ts && !localTs.has(row.ts)) lifts.push(row);
       }
       lifts.sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -1792,7 +1802,8 @@ async function sbPull() {
 
     persist();
     refresh();
-    console.log('[Pull] complete');
+    const newestDate = metrics.filter(m=>m.updated_at).sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'none';
+    toast('Synced ✓ — ' + metrics.filter(m=>m.updated_at).length + ' saved entries, newest: ' + newestDate);
   } catch(e) {
     console.error('Sync error', e);
     toast('Sync failed — offline?');
