@@ -1327,7 +1327,7 @@ function updateDash(){
         onmouseenter="showWowTip(this,${tipIdx})" onmouseleave="hideTargetTip()">
         <span style="color:var(--tx);">${label}${badge?` <span class='badge ${badgeCls}' style='font-size:.55rem;'>${badge}</span>`:''}</span>
         <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--mt);">${prev!==null?fmt(prev):'—'}</span>
-        <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--bl);">${fmt(curr)}${unit}</span>
+        <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:var(--bl);">${fmt(curr)}</span>
         <span style="text-align:right;font-family:'JetBrains Mono',monospace;color:${changeCol};">${changeStr}</span>
       </div>`;
     }).join('');
@@ -1765,6 +1765,19 @@ async function sbPull() {
             }
           }
         }
+      }
+      // Restore week structure from reserved row before filtering it out
+      const weekRow = sbMetrics.find(r => r.date === '0001-01-01');
+      if(weekRow && weekRow.notes) {
+        try {
+          const local = loadCustomWeek();
+          if(!local || (weekRow.updated_at && weekRow.updated_at > (localStorage.getItem('custom_week_updated')||''))) {
+            localStorage.setItem('custom_week_v1', weekRow.notes);
+            localStorage.setItem('custom_week_updated', weekRow.updated_at||'');
+            weekEditState = null;
+            toast('Week structure synced ✓');
+          }
+        } catch(e){ console.warn('[Week] restore error',e); }
       }
       metrics = metrics.filter(m => m.date !== '0001-01-01');
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
