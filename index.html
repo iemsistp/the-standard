@@ -1766,19 +1766,19 @@ async function sbPull() {
           }
         }
       }
+      metrics = metrics.filter(m => m.date !== '0001-01-01');
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
     if (sbLifts) {
-      // Restore week structure from special lift entry (ts=1)
-      const weekLift = sbLifts.find(r => r.ts == 1 && r.exercise === '_week_structure');
-      if(weekLift && weekLift.notes) {
+      // Restore week structure from reserved metrics row '0001-01-01'
+      const weekRow = sbMetrics ? sbMetrics.find(r => r.date === '0001-01-01') : null;
+      if(weekRow && weekRow.notes) {
         try {
           const local = loadCustomWeek();
-          if(!local || (weekLift.updated_at && weekLift.updated_at > (localStorage.getItem('custom_week_updated')||''))) {
-            localStorage.setItem('custom_week_v1', weekLift.notes);
-            localStorage.setItem('custom_week_updated', weekLift.updated_at||'');
-            console.log('[Week] restored from Supabase');
+          if(!local || (weekRow.updated_at && weekRow.updated_at > (localStorage.getItem('custom_week_updated')||''))) {
+            localStorage.setItem('custom_week_v1', weekRow.notes);
+            localStorage.setItem('custom_week_updated', weekRow.updated_at||'');
             toast('Week structure synced ✓');
           }
         } catch(e){ console.warn('[Week] restore error',e); }
@@ -1786,7 +1786,7 @@ async function sbPull() {
       const localTs = new Set(lifts.map(l => l.ts));
       for (const row of sbLifts) {
         // Skip the settings entry from regular lift display
-        if(row.ts == 1 && row.exercise === '_week_structure') continue;
+        
         if (row.ts && !localTs.has(row.ts)) lifts.push(row);
       }
       lifts.sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -1825,12 +1825,10 @@ async function sbPushAll() {
       });
       await sbFetch('metrics', 'POST', batch, '?on_conflict=date');
     }
-    // Lifts + week structure
+    // Push week structure via metrics reserved row
     const weekData = loadCustomWeek();
     if(weekData) {
-      const weekPayload = {date:'2000-01-01',exercise:'_week_structure',cat:'settings',
-        sets:[],notes:JSON.stringify(weekData),ts:1,updated_at:new Date().toISOString()};
-      await sbFetch('lifts','POST',weekPayload,'?on_conflict=ts');
+      await sbFetch('metrics','POST',{date:'0001-01-01',notes:JSON.stringify(weekData),updated_at:new Date().toISOString()},'?on_conflict=date');
     }
     for (let i = 0; i < lifts.length; i += 50) {
       const batch = lifts.slice(i, i+50).map(l => ({...l, ts: l.ts || Date.now()}));
@@ -2062,10 +2060,9 @@ function saveCustomWeek(d){
 }
 async function syncWeekStructure(d){
   try {
-    const payload = {date:'2000-01-01', exercise:'_week_structure', cat:'settings',
-      sets:[], notes: JSON.stringify(d), ts:1,
-      updated_at: new Date().toISOString()};
-    const res = await fetch(`${SB_URL}/rest/v1/lifts?on_conflict=ts`, {
+    // Store in metrics table with reserved date '0001-01-01'
+    const payload = {date:'0001-01-01', notes: JSON.stringify(d), updated_at: new Date().toISOString()};
+    const res = await fetch(`${SB_URL}/rest/v1/metrics?on_conflict=date`, {
       method:'POST',
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
       body: JSON.stringify(payload)
@@ -2073,13 +2070,11 @@ async function syncWeekStructure(d){
     if(!res.ok){
       const err=await res.text();
       console.error('[Week] sync failed:',res.status,err);
-      toast('Week sync error: '+res.status);
+      toast('Week sync error: '+res.status+' '+err.slice(0,60));
     } else {
-      console.log('[Week] synced ok');
       toast('Week structure saved ✓');
     }
   } catch(e){
-    console.warn('[Week] sync error',e);
     toast('Week sync failed: '+e.message);
   }
 }
