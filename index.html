@@ -398,11 +398,11 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
         <div style="font-size:.7rem;color:var(--mt);margin-bottom:.5rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;">Milestones</div>
         <div style="display:flex;flex-direction:column;gap:.3rem;" id="phase1-milestones">
           <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-swim100"><span class="ms-icon">○</span><span class="ms-lbl">Swim 100m continuous</span></div>
-          <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-weight76"><span class="ms-icon">○</span><span class="ms-lbl">Reach 76kg bodyweight</span></div>
+          <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-weight76"><span class="ms-icon">○</span><span class="ms-lbl">Reach 167.6lb bodyweight</span></div>
           <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-swim400"><span class="ms-icon">○</span><span class="ms-lbl">Swim 400m continuous</span></div>
           <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-bike60"><span class="ms-icon">○</span><span class="ms-lbl">60 min Zone 2 ride</span></div>
           <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-run10k"><span class="ms-icon">○</span><span class="ms-lbl">10km run</span></div>
-          <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-weight794"><span class="ms-icon">○</span><span class="ms-lbl">Reach 79.4kg bodyweight</span></div>
+          <div style="display:flex;align-items:center;gap:.5rem;font-size:.72rem;" id="ms-weight794"><span class="ms-icon">○</span><span class="ms-lbl">Reach 175lb bodyweight</span></div>
         </div>
       </div>
 
@@ -1460,37 +1460,31 @@ function toast(msg){const t=el('toast');t.textContent=msg;t.classList.add('show'
 
 // ── REFRESH ───────────────────────────────────────────────
 // ── MILESTONES ────────────────────────────────────────────
-function renderMilestones(){
-  // Data sources
-  const swims=cardioLog.filter(c=>c.type==='Swim');
-  const bikes=cardioLog.filter(c=>c.type==='Bike');
-  const runs=cardioLog.filter(c=>c.type==='Run');
-  const maxSwim=swims.length?Math.max(...swims.map(s=>s.distance_m||0)):0;
-  const maxBike=bikes.length?Math.max(...bikes.map(b=>b.duration_min||0)):0;
-  const maxRun=runs.length?Math.max(...runs.map(r=>r.distance_km||0)):0;
-  const maxWeight=metrics.filter(m=>m.weight).length?Math.max(...metrics.filter(m=>m.weight).map(m=>m.weight)):0;
+function loadMilestones(){try{return JSON.parse(localStorage.getItem('milestones_v1')||'{}');}catch(e){return{};}}
+function toggleMilestone(id){
+  const ms=loadMilestones();
+  ms[id]=!ms[id];
+  localStorage.setItem('milestones_v1',JSON.stringify(ms));
+  renderMilestones();
+  // Sync to Supabase
+  const payload={date:'0001-01-02',notes:JSON.stringify(ms),updated_at:new Date().toISOString()};
+  fetch(`${SB_URL}/rest/v1/metrics?on_conflict=date`,{method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(payload)}).catch(e=>console.warn('[MS] sync failed',e));
+}
 
-  function setMS(id, done, note){
+function renderMilestones(){
+  const ms=loadMilestones();
+  const ids=['ms-swim100','ms-weight76','ms-swim400','ms-bike60','ms-run10k','ms-weight794'];
+  ids.forEach(id=>{
     const row=document.getElementById(id);if(!row)return;
     const icon=row.querySelector('.ms-icon');
     const lbl=row.querySelector('.ms-lbl');
-    if(!icon||!lbl)return;
-    if(done){
-      icon.textContent='✓';icon.style.color='var(--gn)';
-      lbl.style.color='var(--mt)';
-      if(note) lbl.title=note;
-    } else {
-      icon.textContent='◎';icon.style.color='var(--bl)';
-      lbl.style.color='var(--tx)';
-    }
-  }
-
-  setMS('ms-swim100', maxSwim>=100, maxSwim>0?'Best: '+maxSwim+'m':'');
-  setMS('ms-weight76', maxWeight>=76, maxWeight>0?'Peak: '+maxWeight+'kg':'');
-  setMS('ms-swim400', maxSwim>=400, maxSwim>0?'Best: '+maxSwim+'m':'');
-  setMS('ms-bike60', maxBike>=60, maxBike>0?'Longest ride: '+maxBike+' min':'');
-  setMS('ms-run10k', maxRun>=10, maxRun>0?'Longest run: '+maxRun+'km':'');
-  setMS('ms-weight794', maxWeight>=79.4, maxWeight>0?'Peak: '+maxWeight+'kg':'');
+    const done=!!ms[id];
+    if(icon){icon.textContent=done?'✓':'◎';icon.style.color=done?'var(--gn)':'var(--bl)';}
+    if(lbl){lbl.style.color=done?'var(--mt)':'var(--tx)';}
+    row.style.cursor='pointer';
+    row.onclick=()=>toggleMilestone(id);
+    row.title=done?'Click to uncheck':'Click to mark complete';
+  });
 }
 
 function refresh(){
@@ -1659,7 +1653,7 @@ function buildContext() {
   }).join('\n');
 
   return `ATHLETE PROFILE: Tristan, 30yo, hybrid athlete — CrossFit + hypertrophy + Muskoka 70.3 triathlon July 2027.
-Goal: Gain lean mass to 79.4kg (175lb) from 74.9kg start. Currently ${latest.weight||'~76'}kg.
+Goal: Gain lean mass to 175lb (79.4kg) from 165lb start. Currently ${latest.weight?(latest.weight*2.20462).toFixed(1):'~167'}lb.
 Phase 1: Foundation (May-Oct 2026) — swim technique, aerobic base, maintain size.
 
 TODAY (${latest.date||today()}):
@@ -1786,7 +1780,18 @@ async function sbPull() {
           }
         } catch(e){ console.warn('[Week] restore error',e); }
       }
-      metrics = metrics.filter(m => m.date !== '0001-01-01');
+      // Restore milestones from reserved row
+      const msRow = sbMetrics.find(r => r.date === '0001-01-02');
+      if(msRow && msRow.notes) {
+        try {
+          const localMs = loadMilestones();
+          if(!Object.keys(localMs).length || (msRow.updated_at && msRow.updated_at > (localStorage.getItem('milestones_updated')||''))) {
+            localStorage.setItem('milestones_v1', msRow.notes);
+            localStorage.setItem('milestones_updated', msRow.updated_at||'');
+          }
+        } catch(e){ console.warn('[MS] restore error',e); }
+      }
+      metrics = metrics.filter(m => m.date !== '0001-01-01' && m.date !== '0001-01-02');
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
@@ -1849,6 +1854,11 @@ async function sbPushAll() {
     const weekData = loadCustomWeek();
     if(weekData) {
       await sbFetch('metrics','POST',{date:'0001-01-01',notes:JSON.stringify(weekData),updated_at:new Date().toISOString()},'?on_conflict=date');
+    }
+    // Push milestones via metrics reserved row
+    const msData = loadMilestones();
+    if(Object.keys(msData).length) {
+      await sbFetch('metrics','POST',{date:'0001-01-02',notes:JSON.stringify(msData),updated_at:new Date().toISOString()},'?on_conflict=date');
     }
     for (let i = 0; i < lifts.length; i += 50) {
       const batch = lifts.slice(i, i+50).map(l => ({...l, ts: l.ts || Date.now()}));
@@ -2058,7 +2068,7 @@ function renderPhaseStatus(){
   const now=new Date();
   const allChecks={
     swim400:{done:maxSwim>=400,label:'Swim 400m (best: '+maxSwim+'m)'},
-    weight794:{done:maxWeight>=79.4,label:'Weight 79.4kg (now: '+maxWeight+'kg)'},
+    weight794:{done:maxWeight>=79.4,label:'Weight 175lb (now: '+(maxWeight*2.20462).toFixed(1)+'lb)'},
     date1:{done:now>=new Date('2026-11-01'),label:'Past Oct 31 2026'},
     swim1k:{done:maxSwim>=1000,label:'Swim 1000m (best: '+maxSwim+'m)'},
     bike90:{done:maxBike>=90,label:'90 min ride (best: '+maxBike+' min)'},
