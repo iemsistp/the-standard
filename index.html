@@ -242,16 +242,12 @@ if('serviceWorker' in navigator) {
   <!-- 3 HERO TILES -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem;">
     <div class="sc sc-click" style="--ac:var(--bl);cursor:pointer;" onclick="openStatChart('weight','Weight Trend','kg','var(--bl)')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div class="sl">Weight</div>
-        <div style="display:flex;gap:.25rem;flex-direction:column;align-items:flex-end;">
-          <span class="st-badge" id="d-wt-tr" style="position:static;font-size:.58rem;"></span>
-          <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.58rem;"></span>
-        </div>
-      </div>
+      <div class="sl">Weight</div>
       <div class="sv" id="d-wt" style="font-size:1.6rem;line-height:1;">—</div>
       <div class="su" style="margin-top:.1rem;">lbs · goal 175lb</div>
-      <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.5rem;display:block;"></svg>
+      <span class="st-badge" id="d-wt-tr" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
+      <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
+      <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.4rem;display:block;"></svg>
     </div>
     <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
       <div class="sl">7d Surplus</div><div class="sv" id="d-sur">—</div>
@@ -1311,15 +1307,42 @@ function updateDash(){
         if(inv){badge=curr<=tgt.hi?'ON TRACK':curr<=tgt.hi*1.2?'HIGH':'HIGH';badgeCls=curr<=tgt.hi?'bg':curr<=tgt.hi*1.2?'bw':'bb';}
         else{badge=curr>=tgt.low?'ON TRACK':curr>=tgt.low*0.88?'LOW':'LOW';badgeCls=curr>=tgt.low?'bg':curr>=tgt.low*0.88?'bw':'bb';}
       }
-      // Last 7 individual entries for hover
-      const entries7 = r7.map(m=>{
-        let v=key==='surplus'?(m.consumed&&m.burned?m.consumed-m.burned:null):m[key];
-        if(v===null||v===undefined) return null;
-        const disp=fmt(v)+unit;
-        let col='var(--tx)';
-        if(tgt){if(inv)col=v<=tgt.hi?'var(--gn)':v<=tgt.hi*1.2?'var(--or)':'var(--rd)';else col=v>=tgt.low?'var(--gn)':v>=tgt.low*0.88?'var(--or)':'var(--rd)';}
-        return `<div class="tip-entry"><span class="tip-date">${m.date}</span><span class="tip-val" style="color:${col};">${disp}</span></div>`;
-      }).filter(Boolean).join('');
+      // For weight: show last 7 week averages. For others: last 7 daily entries
+      let entries7 = '';
+      if(key === 'weight') {
+        // Build weekly averages for weight
+        const weekMap = {};
+        [...metrics].filter(m=>m.weight).sort((a,b)=>a.date.localeCompare(b.date)).forEach(m=>{
+          const d=new Date(m.date+'T12:00:00'), day=d.getDay();
+          const mon=new Date(d); mon.setDate(d.getDate()-(day===0?6:day-1));
+          const wk=mon.toISOString().split('T')[0];
+          if(!weekMap[wk]) weekMap[wk]=[];
+          weekMap[wk].push(m.weight);
+        });
+        const wkEntries = Object.keys(weekMap).sort().reverse().slice(0,7).reverse();
+        entries7 = '<div style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem;">Weekly averages</div>';
+        const wkAvgs = wkEntries.map(wk=>{ const arr=weekMap[wk]; return arr.reduce((a,b)=>a+b,0)/arr.length; });
+        entries7 += wkEntries.map((wk,i)=>{
+          const avg=wkAvgs[i];
+          const lbs=(avg*2.20462).toFixed(1)+'lb';
+          const prev=i>0?wkAvgs[i-1]:null;
+          const diff=prev!==null?(avg-prev)*2.20462:null;
+          const chg=diff===null?'':((diff>0?'+':'')+diff.toFixed(1)+'lb');
+          const col=diff===null?'var(--mt)':diff>0?'var(--gn)':'var(--rd)';
+          const d=new Date(wk+'T12:00:00');
+          const label=d.toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+          return '<div class="tip-entry"><span class="tip-date">wk '+label+'</span><span class="tip-val" style="color:var(--bl);">'+lbs+'</span><span style="color:'+col+';font-size:.65rem;font-family:JetBrains Mono,monospace;min-width:2.5rem;text-align:right;">'+chg+'</span></div>';
+        }).join('');
+      } else {
+        entries7 = r7.map(m=>{
+          let v=key==='surplus'?(m.consumed&&m.burned?m.consumed-m.burned:null):m[key];
+          if(v===null||v===undefined) return null;
+          const disp=fmt(v)+unit;
+          let col='var(--tx)';
+          if(tgt){if(inv)col=v<=tgt.hi?'var(--gn)':v<=tgt.hi*1.2?'var(--or)':'var(--rd)';else col=v>=tgt.low?'var(--gn)':v>=tgt.low*0.88?'var(--or)':'var(--rd)';}
+          return '<div class="tip-entry"><span class="tip-date">'+m.date+'</span><span class="tip-val" style="color:'+col+';">'+disp+'</span></div>';
+        }).filter(Boolean).join('');
+      }
       const tipHtml = entries7 ? '<div style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem;">Last 7 entries</div>'+entries7 : '';
       wowTipData.push(tipHtml);
       const tipIdx = wowTipData.length - 1;
@@ -1486,23 +1509,23 @@ function refresh(){
 function openStatChart(key, label, unit, color) {
   const body = document.getElementById('chart-modal-body');
   const canvas = document.getElementById('stat-canvas');
-  
-  // Get last 30 days of data for this key
+
   let data = metrics.filter(m => {
     if(key === 'surplus') return m.consumed && m.burned;
     return m[key] !== null && m[key] !== undefined;
-  });  if(key !== 'weight') data = data.slice(0, 30);  data = data.reverse();
-  
-  const vals = data.map(m => key === 'surplus' ? m.consumed - m.burned : m[key]);
-  const dates = data.map(m => m.date.slice(5)); // MM-DD
+  });
+  if(key !== 'weight') data = data.slice(0, 30);
+  data = data.reverse();
+
+  const vals = data.map(m => key === 'surplus' ? m.consumed - m.burned : key === 'weight' ? m[key] * 2.20462 : m[key]);
+  const dates = data.map(m => m.date.slice(5));
   const avg = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '—';
   const max = vals.length ? Math.max(...vals).toFixed(1) : '—';
   const min = vals.length ? Math.min(...vals).toFixed(1) : '—';
   const latest = vals.length ? vals[vals.length-1].toFixed(1) : '—';
 
-  // Targets
   const targets = {
-    weight: {low: 74.9, high: 79.4, label: 'Goal: 79.4kg'},
+    weight: {low: 74.9, high: 79.4, label: 'Goal: 175lb'},
     consumed: {low: 3000, high: 3300, label: 'Target: 3000-3300'},
     protein: {low: 180, high: 200, label: 'Target: 180-200g'},
     surplus: {low: 400, high: 600, label: 'Target: +400-600'},
@@ -1510,14 +1533,15 @@ function openStatChart(key, label, unit, color) {
     sleep: {low: 8, high: 10, label: 'Target: 8h+'},
   };
   const tgt = targets[key] || {};
+  const hexColor = {'var(--bl)':'#3d6b9e','var(--or)':'#a86530','var(--cy)':'#097a8a','var(--gn)':'#1f7a45'}[color]||'#3d6b9e';
 
   body.innerHTML = `
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:${color};line-height:1;">${label}</div>
-    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">Last 30 days</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:${hexColor};line-height:1;">${label}</div>
+    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">${key==='weight'?'Full history':'Last 30 days'}</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.5rem;">
       <div style="background:var(--sf2);border-radius:7px;padding:.6rem;text-align:center;">
         <div style="font-size:.6rem;color:var(--mt);margin-bottom:.15rem;">LATEST</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:${color};">${latest}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:${hexColor};">${latest}</div>
       </div>
       <div style="background:var(--sf2);border-radius:7px;padding:.6rem;text-align:center;">
         <div style="font-size:.6rem;color:var(--mt);margin-bottom:.15rem;">AVG</div>
@@ -1535,102 +1559,77 @@ function openStatChart(key, label, unit, color) {
     ${tgt.label ? `<div style="font-size:.7rem;color:var(--mt);font-family:JetBrains Mono,monospace;margin-bottom:.5rem;">${tgt.label}</div>` : ''}
   `;
 
-  // Show modal first so canvas has dimensions
   document.getElementById('chart-ov').classList.add('show');
-  
+
   if (!vals.length) { canvas.style.display='none'; return; }
   canvas.style.display = 'block';
-  
-  // Use requestAnimationFrame to ensure DOM is rendered before drawing
+
   requestAnimationFrame(() => {
-  const dpr = window.devicePixelRatio || 1;
-  const W_actual = canvas.offsetWidth || 420;
-  canvas.width = W_actual * dpr;
-  canvas.height = 160 * dpr;
-  canvas.style.height = '160px';
-  
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const W = W_actual, H = 160;
-  const pad = {t:16, r:16, b:28, l:42};
-  const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
-  
-  ctx.clearRect(0, 0, W, H);
-  
-  const vmin = Math.min(...vals) * 0.96;
-  const vmax = Math.max(...vals) * 1.04;
-  const range = vmax - vmin || 1;
-  
-  const px = i => pad.l + (i / (vals.length-1)) * cW;
-  const py = v => pad.t + cH - ((v - vmin) / range) * cH;
-
-  // Target zone
-  if (tgt.low && tgt.high) {
-    ctx.fillStyle = 'rgba(45,212,160,0.08)';
-    const ty1 = py(Math.min(tgt.high, vmax));
-    const ty2 = py(Math.max(tgt.low, vmin));
-    ctx.fillRect(pad.l, ty1, cW, ty2 - ty1);
-  }
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.t + (cH / 4) * i;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
-    const val = (vmax - (range/4)*i).toFixed(1);
+    const dpr = window.devicePixelRatio || 1;
+    const W_actual = canvas.offsetWidth || 420;
+    canvas.width = W_actual * dpr;
+    canvas.height = 160 * dpr;
+    canvas.style.height = '160px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = W_actual, H = 160;
+    const pad = {t:16, r:16, b:28, l:42};
+    const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+    ctx.clearRect(0, 0, W, H);
+    const vmin = Math.min(...vals) * 0.96;
+    const vmax = Math.max(...vals) * 1.04;
+    const range = vmax - vmin || 1;
+    const px = i => pad.l + (i / (vals.length-1)) * cW;
+    const py = v => pad.t + cH - ((v - vmin) / range) * cH;
+    if (tgt.low && tgt.high) {
+      ctx.fillStyle = 'rgba(45,212,160,0.08)';
+      const ty1 = py(Math.min(tgt.high, vmax));
+      const ty2 = py(Math.max(tgt.low, vmin));
+      ctx.fillRect(pad.l, ty1, cW, ty2 - ty1);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.t + (cH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+      const val = (vmax - (range/4)*i).toFixed(1);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(val, pad.l - 4, y + 4);
+    }
+    const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+    grad.addColorStop(0, hexColor + '30');
+    grad.addColorStop(1, hexColor + '05');
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(vals[0]));
+    for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
+    ctx.lineTo(px(vals.length-1), pad.t + cH);
+    ctx.lineTo(px(0), pad.t + cH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.strokeStyle = hexColor;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.moveTo(px(0), py(vals[0]));
+    for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(px(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
+    ctx.fillStyle = hexColor;
+    ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = '10px JetBrains Mono, monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(val, pad.l - 4, y + 4);
-  }
-
-  // Gradient fill
-  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
-  const colorMap = {
-    'var(--bl)': '#4f8ef7', 'var(--gn)': '#2dd4a0',
-    'var(--pu)': '#b06ef7', 'var(--or)': '#f79044',
-    'var(--cy)': '#44d4f7', 'var(--gd)': '#f7c244',
-  };
-  const hexColor = colorMap[color] || '#4f8ef7';
-  grad.addColorStop(0, hexColor + '30');
-  grad.addColorStop(1, hexColor + '05');
-
-  ctx.beginPath();
-  ctx.moveTo(px(0), py(vals[0]));
-  for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
-  ctx.lineTo(px(vals.length-1), pad.t + cH);
-  ctx.lineTo(px(0), pad.t + cH);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Line
-  ctx.beginPath();
-  ctx.strokeStyle = hexColor;
-  ctx.lineWidth = 2;
-  ctx.lineJoin = 'round';
-  ctx.moveTo(px(0), py(vals[0]));
-  for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
-  ctx.stroke();
-
-  // Dots on latest
-  ctx.beginPath();
-  ctx.arc(px(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
-  ctx.fillStyle = hexColor;
-  ctx.fill();
-
-  // X axis dates (show ~5)
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.font = '9px DM Sans, sans-serif';
-  ctx.textAlign = 'center';
-  const step = Math.max(1, Math.floor(dates.length / 5));
-  for (let i = 0; i < dates.length; i += step) {
-    ctx.fillText(dates[i], px(i), H - 6);
-  }
-
-  }); // end requestAnimationFrame
+    ctx.font = '9px DM Sans, sans-serif';
+    ctx.textAlign = 'center';
+    const step = Math.max(1, Math.floor(dates.length / 5));
+    for (let i = 0; i < dates.length; i += step) {
+      ctx.fillText(dates[i], px(i), H - 6);
+    }
+  });
 }
+
 
 function closeChartOv(e) {
   if (e.target === document.getElementById('chart-ov'))
