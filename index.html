@@ -1576,16 +1576,19 @@ function openStatChart(key, label, unit, color) {
     const pad = {t:16, r:16, b:28, l:42};
     const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
     ctx.clearRect(0, 0, W, H);
-    const vmin = Math.min(...vals) * 0.96;
-    const vmax = Math.max(...vals) * 1.04;
+    const _spread = Math.max(...vals) - Math.min(...vals) || 1;
+    const vmin = Math.min(...vals) - _spread * 0.1;
+    const vmax = Math.max(...vals) + _spread * 0.1;
     const range = vmax - vmin || 1;
     const px = i => pad.l + (i / (vals.length-1)) * cW;
     const py = v => pad.t + cH - ((v - vmin) / range) * cH;
     if (tgt.low && tgt.high) {
+      const tLow = key === 'weight' ? tgt.low * 2.20462 : tgt.low;
+      const tHigh = key === 'weight' ? tgt.high * 2.20462 : tgt.high;
       ctx.fillStyle = 'rgba(45,212,160,0.08)';
-      const ty1 = py(Math.min(tgt.high, vmax));
-      const ty2 = py(Math.max(tgt.low, vmin));
-      ctx.fillRect(pad.l, ty1, cW, ty2 - ty1);
+      const ty1 = py(Math.min(tHigh, vmax));
+      const ty2 = py(Math.max(tLow, vmin));
+      if(ty2 > ty1) ctx.fillRect(pad.l, ty1, cW, ty2 - ty1);
     }
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
@@ -1601,6 +1604,10 @@ function openStatChart(key, label, unit, color) {
     const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
     grad.addColorStop(0, hexColor + '30');
     grad.addColorStop(1, hexColor + '05');
+    // Clip to chart area so fill never bleeds below x-axis
+    ctx.save();
+    ctx.rect(pad.l, pad.t, cW, cH);
+    ctx.clip();
     ctx.beginPath();
     ctx.moveTo(px(0), py(vals[0]));
     for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
@@ -1609,6 +1616,7 @@ function openStatChart(key, label, unit, color) {
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
+    ctx.restore();
     ctx.beginPath();
     ctx.strokeStyle = hexColor;
     ctx.lineWidth = 2;
