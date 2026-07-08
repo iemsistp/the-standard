@@ -2293,7 +2293,7 @@ async function whoopPullToday(){
 
     // Recovery — find record whose cycle covers selectedDate
     const recRes = await fetch(
-      'https://api.prod.whoop.com/developer/v1/recovery?limit=25', {headers});
+      WHOOP_PROXY + '/whoop-api/v1/recovery?limit=25', {headers});
     if(recRes.ok){
       const d = await recRes.json();
       // Find recovery whose updated_at or created_at date matches selectedDate
@@ -2309,7 +2309,7 @@ async function whoopPullToday(){
 
     // Sleep — find sleep that ended on selectedDate
     const sleepRes = await fetch(
-      'https://api.prod.whoop.com/developer/v1/activity/sleep?limit=25', {headers});
+      WHOOP_PROXY + '/whoop-api/v1/activity/sleep?limit=25', {headers});
     if(sleepRes.ok){
       const d = await sleepRes.json();
       const sleep = d.records?.find(r => {
@@ -2329,7 +2329,7 @@ async function whoopPullToday(){
 
     // Calories burned — cycle for the PREVIOUS day (strain accumulates during the day before)
     const cycleRes = await fetch(
-      'https://api.prod.whoop.com/developer/v1/cycle?limit=25', {headers});
+      WHOOP_PROXY + '/whoop-api/v1/cycle?limit=25', {headers});
     if(cycleRes.ok){
       const d = await cycleRes.json();
       const cycle = d.records?.find(r => {
