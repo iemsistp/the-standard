@@ -2291,60 +2291,63 @@ async function whoopPullToday(){
     const h = {'Authorization':'Bearer '+token};
     const filled = [];
 
-    // Sleep — filter by end time falling on selectedDate
-    // We use a wider window (start from prev day) to catch overnight sleeps
-    const sleepUrl = WHOOP_PROXY + '/whoop-api/v1/activity/sleep?limit=10'
+    async function wFetch(label, url) {
+      console.log('[WHOOP] GET', label, url);
+      const res = await fetch(url, {headers: h});
+      const text = await res.text();
+      console.log('[WHOOP] RESPONSE', label, res.status, text.slice(0, 500));
+      if(!res.ok) return null;
+      try { return JSON.parse(text); } catch(e) { console.error('[WHOOP] parse error', e); return null; }
+    }
+
+    // Sleep — window from prev noon to end of selectedDate
+    const sleepData = await wFetch('sleep',
+      WHOOP_PROXY + '/whoop-api/v1/activity/sleep?limit=10'
       + '&start=' + encodeURIComponent(prevDateStr + 'T12:00:00.000Z')
-      + '&end='   + encodeURIComponent(selEnd);
-    const sleepRes = await fetch(sleepUrl, {headers: h});
-    if(sleepRes.ok){
-      const d = await sleepRes.json();
-      // Find non-nap sleep whose end date matches selectedDate
-      const sleep = d.records?.find(r =>
-        !r.nap && r.score_state === 'SCORED' && (r.end||'').slice(0,10) === selectedDate
-      ) || d.records?.find(r => !r.nap && r.score_state === 'SCORED');
-      if(sleep?.score?.stage_summary){
-        const totalMilli = sleep.score.stage_summary.total_in_bed_time_milli;
-        if(totalMilli){
-          const hrs = totalMilli / 3600000;
-          const hh = Math.floor(hrs), mm = Math.round((hrs-hh)*60);
-          el('m-sl').value = hh + ':' + String(mm).padStart(2,'0');
-          filled.push('Sleep ' + hh + 'h' + mm + 'm');
-        }
+      + '&end='   + encodeURIComponent(selEnd));
+    if(sleepData){
+      const sleep = sleepData.records?.find(r => !r.nap && r.score_state === 'SCORED' && (r.end||'').slice(0,10) === selectedDate)
+        || sleepData.records?.find(r => !r.nap && r.score_state === 'SCORED')
+        || sleepData.records?.[0];
+      console.log('[WHOOP] using sleep:', JSON.stringify(sleep));
+      if(sleep?.score?.stage_summary?.total_in_bed_time_milli){
+        const hrs = sleep.score.stage_summary.total_in_bed_time_milli / 3600000;
+        const hh = Math.floor(hrs), mm = Math.round((hrs-hh)*60);
+        el('m-sl').value = hh + ':' + String(mm).padStart(2,'0');
+        filled.push('Sleep ' + hh + 'h' + mm + 'm');
       }
-    } else { console.warn('[WHOOP] sleep', sleepRes.status, await sleepRes.text()); }
+    }
 
-    // Recovery — filter by created_at on selectedDate
-    const recUrl = WHOOP_PROXY + '/whoop-api/v1/recovery?limit=10'
+    // Recovery
+    const recData = await wFetch('recovery',
+      WHOOP_PROXY + '/whoop-api/v1/recovery?limit=10'
       + '&start=' + encodeURIComponent(selStart)
-      + '&end='   + encodeURIComponent(selEnd);
-    const recRes = await fetch(recUrl, {headers: h});
-    if(recRes.ok){
-      const d = await recRes.json();
-      const rec = d.records?.find(r => r.score_state === 'SCORED');
-      if(rec?.score){
-        const recovery = Math.round(rec.score.recovery_score);
-        el('m-re').value = recovery;
-        filled.push('Recovery ' + recovery + '%');
+      + '&end='   + encodeURIComponent(selEnd));
+    if(recData){
+      const rec = recData.records?.find(r => r.score_state === 'SCORED') || recData.records?.[0];
+      console.log('[WHOOP] using recovery:', JSON.stringify(rec));
+      if(rec?.score?.recovery_score != null){
+        el('m-re').value = Math.round(rec.score.recovery_score);
+        filled.push('Recovery ' + Math.round(rec.score.recovery_score) + '%');
       }
-    } else { console.warn('[WHOOP] recovery', recRes.status, await recRes.text()); }
+    }
 
-    // Calories burned — cycle that started on prevDate (strain from the day before)
-    const cycleUrl = WHOOP_PROXY + '/whoop-api/v1/cycle?limit=10'
+    // Calories burned (prev day cycle)
+    const cycleData = await wFetch('cycle',
+      WHOOP_PROXY + '/whoop-api/v1/cycle?limit=10'
       + '&start=' + encodeURIComponent(prevStart)
-      + '&end='   + encodeURIComponent(prevEnd);
-    const cycleRes = await fetch(cycleUrl, {headers: h});
-    if(cycleRes.ok){
-      const d = await cycleRes.json();
-      const cycle = d.records?.find(r => r.score_state === 'SCORED');
+      + '&end='   + encodeURIComponent(prevEnd));
+    if(cycleData){
+      const cycle = cycleData.records?.find(r => r.score_state === 'SCORED') || cycleData.records?.[0];
+      console.log('[WHOOP] using cycle:', JSON.stringify(cycle));
       if(cycle?.score?.kilojoule){
         const kcal = Math.round(cycle.score.kilojoule * 0.239006);
         el('m-bu').value = kcal;
         filled.push('Burned ' + kcal + 'kcal (' + prevDateStr + ')');
       }
-    } else { console.warn('[WHOOP] cycle', cycleRes.status, await cycleRes.text()); }
+    }
 
-    toast(filled.length ? 'WHOOP: ' + filled.join(' · ') : 'WHOOP: no scored data found for ' + selectedDate);
+    toast(filled.length ? 'WHOOP: ' + filled.join(' · ') : 'WHOOP: no data — check Console (F12)');
   } catch(e){
     console.error('[WHOOP] pull error', e);
     toast('WHOOP pull failed: ' + e.message);
