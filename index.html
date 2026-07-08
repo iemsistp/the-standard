@@ -202,6 +202,7 @@ if('serviceWorker' in navigator) {
     <span class="nav-date" id="nav-date" style="font-size:.6rem;"></span>
   </div>
   <div style="display:flex;gap:.4rem;">
+    <button id="whoop-btn" onclick="whoopConnect()" class="nav-action-btn" title="Connect WHOOP" style="color:var(--cy);border-color:var(--cy);">Connect WHOOP</button>
     <button onclick="sbPull()" class="nav-action-btn" title="Sync">⟳</button>
     <button onclick="sbPushAll()" class="nav-action-btn" title="Upload">↑</button>
   </div>
@@ -347,6 +348,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     <div id="m-fb" style="margin-bottom:.85rem;"></div>
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveMetrics()" id="save-btn">Save Log</button>
+      <button class="btn btn-s" onclick="whoopPullToday()" id="whoop-pull-btn" style="display:none;">⟳ WHOOP</button>
       <button class="btn btn-s" onclick="copyMorningLog()" id="copy-morning-btn" style="display:none;">📋 Copy to Claude</button>
       <button class="btn" onclick="clearMetrics()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:8px;padding:.65rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.5px;">Clear</button>
     </div>
@@ -1696,7 +1698,9 @@ const SB_URL = 'https://mbxhukdeblmkioyhfkck.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieGh1a2RlYmxta2lveWhma2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODc2NDYsImV4cCI6MjA5MzY2MzY0Nn0.w-t0UmQRyfu-Evs2YOCMIw1V5QLLc0DjmabOdHUzbpE';
 const WHOOP_CLIENT_ID = 'e7810fe8-7dfa-4685-9d69-850f0452309d';
 const WHOOP_CLIENT_SECRET = '0c38465a728f18e21403a454fe4acdb43924e3f62dfeb6c5249b54b65811944a';
-  
+const WHOOP_REDIRECT = 'https://iemsistp.github.io/the-standard/';
+const WHOOP_SCOPES = 'read:recovery read:sleep read:body_measurement offline';
+
 async function sbFetch(table, method='GET', body=null, params='') {
   const res = await fetch(`${SB_URL}/rest/v1/${table}${params}`, {
     method,
@@ -2203,8 +2207,141 @@ function renderMiniSparkline(svgId, vals, color, targetLow, targetHigh){
     +'<circle cx="'+xS(vals.length-1).toFixed(1)+'" cy="'+yS(vals[vals.length-1]).toFixed(1)+'" r="2" fill="'+color.replace('var(--or)','#a86530').replace('var(--cy)','#097a8a')+'"/>';
 }
 
+// ── WHOOP INTEGRATION ────────────────────────────────────
+function whoopConnect(){
+  const state = Math.random().toString(36).slice(2);
+  localStorage.setItem('whoop_state', state);
+  const url = 'https://api.prod.whoop.com/oauth/oauth2/auth'
+    + '?client_id=' + WHOOP_CLIENT_ID
+    + '&redirect_uri=' + encodeURIComponent(WHOOP_REDIRECT)
+    + '&response_type=code'
+    + '&scope=' + encodeURIComponent(WHOOP_SCOPES)
+    + '&state=' + state;
+  window.location.href = url;
+}
+
+async function whoopExchangeCode(code){
+  try {
+    const res = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        client_id: WHOOP_CLIENT_ID,
+        client_secret: WHOOP_CLIENT_SECRET,
+        redirect_uri: WHOOP_REDIRECT,
+      })
+    });
+    if(!res.ok){ const e=await res.text(); throw new Error(e); }
+    const data = await res.json();
+    localStorage.setItem('whoop_access', data.access_token);
+    localStorage.setItem('whoop_refresh', data.refresh_token);
+    localStorage.setItem('whoop_expires', String(Date.now() + (data.expires_in * 1000)));
+    toast('WHOOP connected!');
+    updateWhoopBtn();
+  } catch(e){ toast('WHOOP auth failed: ' + e.message); }
+}
+
+async function whoopRefreshToken(){
+  const refresh = localStorage.getItem('whoop_refresh');
+  if(!refresh) return false;
+  try {
+    const res = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:WHOOP_CLIENT_ID,client_secret:WHOOP_CLIENT_SECRET})
+    });
+    if(!res.ok) return false;
+    const data = await res.json();
+    localStorage.setItem('whoop_access', data.access_token);
+    localStorage.setItem('whoop_refresh', data.refresh_token);
+    localStorage.setItem('whoop_expires', String(Date.now() + (data.expires_in * 1000)));
+    return true;
+  } catch(e){ return false; }
+}
+
+async function whoopGetToken(){
+  const expires = parseInt(localStorage.getItem('whoop_expires')||'0');
+  if(Date.now() > expires - 60000){
+    const ok = await whoopRefreshToken();
+    if(!ok){ whoopDisconnect(); return null; }
+  }
+  return localStorage.getItem('whoop_access');
+}
+
+async function whoopPullToday(){
+  const token = await whoopGetToken();
+  if(!token){ toast('Connect WHOOP first'); return; }
+  toast('Pulling from WHOOP...');
+  try {
+    const [recRes, sleepRes] = await Promise.all([
+      fetch('https://api.prod.whoop.com/developer/v1/recovery?limit=1', {headers:{'Authorization':'Bearer '+token}}),
+      fetch('https://api.prod.whoop.com/developer/v1/activity/sleep?limit=1', {headers:{'Authorization':'Bearer '+token}})
+    ]);
+    const filled = [];
+    if(recRes.ok){
+      const d = await recRes.json();
+      const rec = d.records?.[0];
+      if(rec && rec.score){
+        const recovery = Math.round(rec.score.recovery_score);
+        if(recovery){ el('m-re').value = recovery; filled.push('Recovery '+recovery+'%'); }
+      }
+    }
+    if(sleepRes.ok){
+      const d = await sleepRes.json();
+      const sleep = d.records?.[0];
+      if(sleep && sleep.score && sleep.score.stage_summary){
+        const hrs = sleep.score.stage_summary.total_in_bed_time_milli / 3600000;
+        const h = Math.floor(hrs), m = Math.round((hrs-h)*60);
+        el('m-sl').value = h + ':' + String(m).padStart(2,'0');
+        filled.push('Sleep '+h+'h'+m+'m');
+      }
+    }
+    toast(filled.length ? 'WHOOP: ' + filled.join(' · ') : 'WHOOP: no data yet today');
+  } catch(e){ toast('WHOOP pull failed'); }
+}
+
+function whoopDisconnect(){
+  ['whoop_access','whoop_refresh','whoop_expires','whoop_state'].forEach(k=>localStorage.removeItem(k));
+  updateWhoopBtn();
+  toast('WHOOP disconnected');
+}
+
+function whoopIsConnected(){ return !!localStorage.getItem('whoop_access'); }
+
+function updateWhoopBtn(){
+  const btn = el('whoop-btn');
+  const pull = el('whoop-pull-btn');
+  if(!btn) return;
+  if(whoopIsConnected()){
+    btn.textContent = 'WHOOP ✓';
+    btn.onclick = whoopDisconnect;
+    btn.title = 'Click to disconnect WHOOP';
+    if(pull) pull.style.display = 'inline-flex';
+  } else {
+    btn.textContent = 'Connect WHOOP';
+    btn.onclick = whoopConnect;
+    btn.title = 'Pull recovery and sleep from WHOOP';
+    if(pull) pull.style.display = 'none';
+  }
+}
+
+function whoopHandleCallback(){
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if(code && state && state === localStorage.getItem('whoop_state')){
+    window.history.replaceState({}, document.title, window.location.pathname);
+    whoopExchangeCode(code);
+  }
+}
+
+
 // ── INIT ──────────────────────────────────────────────────
 el('m-date').value=today();if(el('l-date'))el('l-date').value=today();
+whoopHandleCallback();
+updateWhoopBtn();
 refresh();
 // Pull from Supabase on load (merge remote → local)
 // Small delay so page renders first
