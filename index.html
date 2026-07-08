@@ -2271,33 +2271,82 @@ async function whoopGetToken(){
 async function whoopPullToday(){
   const token = await whoopGetToken();
   if(!token){ toast('Connect WHOOP first'); return; }
-  toast('Pulling from WHOOP...');
+
+  // Get selected date from form, fall back to today
+  const selectedDate = v('m-date') || today();
+
+  // WHOOP date window helpers
+  // Recovery/sleep: data for selectedDate means the sleep that ended ON selectedDate
+  // Cals burned: the cycle for the DAY BEFORE selectedDate (since WHOOP strain closes at midnight)
+  const dayStart = (d) => d + 'T00:00:00.000Z';
+  const dayEnd   = (d) => d + 'T23:59:59.999Z';
+
+  // Previous day for calories burned
+  const prevDate = new Date(selectedDate + 'T12:00:00');
+  prevDate.setDate(prevDate.getDate() - 1);
+  const prevDateStr = prevDate.toISOString().split('T')[0];
+
+  toast('Pulling WHOOP data for ' + selectedDate + '...');
   try {
-    const [recRes, sleepRes] = await Promise.all([
-      fetch('https://api.prod.whoop.com/developer/v1/recovery?limit=1', {headers:{'Authorization':'Bearer '+token}}),
-      fetch('https://api.prod.whoop.com/developer/v1/activity/sleep?limit=1', {headers:{'Authorization':'Bearer '+token}})
-    ]);
+    const headers = {'Authorization':'Bearer '+token};
     const filled = [];
+
+    // Recovery — find record whose cycle covers selectedDate
+    const recRes = await fetch(
+      'https://api.prod.whoop.com/developer/v1/recovery?limit=25', {headers});
     if(recRes.ok){
       const d = await recRes.json();
-      const rec = d.records?.[0];
-      if(rec && rec.score){
+      // Find recovery whose updated_at or created_at date matches selectedDate
+      const rec = d.records?.find(r => {
+        const recDate = (r.updated_at || r.created_at || '').slice(0,10);
+        return recDate === selectedDate;
+      }) || d.records?.[0]; // fallback to latest if no match
+      if(rec?.score){
         const recovery = Math.round(rec.score.recovery_score);
-        if(recovery){ el('m-re').value = recovery; filled.push('Recovery '+recovery+'%'); }
+        if(recovery != null){ el('m-re').value = recovery; filled.push('Recovery '+recovery+'%'); }
       }
-    }
+    } else { console.warn('[WHOOP] recovery', recRes.status, await recRes.text()); }
+
+    // Sleep — find sleep that ended on selectedDate
+    const sleepRes = await fetch(
+      'https://api.prod.whoop.com/developer/v1/activity/sleep?limit=25', {headers});
     if(sleepRes.ok){
       const d = await sleepRes.json();
-      const sleep = d.records?.[0];
-      if(sleep && sleep.score && sleep.score.stage_summary){
-        const hrs = sleep.score.stage_summary.total_in_bed_time_milli / 3600000;
-        const h = Math.floor(hrs), m = Math.round((hrs-h)*60);
-        el('m-sl').value = h + ':' + String(m).padStart(2,'0');
-        filled.push('Sleep '+h+'h'+m+'m');
+      const sleep = d.records?.find(r => {
+        const endDate = (r.end || '').slice(0,10);
+        return endDate === selectedDate;
+      }) || d.records?.[0];
+      if(sleep?.score?.stage_summary){
+        const totalMilli = sleep.score.stage_summary.total_in_bed_time_milli;
+        if(totalMilli){
+          const hrs = totalMilli / 3600000;
+          const h = Math.floor(hrs), m = Math.round((hrs-h)*60);
+          el('m-sl').value = h + ':' + String(m).padStart(2,'0');
+          filled.push('Sleep '+h+'h'+m+'m');
+        }
       }
-    }
-    toast(filled.length ? 'WHOOP: ' + filled.join(' · ') : 'WHOOP: no data yet today');
-  } catch(e){ toast('WHOOP pull failed'); }
+    } else { console.warn('[WHOOP] sleep', sleepRes.status, await sleepRes.text()); }
+
+    // Calories burned — cycle for the PREVIOUS day (strain accumulates during the day before)
+    const cycleRes = await fetch(
+      'https://api.prod.whoop.com/developer/v1/cycle?limit=25', {headers});
+    if(cycleRes.ok){
+      const d = await cycleRes.json();
+      const cycle = d.records?.find(r => {
+        const cycleDate = (r.start || '').slice(0,10);
+        return cycleDate === prevDateStr;
+      }) || d.records?.[0];
+      if(cycle?.score?.kilojoule){
+        const kcal = Math.round(cycle.score.kilojoule * 0.239006);
+        if(kcal){ el('m-bu').value = kcal; filled.push('Burned '+kcal+'kcal ('+prevDateStr+')'); }
+      }
+    } else { console.warn('[WHOOP] cycle', cycleRes.status, await cycleRes.text()); }
+
+    toast(filled.length ? 'WHOOP: ' + filled.join(' · ') : 'WHOOP: no data found for ' + selectedDate);
+  } catch(e){
+    console.error('[WHOOP] pull error', e);
+    toast('WHOOP pull failed: ' + e.message);
+  }
 }
 
 function whoopDisconnect(){
