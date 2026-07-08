@@ -1697,7 +1697,7 @@ function quickQ(q) {
 const SB_URL = 'https://mbxhukdeblmkioyhfkck.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieGh1a2RlYmxta2lveWhma2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODc2NDYsImV4cCI6MjA5MzY2MzY0Nn0.w-t0UmQRyfu-Evs2YOCMIw1V5QLLc0DjmabOdHUzbpE';
 const WHOOP_CLIENT_ID = 'e7810fe8-7dfa-4685-9d69-850f0452309d';
-const WHOOP_CLIENT_SECRET = '0c38465a728f18e21403a454fe4acdb43924e3f62dfeb6c5249b54b65811944a';
+const WHOOP_PROXY = 'https://royal-lab-ba97.iemsistp.workers.dev';
 const WHOOP_REDIRECT = 'https://iemsistp.github.io/the-standard/';
 const WHOOP_SCOPES = 'read:recovery read:sleep read:body_measurement offline';
 
@@ -2222,14 +2222,12 @@ function whoopConnect(){
 
 async function whoopExchangeCode(code){
   try {
-    const res = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+    const res = await fetch(WHOOP_PROXY, {
       method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: new URLSearchParams({
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
         grant_type: 'authorization_code',
         code,
-        client_id: WHOOP_CLIENT_ID,
-        client_secret: WHOOP_CLIENT_SECRET,
         redirect_uri: WHOOP_REDIRECT,
       })
     });
@@ -2247,10 +2245,10 @@ async function whoopRefreshToken(){
   const refresh = localStorage.getItem('whoop_refresh');
   if(!refresh) return false;
   try {
-    const res = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+    const res = await fetch(WHOOP_PROXY, {
       method: 'POST',
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:WHOOP_CLIENT_ID,client_secret:WHOOP_CLIENT_SECRET})
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({grant_type:'refresh_token',refresh_token:refresh})
     });
     if(!res.ok) return false;
     const data = await res.json();
