@@ -1694,7 +1694,9 @@ function quickQ(q) {
 // ── SUPABASE SYNC ─────────────────────────────────────────
 const SB_URL = 'https://mbxhukdeblmkioyhfkck.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieGh1a2RlYmxta2lveWhma2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODc2NDYsImV4cCI6MjA5MzY2MzY0Nn0.w-t0UmQRyfu-Evs2YOCMIw1V5QLLc0DjmabOdHUzbpE';
-
+const WHOOP_CLIENT_ID = 'e7810fe8-7dfa-4685-9d69-850f0452309d';
+const WHOOP_CLIENT_SECRET = '0c38465a728f18e21403a454fe4acdb43924e3f62dfeb6c5249b54b65811944a';
+  
 async function sbFetch(table, method='GET', body=null, params='') {
   const res = await fetch(`${SB_URL}/rest/v1/${table}${params}`, {
     method,
