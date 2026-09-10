@@ -254,7 +254,7 @@ if('serviceWorker' in navigator) {
       <div class="su">kcal · target +400-500</div><span class="st-badge" id="d-sur-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
       <svg id="sur-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" style="width:100%;height:38px;margin-top:.4rem;display:block;"></svg>
     </div>
-    <div class="sc sc-click" style="--ac:var(--cy)" onclick="openStatChart('recovery','Recovery %','%','var(--cy)')">
+    <div class="sc sc-click" style="--ac:var(--cy)" onclick="openRecoveryMatrix()">
       <div class="sl">Recovery</div><div class="sv" id="d-rec">—</div>
       <div class="su">% · target 70%+</div><span class="st-badge" id="d-rec-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
       <svg id="rec-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" style="width:100%;height:38px;margin-top:.4rem;display:block;"></svg>
@@ -1763,6 +1763,88 @@ function openStatChart(key, label, unit, color) {
       for (let i = 0; i < dates.length; i += step) ctx.fillText(dates[i], px2(i), H - 6);
     }
   });
+}
+
+
+function openRecoveryMatrix() {
+  const monthMap = {};
+  metrics.forEach(m => {
+    const mo = m.date.slice(0,7);
+    if(!monthMap[mo]) monthMap[mo] = {sleep:[],recovery:[],weight:[]};
+    if(m.sleep) monthMap[mo].sleep.push(m.sleep);
+    if(m.recovery) monthMap[mo].recovery.push(m.recovery);
+    if(m.weight) monthMap[mo].weight.push(m.weight * 2.20462);
+  });
+
+  const now = new Date();
+  const sixAgo = new Date(now); sixAgo.setMonth(now.getMonth()-6);
+  const cutoff = sixAgo.toISOString().slice(0,7);
+  const months = Object.keys(monthMap).filter(mo => mo >= cutoff).sort();
+
+  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const periods = months.map((mo, pi) => {
+    const g = monthMap[mo];
+    const avgSleep = avg(g.sleep);
+    const avgRec = avg(g.recovery);
+    const avgWt = avg(g.weight);
+    let wtChange = null;
+    if(pi > 0) {
+      const prevWt = avg(monthMap[months[pi-1]]?.weight || []);
+      if(prevWt && avgWt) wtChange = avgWt - prevWt;
+    }
+    return { mo, avgSleep, avgRec, avgWt, wtChange, label: MON[parseInt(mo.slice(5))-1] };
+  });
+
+  const dot = (bg, fg, display) => `<div style="width:34px;height:34px;border-radius:6px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:${fg};margin:auto;line-height:1.2;text-align:center;">${display}</div>`;
+
+  // Color ranges
+  const wtC  = v => v===null?'#333':v>0.5?'#1baf7a':v>0?'#9fe1cb':'#e24b4a';
+  const wtF  = v => v===null?'#666':v>0.5?'#fff':v>0?'#085041':'#fff';
+  const slC  = v => v===null?'#333':v>=8?'#1baf7a':v>=7?'#9fe1cb':'#e24b4a';
+  const slF  = v => v===null?'#666':v>=8?'#fff':v>=7?'#085041':'#fff';
+  const recC = v => v===null?'#333':v>=70?'#1baf7a':v>=50?'#9fe1cb':'#e24b4a';
+  const recF = v => v===null?'#666':v>=70?'#fff':v>=50?'#085041':'#fff';
+
+  const slFmt = v => {
+    if(v===null) return '—';
+    const h=Math.floor(v), m=Math.round((v-h)*60);
+    return h+'h'+(m>0?m+'m':'');
+  };
+
+  const rows = [
+    { label: 'Wt ↑',     cells: periods.map(p => dot(wtC(p.wtChange),  wtF(p.wtChange),  p.wtChange!==null?(p.wtChange>0?'+':'')+p.wtChange.toFixed(1)+'lb':'—')) },
+    { label: 'Sleep',    cells: periods.map(p => dot(slC(p.avgSleep),  slF(p.avgSleep),  slFmt(p.avgSleep))) },
+    { label: 'Recovery', cells: periods.map(p => dot(recC(p.avgRec),   recF(p.avgRec),   p.avgRec!==null?Math.round(p.avgRec)+'%':'—')) },
+  ];
+
+  const gridCols = `52px repeat(${periods.length},1fr)`;
+  const colHeaders = periods.map(p => `<span style="font-size:11px;color:var(--mt);text-align:center;">${p.label}</span>`).join('');
+  const tableHTML = rows.map(row => `
+    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;align-items:center;margin-bottom:5px;">
+      <span style="font-size:11px;color:var(--mt);">${row.label}</span>
+      ${row.cells.join('')}
+    </div>`).join('');
+
+  const body = document.getElementById('chart-modal-body');
+  body.innerHTML = `
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:var(--cy);line-height:1;">Recovery</div>
+    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">Last 6 months · monthly avg</div>
+    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;margin-bottom:6px;">
+      <span></span>${colHeaders}
+    </div>
+    ${tableHTML}
+    <div style="display:flex;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bd);">
+      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#1baf7a;display:inline-block;"></span>on track</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#9fe1cb;display:inline-block;"></span>close</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#e24b4a;display:inline-block;"></span>off</span>
+    </div>
+    <div style="margin-top:10px;font-size:.72rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">Target: sleep 8h+ · recovery 70%+</div>
+  `;
+
+  document.getElementById('stat-canvas').style.display = 'none';
+  document.getElementById('chart-ov').classList.add('show');
 }
 
 
