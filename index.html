@@ -1616,35 +1616,6 @@ function openStatChart(key, label, unit, color) {
       ctx.textAlign = 'right';
       ctx.fillText(val, pad.l - 4, y + 4);
     }
-    // Weight chart: skip index-based draw — redrawn below with calendar x positions
-    if(key !== 'weight') {
-      const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
-      grad.addColorStop(0, hexColor + '30');
-      grad.addColorStop(1, hexColor + '05');
-      ctx.save();
-      ctx.rect(pad.l, pad.t, cW, cH);
-      ctx.clip();
-      ctx.beginPath();
-      ctx.moveTo(px(0), py(vals[0]));
-      for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
-      ctx.lineTo(px(vals.length-1), pad.t + cH);
-      ctx.lineTo(px(0), pad.t + cH);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-      ctx.restore();
-      ctx.beginPath();
-      ctx.strokeStyle = hexColor;
-      ctx.lineWidth = 2;
-      ctx.lineJoin = 'round';
-      ctx.moveTo(px(0), py(vals[0]));
-      for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(px(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
-      ctx.fillStyle = hexColor;
-      ctx.fill();
-    }
     // ── Monthly average overlays + x-axis (weight chart only) ──────
     if(key === 'weight') {
       // Group data points by calendar month
@@ -1687,9 +1658,7 @@ function openStatChart(key, label, unit, color) {
         return bucket.x1 + frac * (bucket.x2 - bucket.x1);
       };
 
-      // Redraw daily line using calendar-date x positions for even spacing
-      ctx.clearRect(0, 0, W, H);
-      // Redraw grid
+      // Draw grid lines for weight chart
       ctx.strokeStyle = 'rgba(255,255,255,0.05)';
       ctx.lineWidth = 1;
       for (let i = 0; i <= 4; i++) {
@@ -1701,7 +1670,7 @@ function openStatChart(key, label, unit, color) {
         ctx.textAlign = 'right';
         ctx.fillText(val, pad.l - 4, y + 4);
       }
-      // Redraw gradient fill
+      // Draw daily weight line using calendar column x positions
       const grad2 = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
       grad2.addColorStop(0, hexColor + '30');
       grad2.addColorStop(1, hexColor + '05');
