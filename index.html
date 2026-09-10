@@ -223,6 +223,10 @@ if('serviceWorker' in navigator) {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span>70.3</span>
   </button>
+  <button class="btab" onclick="showPg('weight',this)" data-label="Weight">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h18v18H3z" rx="2"/><path d="M7 10h10M7 14h6"/><circle cx="17" cy="14" r="1" fill="currentColor"/></svg>
+    <span>Weight</span>
+  </button>
 </div>
 <main>
 
@@ -241,7 +245,7 @@ if('serviceWorker' in navigator) {
   <div id="dash-fb"></div>
   <!-- 3 HERO TILES -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.25rem;">
-    <div class="sc sc-click" style="--ac:var(--bl);cursor:pointer;" onclick="openStatChart('weight','Weight Trend','kg','var(--bl)')">
+    <div class="sc sc-click" style="--ac:var(--bl);cursor:pointer;" onclick="showPg('weight',this)">
       <div class="sl">Weight</div>
       <div class="sv" id="d-wt" style="font-size:1.6rem;line-height:1;">—</div>
       <div class="su" style="margin-top:.1rem;">lbs · goal 175lb</div>
@@ -347,6 +351,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     <div id="m-fb" style="margin-bottom:.85rem;"></div>
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveMetrics()" id="save-btn">Save Log</button>
+      <button class="btn btn-s" onclick="whoopPullToday()" id="whoop-pull-btn" style="display:none;">⟳ WHOOP</button>
       <button class="btn btn-s" onclick="copyMorningLog()" id="copy-morning-btn" style="display:none;">📋 Copy to Claude</button>
       <button class="btn" onclick="clearMetrics()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:8px;padding:.65rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.5px;">Clear</button>
     </div>
@@ -541,6 +546,77 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
 <div id="target-tip" style="display:none;position:fixed;"></div>
 </main>
 
+
+<!-- WEIGHT DASHBOARD -->
+<div class="pg" id="pg-weight">
+  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
+    <div>
+      <div class="ht" style="font-size:2rem;">Weight<br><span>Trend</span></div>
+      <div class="hs" id="wdash-sub">Mass gain tracker</div>
+    </div>
+    <div class="hm">
+      <div class="hg" id="wdash-current">—</div>
+      <div class="hgs">lbs · current</div>
+    </div>
+  </div>
+
+  <!-- Stat tiles -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem;">
+    <div class="sc" style="--ac:var(--gd);">
+      <div class="sl">Goal</div><div class="sv">175</div><div class="su">lbs target</div>
+    </div>
+    <div class="sc" style="--ac:var(--gn);">
+      <div class="sl">Gained</div><div class="sv" id="wdash-gained">—</div><div class="su">lbs total</div>
+    </div>
+    <div class="sc" style="--ac:var(--bl);">
+      <div class="sl">To Go</div><div class="sv" id="wdash-togo">—</div><div class="su">lbs remaining</div>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="cd" style="margin-bottom:1rem;">
+    <div class="sl" style="margin-bottom:.6rem;">Progress to 175lb goal</div>
+    <div style="height:8px;background:var(--sf2);border-radius:999px;overflow:hidden;margin-bottom:.45rem;">
+      <div id="wdash-progress-bar" style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--bl),var(--gd));transition:width .8s ease;width:0%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--mt);">
+      <span>165 lb start</span><span id="wdash-now-label" style="color:var(--gd);">— now</span><span>175 lb goal</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-top:.9rem;padding-top:.75rem;border-top:1px solid var(--bd);">
+      <div><div class="sl">Rate</div><div style="font-family:'JetBrains Mono',monospace;font-size:.82rem;" id="wdash-rate">—</div></div>
+      <div><div class="sl">Avg Calories</div><div style="font-family:'JetBrains Mono',monospace;font-size:.82rem;" id="wdash-cal">—</div></div>
+      <div><div class="sl">Est. Reach</div><div style="font-family:'JetBrains Mono',monospace;font-size:.82rem;" id="wdash-eta">—</div></div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="cd" style="margin-bottom:1rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <div style="width:18px;height:2px;background:var(--gd);border-radius:2px;"></div>
+        <span style="font-size:.65rem;color:var(--mt);">Daily</span>
+        <div style="width:18px;height:2px;background:var(--bl);border-radius:2px;border-top:2px dashed var(--bl);"></div>
+        <span style="font-size:.65rem;color:var(--mt);">7-day avg</span>
+      </div>
+      <div style="display:flex;gap:.25rem;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:.2rem;">
+        <button id="wtog-W" onclick="setWeightView('W')" style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;padding:.2rem .6rem;border-radius:4px;border:none;background:none;color:var(--mt);cursor:pointer;">W</button>
+        <button id="wtog-M" onclick="setWeightView('M')" style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;padding:.2rem .6rem;border-radius:4px;border:none;background:var(--bd);color:var(--tx);cursor:pointer;">M</button>
+        <button id="wtog-6M" onclick="setWeightView('6M')" style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;padding:.2rem .6rem;border-radius:4px;border:none;background:none;color:var(--mt);cursor:pointer;">6M</button>
+      </div>
+    </div>
+    <div style="font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;margin-bottom:.5rem;" id="wdash-range">—</div>
+    <div style="position:relative;width:100%;height:200px;">
+      <canvas id="weightTrendChart" role="img" aria-label="Weight trend over time with 7-day rolling average"></canvas>
+    </div>
+  </div>
+
+  <!-- Recent log -->
+  <div class="cd">
+    <div class="ct">Recent Log</div>
+    <div id="wdash-log"></div>
+  </div>
+</div>
+
 <!-- STAT CHART MODAL -->
 <div class="modal-ov" id="chart-ov" onclick="closeChartOv(event)" style="z-index:510;">
   <div class="modal" style="max-width:480px;">
@@ -690,6 +766,7 @@ function showPg(id,btn){
   document.getElementById('pg-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
   refresh();
+  if(id==='weight') renderWeightDashboard();
 }
 
 // ── METRICS ───────────────────────────────────────────────
@@ -1489,6 +1566,7 @@ function renderMilestones(){
 
 function refresh(){
   updateCountdown();updateDash();
+  if(document.getElementById('pg-weight')?.classList.contains('active')) renderWeightDashboard();
   renderWeek('dash-week',false);renderWeek('prog-week',true);
   renderMetTable();
   renderMilestones();
@@ -1694,6 +1772,10 @@ function quickQ(q) {
 // ── SUPABASE SYNC ─────────────────────────────────────────
 const SB_URL = 'https://mbxhukdeblmkioyhfkck.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieGh1a2RlYmxta2lveWhma2NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODc2NDYsImV4cCI6MjA5MzY2MzY0Nn0.w-t0UmQRyfu-Evs2YOCMIw1V5QLLc0DjmabOdHUzbpE';
+const WHOOP_CLIENT_ID = 'e7810fe8-7dfa-4685-9d69-850f0452309d';
+const WHOOP_CLIENT_SECRET = 'YOUR_SECRET_HERE';
+const WHOOP_REDIRECT = 'https://iemsistp.github.io/the-standard/';
+const WHOOP_SCOPES = 'read:recovery read:sleep read:body_measurement offline';
 
 async function sbFetch(table, method='GET', body=null, params='') {
   const res = await fetch(`${SB_URL}/rest/v1/${table}${params}`, {
@@ -2201,8 +2283,141 @@ function renderMiniSparkline(svgId, vals, color, targetLow, targetHigh){
     +'<circle cx="'+xS(vals.length-1).toFixed(1)+'" cy="'+yS(vals[vals.length-1]).toFixed(1)+'" r="2" fill="'+color.replace('var(--or)','#a86530').replace('var(--cy)','#097a8a')+'"/>';
 }
 
+// ── WHOOP INTEGRATION ────────────────────────────────────
+function whoopConnect(){
+  const state = Math.random().toString(36).slice(2);
+  localStorage.setItem('whoop_state', state);
+  const url = 'https://api.prod.whoop.com/oauth/oauth2/auth'
+    + '?client_id=' + WHOOP_CLIENT_ID
+    + '&redirect_uri=' + encodeURIComponent(WHOOP_REDIRECT)
+    + '&response_type=code'
+    + '&scope=' + encodeURIComponent(WHOOP_SCOPES)
+    + '&state=' + state;
+  window.location.href = url;
+}
+
+async function whoopExchangeCode(code){
+  try {
+    const res = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        client_id: WHOOP_CLIENT_ID,
+        client_secret: WHOOP_CLIENT_SECRET,
+        redirect_uri: WHOOP_REDIRECT,
+      })
+    });
+    if(!res.ok){ const e=await res.text(); throw new Error(e); }
+    const data = await res.json();
+    localStorage.setItem('whoop_access', data.access_token);
+    localStorage.setItem('whoop_refresh', data.refresh_token);
+    localStorage.setItem('whoop_expires', String(Date.now() + (data.expires_in * 1000)));
+    toast('WHOOP connected!');
+    updateWhoopBtn();
+  } catch(e){ toast('WHOOP auth failed: ' + e.message); }
+}
+
+async function whoopRefreshToken(){
+  const refresh = localStorage.getItem('whoop_refresh');
+  if(!refresh) return false;
+  try {
+    const res = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({grant_type:'refresh_token',refresh_token:refresh,client_id:WHOOP_CLIENT_ID,client_secret:WHOOP_CLIENT_SECRET})
+    });
+    if(!res.ok) return false;
+    const data = await res.json();
+    localStorage.setItem('whoop_access', data.access_token);
+    localStorage.setItem('whoop_refresh', data.refresh_token);
+    localStorage.setItem('whoop_expires', String(Date.now() + (data.expires_in * 1000)));
+    return true;
+  } catch(e){ return false; }
+}
+
+async function whoopGetToken(){
+  const expires = parseInt(localStorage.getItem('whoop_expires')||'0');
+  if(Date.now() > expires - 60000){
+    const ok = await whoopRefreshToken();
+    if(!ok){ whoopDisconnect(); return null; }
+  }
+  return localStorage.getItem('whoop_access');
+}
+
+async function whoopPullToday(){
+  const token = await whoopGetToken();
+  if(!token){ toast('Connect WHOOP first'); return; }
+  toast('Pulling from WHOOP...');
+  try {
+    const [recRes, sleepRes] = await Promise.all([
+      fetch('https://api.prod.whoop.com/developer/v1/recovery?limit=1', {headers:{'Authorization':'Bearer '+token}}),
+      fetch('https://api.prod.whoop.com/developer/v1/activity/sleep?limit=1', {headers:{'Authorization':'Bearer '+token}})
+    ]);
+    const filled = [];
+    if(recRes.ok){
+      const d = await recRes.json();
+      const rec = d.records?.[0];
+      if(rec && rec.score){
+        const recovery = Math.round(rec.score.recovery_score);
+        if(recovery){ el('m-re').value = recovery; filled.push('Recovery '+recovery+'%'); }
+      }
+    }
+    if(sleepRes.ok){
+      const d = await sleepRes.json();
+      const sleep = d.records?.[0];
+      if(sleep && sleep.score && sleep.score.stage_summary){
+        const hrs = sleep.score.stage_summary.total_in_bed_time_milli / 3600000;
+        const h = Math.floor(hrs), m = Math.round((hrs-h)*60);
+        el('m-sl').value = h + ':' + String(m).padStart(2,'0');
+        filled.push('Sleep '+h+'h'+m+'m');
+      }
+    }
+    toast(filled.length ? 'WHOOP: ' + filled.join(' · ') : 'WHOOP: no data yet today');
+  } catch(e){ toast('WHOOP pull failed'); }
+}
+
+function whoopDisconnect(){
+  ['whoop_access','whoop_refresh','whoop_expires','whoop_state'].forEach(k=>localStorage.removeItem(k));
+  updateWhoopBtn();
+  toast('WHOOP disconnected');
+}
+
+function whoopIsConnected(){ return !!localStorage.getItem('whoop_access'); }
+
+function updateWhoopBtn(){
+  const btn = el('whoop-btn');
+  const pull = el('whoop-pull-btn');
+  if(!btn) return;
+  if(whoopIsConnected()){
+    btn.textContent = 'WHOOP ✓';
+    btn.onclick = whoopDisconnect;
+    btn.title = 'Click to disconnect WHOOP';
+    if(pull) pull.style.display = 'inline-flex';
+  } else {
+    btn.textContent = 'Connect WHOOP';
+    btn.onclick = whoopConnect;
+    btn.title = 'Pull recovery and sleep from WHOOP';
+    if(pull) pull.style.display = 'none';
+  }
+}
+
+function whoopHandleCallback(){
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if(code && state && state === localStorage.getItem('whoop_state')){
+    window.history.replaceState({}, document.title, window.location.pathname);
+    whoopExchangeCode(code);
+  }
+}
+
+
 // ── INIT ──────────────────────────────────────────────────
 el('m-date').value=today();if(el('l-date'))el('l-date').value=today();
+whoopHandleCallback();
+updateWhoopBtn();
 refresh();
 // Pull from Supabase on load (merge remote → local)
 // Small delay so page renders first
@@ -2213,6 +2428,203 @@ setTimeout(()=>{
   const banner = document.getElementById('sb-status');
   if(banner && hasHist) banner.style.display = 'block';
 });
+
+// ── WEIGHT DASHBOARD ──────────────────────────────────────
+let weightChartInstance = null;
+let weightView = 'M';
+
+function setWeightView(v) {
+  weightView = v;
+  ['W','M','6M'].forEach(t => {
+    const btn = document.getElementById('wtog-'+t);
+    if(btn) { btn.style.background = t===v ? 'var(--bd)' : 'none'; btn.style.color = t===v ? 'var(--tx)' : 'var(--mt)'; }
+  });
+  renderWeightDashboard();
+}
+
+function renderWeightDashboard() {
+  const allWt = metrics.filter(m => m.weight).sort((a,b) => a.date.localeCompare(b.date));
+  if(!allWt.length) return;
+
+  const latest = allWt[allWt.length-1];
+  const latestLbs = (latest.weight * 2.20462).toFixed(1);
+  const startLbs = 165, goalLbs = 175;
+  const gained = Math.max(0, parseFloat(latestLbs) - startLbs).toFixed(1);
+  const togo = Math.max(0, goalLbs - parseFloat(latestLbs)).toFixed(1);
+  const pct = Math.min(100, Math.max(0, ((parseFloat(latestLbs) - startLbs) / (goalLbs - startLbs)) * 100));
+
+  const el2 = id => document.getElementById(id);
+  if(el2('wdash-current')) el2('wdash-current').textContent = latestLbs;
+  if(el2('wdash-gained')) el2('wdash-gained').textContent = '+' + gained;
+  if(el2('wdash-togo')) el2('wdash-togo').textContent = togo;
+  if(el2('wdash-progress-bar')) el2('wdash-progress-bar').style.width = pct.toFixed(1) + '%';
+  if(el2('wdash-now-label')) el2('wdash-now-label').textContent = latestLbs + ' lb now';
+
+  // Rate: compare last 4 weeks of weight
+  const now = new Date();
+  const fourWeeksAgo = new Date(now); fourWeeksAgo.setDate(now.getDate()-28);
+  const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(now.getDate()-14);
+  const recent2wk = allWt.filter(m => new Date(m.date+'T12:00:00') >= twoWeeksAgo);
+  const older2wk = allWt.filter(m => { const d=new Date(m.date+'T12:00:00'); return d>=fourWeeksAgo && d<twoWeeksAgo; });
+  let rateStr = '—';
+  if(recent2wk.length && older2wk.length) {
+    const avgR = recent2wk.reduce((s,m)=>s+m.weight,0)/recent2wk.length;
+    const avgO = older2wk.reduce((s,m)=>s+m.weight,0)/older2wk.length;
+    const wkRate = ((avgR - avgO) / 2 * 2.20462);
+    rateStr = (wkRate >= 0 ? '+' : '') + wkRate.toFixed(2) + ' lb/wk';
+  }
+  if(el2('wdash-rate')) el2('wdash-rate').textContent = rateStr;
+
+  // Avg cals last 7 days
+  const r7cal = metrics.slice(0,7).filter(m=>m.consumed);
+  const avgCal = r7cal.length ? Math.round(r7cal.reduce((s,m)=>s+m.consumed,0)/r7cal.length) : null;
+  if(el2('wdash-cal')) el2('wdash-cal').textContent = avgCal ? avgCal.toLocaleString() + ' kcal' : '—';
+
+  // ETA
+  const toGoKg = 79.4 - latest.weight;
+  const wkRateKg = recent2wk.length && older2wk.length
+    ? (recent2wk.reduce((s,m)=>s+m.weight,0)/recent2wk.length - older2wk.reduce((s,m)=>s+m.weight,0)/older2wk.length) / 2
+    : 0.2;
+  const weeksLeft = wkRateKg > 0 ? Math.ceil(toGoKg / wkRateKg) : null;
+  if(el2('wdash-eta')) el2('wdash-eta').textContent = weeksLeft && weeksLeft > 0 ? '~' + weeksLeft + ' wks' : toGoKg <= 0 ? '🎯 Done!' : '—';
+
+  // Filter data by view
+  const cutoff = new Date(now);
+  if(weightView === 'W') cutoff.setDate(now.getDate()-7);
+  else if(weightView === 'M') cutoff.setDate(now.getDate()-30);
+  else cutoff.setDate(now.getDate()-182);
+  const filtered = allWt.filter(m => new Date(m.date+'T12:00:00') >= cutoff);
+  if(!filtered.length) return;
+
+  const first = filtered[0].date, last2 = filtered[filtered.length-1].date;
+  const fmt = d => { const p=d.split('-'); return p[1]+'/'+p[2]; };
+  if(el2('wdash-range')) el2('wdash-range').textContent = fmt(first) + ' — ' + fmt(last2);
+
+  const labels = filtered.map(m => fmt(m.date));
+  const dailyLbs = filtered.map(m => parseFloat((m.weight*2.20462).toFixed(1)));
+
+  // 7-day rolling average
+  const rollingAvg = dailyLbs.map((_,i,arr) => {
+    const win = arr.slice(Math.max(0,i-3), i+4);
+    return parseFloat((win.reduce((a,b)=>a+b,0)/win.length).toFixed(2));
+  });
+
+  // Goal line
+  const goalLine = dailyLbs.map(() => 175);
+
+  const canvas = document.getElementById('weightTrendChart');
+  if(!canvas) return;
+
+  if(weightChartInstance) { weightChartInstance.destroy(); weightChartInstance = null; }
+
+  // Load Chart.js if not already loaded
+  function buildChart() {
+    weightChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Daily weight',
+            data: dailyLbs,
+            borderColor: '#9e7820',
+            backgroundColor: 'rgba(158,120,32,0.06)',
+            borderWidth: 1.5,
+            pointRadius: weightView==='W' ? 3 : 0,
+            pointHoverRadius: 4,
+            pointBackgroundColor: '#9e7820',
+            tension: 0.3,
+            fill: true,
+            order: 3
+          },
+          {
+            label: '7-day avg',
+            data: rollingAvg,
+            borderColor: '#3d6b9e',
+            borderWidth: 2,
+            borderDash: [5,3],
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            tension: 0.4,
+            fill: false,
+            order: 2
+          },
+          {
+            label: '175lb goal',
+            data: goalLine,
+            borderColor: 'rgba(31,122,69,0.35)',
+            borderWidth: 1,
+            borderDash: [3,4],
+            pointRadius: 0,
+            fill: false,
+            order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0c0c0c',
+            borderColor: '#1e1e1e',
+            borderWidth: 1,
+            titleColor: '#707070',
+            bodyColor: '#d0d0d0',
+            titleFont: { family: 'JetBrains Mono', size: 10 },
+            bodyFont: { family: 'JetBrains Mono', size: 11 },
+            callbacks: {
+              label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + ' lb'
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#1e1e1e' },
+            ticks: { color: '#707070', font: { family: 'JetBrains Mono', size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+            border: { display: false }
+          },
+          y: {
+            grid: { color: '#1e1e1e' },
+            ticks: { color: '#707070', font: { family: 'JetBrains Mono', size: 9 }, callback: v => v.toFixed(0) + ' lb' },
+            border: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  if(typeof Chart !== 'undefined') {
+    buildChart();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+    s.onload = buildChart;
+    document.head.appendChild(s);
+  }
+
+  // Recent log
+  const logEl = document.getElementById('wdash-log');
+  if(logEl) {
+    const recent = [...allWt].reverse().slice(0,14);
+    logEl.innerHTML = recent.map((m,i,arr) => {
+      const lbs = (m.weight * 2.20462).toFixed(1);
+      const prev = arr[i+1];
+      const diff = prev ? ((m.weight - prev.weight)*2.20462) : null;
+      const diffStr = diff !== null ? (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' lb' : '—';
+      const diffCol = diff === null ? 'var(--mt)' : diff > 0 ? 'var(--gn)' : diff < 0 ? 'var(--rd)' : 'var(--mt)';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);">'
+        + '<span style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--mt);">' + m.date + '</span>'
+        + '<div style="flex:1;margin:0 .75rem;height:4px;background:var(--sf2);border-radius:999px;overflow:hidden;">'
+        + '<div style="height:100%;background:var(--gd);border-radius:999px;width:' + Math.min(100,Math.max(0,((m.weight-72)/(80-72))*100)).toFixed(1) + '%;"></div></div>'
+        + '<span style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--gd);min-width:50px;text-align:right;">' + lbs + '</span>'
+        + '<span style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:' + diffCol + ';min-width:48px;text-align:right;">' + diffStr + '</span>'
+        + '</div>';
+    }).join('');
+  }
+}
 
 </script>
 </body>
