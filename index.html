@@ -2616,11 +2616,11 @@ function renderWeightDashboard() {
       const diffStr = diff !== null ? (diff >= 0 ? '+' : '') + diff.toFixed(1) + ' lb' : '—';
       const diffCol = diff === null ? 'var(--mt)' : diff > 0 ? 'var(--gn)' : diff < 0 ? 'var(--rd)' : 'var(--mt)';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--bd);">'
-        + '<span style="font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--mt);">' + m.date + '</span>'
+        + '<span style="font-family:JetBrains Mono,monospace;font-size:.68rem;color:var(--mt);">' + m.date + '</span>'
         + '<div style="flex:1;margin:0 .75rem;height:4px;background:var(--sf2);border-radius:999px;overflow:hidden;">'
         + '<div style="height:100%;background:var(--gd);border-radius:999px;width:' + Math.min(100,Math.max(0,((m.weight-72)/(80-72))*100)).toFixed(1) + '%;"></div></div>'
-        + '<span style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--gd);min-width:50px;text-align:right;">' + lbs + '</span>'
-        + '<span style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:' + diffCol + ';min-width:48px;text-align:right;">' + diffStr + '</span>'
+        + '<span style="font-family:JetBrains Mono,monospace;font-size:.78rem;color:var(--gd);min-width:50px;text-align:right;">' + lbs + '</span>'
+        + '<span style="font-family:JetBrains Mono,monospace;font-size:.65rem;color:' + diffCol + ';min-width:48px;text-align:right;">' + diffStr + '</span>'
         + '</div>';
     }).join('');
   }
