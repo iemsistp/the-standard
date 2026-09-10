@@ -605,7 +605,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
       </div>
     </div>
     <div style="font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;margin-bottom:.5rem;" id="wdash-range">—</div>
-    <div style="position:relative;width:100%;height:200px;">
+    <div style="position:relative;width:100%;height:280px;">
       <canvas id="weightTrendChart" role="img" aria-label="Weight trend over time with period averages"></canvas>
     </div>
   </div>
@@ -2542,40 +2542,46 @@ function renderWeightDashboard() {
 
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 320;
-  const H = 200;
+  const H = 280;
   canvas.width = W * dpr;
   canvas.height = H * dpr;
   canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const PAD = { t: 24, r: 12, b: 28, l: 38 };
+  // Generous padding: top for avg labels, bottom for pct + x-axis, left for y-axis labels
+  const PAD = { t: 22, r: 16, b: 36, l: 42 };
   const cW = W - PAD.l - PAD.r;
   const cH = H - PAD.t - PAD.b;
   const n = dailyLbs.length;
 
   const allVals = dailyLbs.filter(v => v > 0);
-  const spread = Math.max(...allVals) - Math.min(...allVals) || 2;
-  const vMin = Math.min(...allVals) - spread * 0.25;
-  const vMax = Math.max(...allVals) + spread * 0.35;
+  const dataMin = Math.min(...allVals);
+  const dataMax = Math.max(...allVals);
+  const spread = dataMax - dataMin || 2;
+  // Extra headroom above for avg labels, extra below for pct labels
+  const vMin = dataMin - spread * 0.45;
+  const vMax = dataMax + spread * 0.55;
   const vRange = vMax - vMin;
 
   const xP = i => PAD.l + (i / Math.max(n - 1, 1)) * cW;
   const yP = v => PAD.t + cH - ((v - vMin) / vRange) * cH;
 
-  // Grid lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  // Grid lines — only 3-4 clean values in the data range
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
   ctx.lineWidth = 1;
+  const gridStep = spread <= 3 ? 1 : spread <= 6 ? 2 : 5;
+  const gridStart = Math.ceil(dataMin / gridStep) * gridStep;
   const gridVals = [];
-  const step = vRange > 6 ? 2 : 1;
-  for(let v = Math.ceil(vMin); v <= vMax; v += step) gridVals.push(v);
+  for(let v = gridStart; v <= dataMax + gridStep; v += gridStep) gridVals.push(v);
   gridVals.forEach(v => {
     const y = yP(v);
+    if(y < PAD.t || y > PAD.t + cH) return;
     ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + cW, y); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '10px JetBrains Mono, monospace';
     ctx.textAlign = 'right';
-    ctx.fillText(v.toFixed(0), PAD.l - 4, y + 3);
+    ctx.fillText(v.toFixed(0), PAD.l - 6, y + 4);
   });
 
   // X axis labels — month names for 6M, dates for others
@@ -2587,13 +2593,13 @@ function renderWeightDashboard() {
       const midI = p.indices[Math.floor(p.indices.length/2)];
       const x = xP(midI);
       const mo = new Date(p.dates[0]+'T12:00:00').toLocaleDateString('en-CA',{month:'short'});
-      ctx.fillText(mo, x, H - 6);
+      ctx.fillText(mo, x, H - 8);
     });
   } else {
     const tickStep = Math.max(1, Math.floor(n / 6));
     for(let i = 0; i < n; i += tickStep) {
       const d = filtered[i].date.split('-');
-      ctx.fillText(d[1]+'/'+d[2], xP(i), H - 6);
+      ctx.fillText(d[1]+'/'+d[2], xP(i), H - 8);
     }
   }
 
@@ -2626,23 +2632,27 @@ function renderWeightDashboard() {
       ctx.stroke();
 
       const midX = (x1 + x2) / 2;
+      const segWidth = x2 - x1;
 
-      // Avg label ABOVE the line
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.font = 'bold 10px DM Sans, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(p.avg.toFixed(1), midX, y - 5);
-
-      // +/-% label BELOW the line (from 2nd segment on)
-      if(pi > 0) {
-        const prev = periods[pi-1];
-        const pct = ((p.avg - prev.avg) / prev.avg * 100);
-        const sign = pct >= 0 ? '+' : '';
-        const pctStr = sign + pct.toFixed(1) + '%';
-        ctx.fillStyle = pct >= 0 ? '#1f7a45' : '#a02820';
-        ctx.font = '9px DM Sans, sans-serif';
+      // Only draw labels if segment wide enough
+      if(segWidth > 28) {
+        // Avg label ABOVE the line
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.font = 'bold 11px DM Sans, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(pctStr, midX, y + 14);
+        ctx.fillText(p.avg.toFixed(1), midX, y - 7);
+
+        // +/-% label BELOW the line (from 2nd segment on)
+        if(pi > 0) {
+          const prev = periods[pi-1];
+          const pct = ((p.avg - prev.avg) / prev.avg * 100);
+          const sign = pct >= 0 ? '+' : '';
+          const pctStr = sign + pct.toFixed(1) + '%';
+          ctx.fillStyle = pct >= 0 ? '#2a9d5c' : '#e05555';
+          ctx.font = '10px DM Sans, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(pctStr, midX, y + 16);
+        }
       }
     });
   }
