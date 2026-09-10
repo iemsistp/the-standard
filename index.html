@@ -1659,29 +1659,30 @@ function openStatChart(key, label, unit, color) {
         return { mo, i0: g.i0, i1: g.i1, avg: parseFloat(avg.toFixed(1)) };
       });
 
-      // For each month, compute x positions based on actual calendar date range
-      // rather than entry indices — so every month spans its full calendar width
-      const totalDays = (new Date(data[data.length-1].date+'T12:00:00') - new Date(data[0].date+'T12:00:00')) / 86400000 || 1;
-      const dateToX = dateStr => {
-        const days = (new Date(dateStr+'T12:00:00') - new Date(data[0].date+'T12:00:00')) / 86400000;
-        return pad.l + (days / totalDays) * cW;
-      };
-      // Also remap px to use calendar dates for the line itself
-      const pxDate = i => dateToX(data[i].date);
-
-      // Recalculate each period's x bounds from first/last calendar day of that month
-      moPeriods.forEach(p => {
-        const [yr, mo] = p.mo.split('-').map(Number);
-        const firstDay = p.mo + '-01';
-        const lastDay = new Date(yr, mo, 0).getDate(); // last day of month
-        const lastDayStr = p.mo + '-' + String(lastDay).padStart(2,'0');
-        // Clamp to data range
-        const x1 = Math.max(pad.l, dateToX(firstDay));
-        const x2 = Math.min(pad.l + cW, dateToX(lastDayStr));
-        p.x1 = x1;
-        p.x2 = x2;
-        p.midX = (x1 + x2) / 2;
+      // Use the sorted month list as evenly-spaced columns — each month gets
+      // exactly 1/N of the chart width regardless of how many entries it has
+      const N = moPeriods.length || 1;
+      const colW = cW / N;
+      moPeriods.forEach((p, pi) => {
+        p.x1   = pad.l + pi * colW;
+        p.x2   = pad.l + (pi + 1) * colW;
+        p.midX = (p.x1 + p.x2) / 2;
       });
+
+      // Map each data point's x to its month column, distributed within that column
+      const moIndex = {};
+      moPeriods.forEach((p, pi) => { moIndex[p.mo] = pi; });
+      const pxDate = i => {
+        const mo = data[i].date.slice(0, 7);
+        const pi = moIndex[mo] ?? 0;
+        const bucket = moPeriods[pi];
+        // How far into the month is this date?
+        const day = parseInt(data[i].date.slice(8, 10));
+        const [yr, moNum] = mo.split('-').map(Number);
+        const daysInMo = new Date(yr, moNum, 0).getDate();
+        const frac = (day - 1) / (daysInMo - 1 || 1);
+        return bucket.x1 + frac * (bucket.x2 - bucket.x1);
+      };
 
       // Redraw daily line using calendar-date x positions for even spacing
       ctx.clearRect(0, 0, W, H);
