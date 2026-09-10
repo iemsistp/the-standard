@@ -1616,32 +1616,35 @@ function openStatChart(key, label, unit, color) {
       ctx.textAlign = 'right';
       ctx.fillText(val, pad.l - 4, y + 4);
     }
-    const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
-    grad.addColorStop(0, hexColor + '30');
-    grad.addColorStop(1, hexColor + '05');
-    ctx.save();
-    ctx.rect(pad.l, pad.t, cW, cH);
-    ctx.clip();
-    ctx.beginPath();
-    ctx.moveTo(px(0), py(vals[0]));
-    for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
-    ctx.lineTo(px(vals.length-1), pad.t + cH);
-    ctx.lineTo(px(0), pad.t + cH);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.restore();
-    ctx.beginPath();
-    ctx.strokeStyle = hexColor;
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    ctx.moveTo(px(0), py(vals[0]));
-    for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(px(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
-    ctx.fillStyle = hexColor;
-    ctx.fill();
+    // Weight chart: skip index-based draw — redrawn below with calendar x positions
+    if(key !== 'weight') {
+      const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+      grad.addColorStop(0, hexColor + '30');
+      grad.addColorStop(1, hexColor + '05');
+      ctx.save();
+      ctx.rect(pad.l, pad.t, cW, cH);
+      ctx.clip();
+      ctx.beginPath();
+      ctx.moveTo(px(0), py(vals[0]));
+      for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
+      ctx.lineTo(px(vals.length-1), pad.t + cH);
+      ctx.lineTo(px(0), pad.t + cH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.restore();
+      ctx.beginPath();
+      ctx.strokeStyle = hexColor;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.moveTo(px(0), py(vals[0]));
+      for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(px(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
+      ctx.fillStyle = hexColor;
+      ctx.fill();
+    }
     // ── Monthly average overlays + x-axis (weight chart only) ──────
     if(key === 'weight') {
       // Group data points by calendar month
