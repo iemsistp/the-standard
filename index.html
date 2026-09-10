@@ -1579,12 +1579,13 @@ function openStatChart(key, label, unit, color) {
     const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
     ctx.clearRect(0, 0, W, H);
     const _spread = Math.max(...vals) - Math.min(...vals) || 1;
-    // For weight, give extra vertical room so labels don't clip
+    // For weight: tight range around actual data so trend is visible, with just
+    // enough headroom above/below for the avg label (11px) and pct label (10px)
     const vmin = key === 'weight'
-      ? Math.min(...vals) - _spread * 0.35
+      ? Math.min(...vals) - _spread * 0.15
       : Math.min(...vals) - _spread * 0.1;
     const vmax = key === 'weight'
-      ? Math.max(...vals) + _spread * 0.45
+      ? Math.max(...vals) + _spread * 0.25
       : Math.max(...vals) + _spread * 0.1;
     const range = vmax - vmin || 1;
     const px = i => pad.l + (i / (vals.length-1)) * cW;
@@ -1644,55 +1645,68 @@ function openStatChart(key, label, unit, color) {
 
     // ── Monthly average overlays (weight chart only) ──────
     if(key === 'weight') {
-      // Build monthly buckets from the data array
+      // Build monthly buckets — key by YYYY-MM, value = data point indices + lbs vals
       const monthMap = {};
       data.forEach((d, i) => {
-        const mo = d.date.slice(0, 7); // "2026-03"
+        const mo = d.date.slice(0, 7);
         if(!monthMap[mo]) monthMap[mo] = {indices:[], vals:[]};
         monthMap[mo].indices.push(i);
         monthMap[mo].vals.push(vals[i]);
       });
+
       const months = Object.keys(monthMap).sort();
       const moPeriods = months.map(mo => {
         const g = monthMap[mo];
-        const avg = g.vals.reduce((a,b)=>a+b,0)/g.vals.length;
-        return {mo, indices: g.indices, avg: parseFloat(avg.toFixed(2))};
-      });
+        const avg = g.vals.reduce((a,b)=>a+b,0) / g.vals.length;
+        return {
+          mo,
+          i0: g.indices[0],
+          i1: g.indices[g.indices.length - 1],
+          avg: parseFloat(avg.toFixed(1))
+        };
+      }).filter(p => p.i1 > p.i0); // need at least 2 points
+
+      const GAP = 6;
 
       moPeriods.forEach((p, pi) => {
-        if(p.indices.length < 2) return;
-        const x1 = px(p.indices[0]);
-        const x2 = px(p.indices[p.indices.length-1]);
+        const x1 = px(p.i0);
+        const x2 = px(p.i1);
         const y  = py(p.avg);
-        const GAP = 5;
         const midX = (x1 + x2) / 2;
         const segW = x2 - x1;
 
-        // Flat white segment line
+        // White horizontal segment line
+        ctx.save();
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         ctx.lineWidth = 2;
         ctx.moveTo(x1 + GAP, y);
         ctx.lineTo(x2 - GAP, y);
         ctx.stroke();
+        ctx.restore();
 
-        if(segW < 24) return; // too narrow to label
+        if(segW < 30) return;
 
-        // Avg weight ABOVE the line
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        // Avg weight label ABOVE line
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
         ctx.font = 'bold 11px DM Sans, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(p.avg.toFixed(1), midX, y - 6);
+        ctx.fillText(p.avg.toFixed(1), midX, y - 7);
+        ctx.restore();
 
-        // +/-% BELOW the line from 2nd month onward
+        // +/-% label BELOW line — every segment including first shows avg,
+        // pct only from 2nd onward
         if(pi > 0) {
-          const prev = moPeriods[pi-1];
+          const prev = moPeriods[pi - 1];
           const pct = (p.avg - prev.avg) / prev.avg * 100;
           const sign = pct >= 0 ? '+' : '';
+          ctx.save();
           ctx.fillStyle = pct >= 0 ? '#2a9d5c' : '#e05555';
-          ctx.font = '10px DM Sans, sans-serif';
+          ctx.font = '600 10px DM Sans, sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText(sign + pct.toFixed(1) + '%', midX, y + 15);
+          ctx.restore();
         }
       });
     }
