@@ -249,7 +249,7 @@ if('serviceWorker' in navigator) {
       <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
       <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.4rem;display:block;"></svg>
     </div>
-    <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
+    <div class="sc sc-click" style="--ac:var(--or)" onclick="openSurplusMatrix()">
       <div class="sl">7d Surplus</div><div class="sv" id="d-sur">—</div>
       <div class="su">kcal · target +400-500</div><span class="st-badge" id="d-sur-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
       <svg id="sur-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" style="width:100%;height:38px;margin-top:.4rem;display:block;"></svg>
@@ -1763,6 +1763,96 @@ function openStatChart(key, label, unit, color) {
       for (let i = 0; i < dates.length; i += step) ctx.fillText(dates[i], px2(i), H - 6);
     }
   });
+}
+
+
+function openSurplusMatrix() {
+  // Build monthly buckets from metrics
+  const monthMap = {};
+  metrics.forEach(m => {
+    if(!m.consumed || !m.burned) return;
+    const mo = m.date.slice(0,7);
+    if(!monthMap[mo]) monthMap[mo] = {surplus:[],protein:[],carbs:[],weight:[]};
+    monthMap[mo].surplus.push(m.consumed - m.burned);
+    if(m.protein) monthMap[mo].protein.push(m.protein);
+    if(m.carbs) monthMap[mo].carbs.push(m.carbs);
+    if(m.weight) monthMap[mo].weight.push(m.weight * 2.20462);
+  });
+
+  // Last 6 months only
+  const now = new Date();
+  const sixAgo = new Date(now); sixAgo.setMonth(now.getMonth()-6);
+  const cutoff = sixAgo.toISOString().slice(0,7);
+  const months = Object.keys(monthMap).filter(mo => mo >= cutoff).sort();
+
+  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const periods = months.map((mo, pi) => {
+    const g = monthMap[mo];
+    const avgSur = avg(g.surplus);
+    const avgPro = avg(g.protein);
+    const avgCarb = avg(g.carbs);
+    const avgWt = avg(g.weight);
+    // Weight change vs previous month
+    let wtChange = null;
+    if(pi > 0) {
+      const prevMo = months[pi-1];
+      const prevWt = avg(monthMap[prevMo]?.weight || []);
+      if(prevWt && avgWt) wtChange = avgWt - prevWt;
+    }
+    return { mo, avgSur, avgPro, avgCarb, avgWt, wtChange, label: MON[parseInt(mo.slice(5))-1] };
+  });
+
+  // Color helpers — green/pale-green/red based on targets
+  const surCol = v => v===null?'#444':v>=400&&v<=700?'#1baf7a':v>0&&v<400?'#9fe1cb':'#e24b4a';
+  const surTxt = v => v===null?'#888':v>=400&&v<=700?'#fff':v>0&&v<400?'#085041':'#fff';
+  const proCol = v => v===null?'#444':v>=180?'#1baf7a':v>=160?'#9fe1cb':'#e24b4a';
+  const proTxt = v => v===null?'#888':v>=180?'#fff':v>=160?'#085041':'#fff';
+  const carbCol = v => v===null?'#444':v>=310&&v<=360?'#1baf7a':v>=270?'#9fe1cb':'#e24b4a';
+  const carbTxt = v => v===null?'#888':v>=310&&v<=360?'#fff':v>=270?'#085041':'#fff';
+  const wtCol = v => v===null?'#444':v>0.5?'#1baf7a':v>0?'#9fe1cb':'#e24b4a';
+  const wtTxt = v => v===null?'#888':v>0.5?'#fff':v>0?'#085041':'#fff';
+
+  const dot = (val, display, bg, fg) => `<div style="width:34px;height:34px;border-radius:6px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:${fg};margin:auto;line-height:1.2;text-align:center;">${display}</div>`;
+
+  const rows = [
+    { label: 'Wt ↑', cells: periods.map(p => dot(p.wtChange, p.wtChange!==null?(p.wtChange>0?'+':'')+p.wtChange.toFixed(1):'—', wtCol(p.wtChange), wtTxt(p.wtChange))) },
+    { label: 'Surplus', cells: periods.map(p => dot(p.avgSur, p.avgSur!==null?'+'+(Math.round(p.avgSur)):'—', surCol(p.avgSur), surTxt(p.avgSur))) },
+    { label: 'Protein', cells: periods.map(p => dot(p.avgPro, p.avgPro!==null?Math.round(p.avgPro)+'g':'—', proCol(p.avgPro), proTxt(p.avgPro))) },
+    { label: 'Carbs', cells: periods.map(p => dot(p.avgCarb, p.avgCarb!==null?Math.round(p.avgCarb)+'g':'—', carbCol(p.avgCarb), carbTxt(p.avgCarb))) },
+  ];
+
+  const colHeaders = periods.map(p => `<span style="font-size:11px;color:var(--mt);text-align:center;">${p.label}</span>`).join('');
+  const gridCols = `52px repeat(${periods.length},1fr)`;
+
+  const tableHTML = rows.map(row => `
+    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;align-items:center;margin-bottom:5px;">
+      <span style="font-size:11px;color:var(--mt);">${row.label}</span>
+      ${row.cells.join('')}
+    </div>`).join('');
+
+  const legendHTML = `
+    <div style="display:flex;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bd);">
+      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#1baf7a;display:inline-block;"></span>on track</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#9fe1cb;display:inline-block;"></span>close</span>
+      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#e24b4a;display:inline-block;"></span>off</span>
+    </div>`;
+
+  const body = document.getElementById('chart-modal-body');
+  body.innerHTML = `
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:var(--or);line-height:1;">Surplus</div>
+    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">Last 6 months · monthly avg</div>
+    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;margin-bottom:6px;">
+      <span></span>${colHeaders}
+    </div>
+    ${tableHTML}
+    ${legendHTML}
+    <div style="margin-top:10px;font-size:.72rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">Target: surplus +400–600 · protein 180g+ · carbs 310–360g</div>
+  `;
+
+  document.getElementById('stat-canvas').style.display = 'none';
+  document.getElementById('chart-ov').classList.add('show');
 }
 
 
