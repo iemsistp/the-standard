@@ -1638,38 +1638,33 @@ function openStatChart(key, label, unit, color) {
     ctx.arc(px(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
     ctx.fillStyle = hexColor;
     ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = '9px DM Sans, sans-serif';
-    ctx.textAlign = 'center';
-    const step = Math.max(1, Math.floor(dates.length / 5));
-    for (let i = 0; i < dates.length; i += step) {
-      ctx.fillText(dates[i], px(i), H - 6);
-    }
-
-    // ── Monthly average overlays (weight chart only) ──────
+    // ── Monthly average overlays + x-axis (weight chart only) ──────
     if(key === 'weight') {
-      // Build monthly buckets — key by YYYY-MM, value = data point indices + lbs vals
+      // Group data points by calendar month
       const monthMap = {};
       data.forEach((d, i) => {
-        const mo = d.date.slice(0, 7);
-        if(!monthMap[mo]) monthMap[mo] = {indices:[], vals:[]};
-        monthMap[mo].indices.push(i);
+        const mo = d.date.slice(0, 7); // "2026-03"
+        if(!monthMap[mo]) monthMap[mo] = { i0: i, i1: i, vals: [] };
+        monthMap[mo].i1 = i;
         monthMap[mo].vals.push(vals[i]);
       });
 
-      const months = Object.keys(monthMap).sort();
-      const moPeriods = months.map(mo => {
+      const moPeriods = Object.keys(monthMap).sort().map(mo => {
         const g = monthMap[mo];
         const avg = g.vals.reduce((a,b)=>a+b,0) / g.vals.length;
-        return {
-          mo,
-          i0: g.indices[0],
-          i1: g.indices[g.indices.length - 1],
-          avg: parseFloat(avg.toFixed(1))
-        };
-      }).filter(p => p.i1 > p.i0); // need at least 2 points
+        return { mo, i0: g.i0, i1: g.i1, avg: parseFloat(avg.toFixed(1)) };
+      }).filter(p => p.i1 >= p.i0);
 
-      const GAP = 6;
+      // X-axis: month name centred in each segment
+      const MON_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      moPeriods.forEach(p => {
+        const midX = (px(p.i0) + px(p.i1)) / 2;
+        const moName = MON_NAMES[parseInt(p.mo.slice(5,7)) - 1];
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.font = '9px DM Sans, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(moName, midX, H - 6);
+      });
 
       moPeriods.forEach((p, pi) => {
         const x1 = px(p.i0);
@@ -1677,41 +1672,62 @@ function openStatChart(key, label, unit, color) {
         const y  = py(p.avg);
         const midX = (x1 + x2) / 2;
         const segW = x2 - x1;
+        const GAP = 4;
 
         // White horizontal segment line
-        ctx.save();
         ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+        ctx.lineWidth = 2.5;
         ctx.moveTo(x1 + GAP, y);
         ctx.lineTo(x2 - GAP, y);
         ctx.stroke();
-        ctx.restore();
 
-        if(segW < 30) return;
+        if(segW < 28) return;
 
-        // Avg weight label ABOVE line
-        ctx.save();
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        // Avg label ABOVE — pill background so it's readable even when lines are close
+        const avgTxt = p.avg.toFixed(1);
         ctx.font = 'bold 11px DM Sans, sans-serif';
+        const tw = ctx.measureText(avgTxt).width;
+        const pillPad = 3;
+        ctx.fillStyle = 'rgba(10,10,10,0.75)';
+        ctx.beginPath();
+        ctx.roundRect
+          ? ctx.roundRect(midX - tw/2 - pillPad, y - 18, tw + pillPad*2, 13, 3)
+          : ctx.rect(midX - tw/2 - pillPad, y - 18, tw + pillPad*2, 13);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
         ctx.textAlign = 'center';
-        ctx.fillText(p.avg.toFixed(1), midX, y - 7);
-        ctx.restore();
+        ctx.fillText(avgTxt, midX, y - 8);
 
-        // +/-% label BELOW line — every segment including first shows avg,
-        // pct only from 2nd onward
+        // % change BELOW — only from 2nd segment onward
         if(pi > 0) {
           const prev = moPeriods[pi - 1];
           const pct = (p.avg - prev.avg) / prev.avg * 100;
           const sign = pct >= 0 ? '+' : '';
-          ctx.save();
-          ctx.fillStyle = pct >= 0 ? '#2a9d5c' : '#e05555';
+          const pctTxt = sign + pct.toFixed(1) + '%';
           ctx.font = '600 10px DM Sans, sans-serif';
+          const pw = ctx.measureText(pctTxt).width;
+          ctx.fillStyle = 'rgba(10,10,10,0.75)';
+          ctx.beginPath();
+          ctx.roundRect
+            ? ctx.roundRect(midX - pw/2 - pillPad, y + 6, pw + pillPad*2, 13, 3)
+            : ctx.rect(midX - pw/2 - pillPad, y + 6, pw + pillPad*2, 13);
+          ctx.fill();
+          ctx.fillStyle = pct >= 0 ? '#4ade80' : '#f87171';
           ctx.textAlign = 'center';
-          ctx.fillText(sign + pct.toFixed(1) + '%', midX, y + 15);
-          ctx.restore();
+          ctx.fillText(pctTxt, midX, y + 16);
         }
       });
+
+    } else {
+      // Non-weight charts: regular date x-axis
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '9px DM Sans, sans-serif';
+      ctx.textAlign = 'center';
+      const step = Math.max(1, Math.floor(dates.length / 5));
+      for (let i = 0; i < dates.length; i += step) {
+        ctx.fillText(dates[i], px(i), H - 6);
+      }
     }
   });
 }
