@@ -1579,24 +1579,27 @@ function openStatChart(key, label, unit, color) {
     const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
     ctx.clearRect(0, 0, W, H);
     const _spread = Math.max(...vals) - Math.min(...vals) || 1;
-    // For weight: tight range around actual data so trend is visible, with just
-    // enough headroom above/below for the avg label (11px) and pct label (10px)
-    const vmin = key === 'weight'
-      ? Math.min(...vals) - _spread * 0.15
-      : Math.min(...vals) - _spread * 0.1;
-    const vmax = key === 'weight'
-      ? Math.max(...vals) + _spread * 0.25
-      : Math.max(...vals) + _spread * 0.1;
+    let vmin, vmax;
+    if(key === 'weight') {
+      // Use only last 60 days to set the y scale so recent trend fills chart
+      const recentVals = vals.slice(Math.max(0, vals.length - 60));
+      const rMin = Math.min(...recentVals);
+      const rMax = Math.max(...recentVals);
+      const rSpread = rMax - rMin || 2;
+      vmin = rMin - rSpread * 0.5;
+      vmax = rMax + rSpread * 0.6;
+    } else {
+      vmin = Math.min(...vals) - _spread * 0.1;
+      vmax = Math.max(...vals) + _spread * 0.1;
+    }
     const range = vmax - vmin || 1;
     const px = i => pad.l + (i / (vals.length-1)) * cW;
     const py = v => pad.t + cH - ((v - vmin) / range) * cH;
-    if (tgt.low && tgt.high) {
-      const tLow = key === 'weight' ? tgt.low * 2.20462 : tgt.low;
-      const tHigh = key === 'weight' ? tgt.high * 2.20462 : tgt.high;
-      ctx.fillStyle = 'rgba(45,212,160,0.08)';
-      const ty1 = py(Math.min(tHigh, vmax));
-      const ty2 = py(Math.max(tLow, vmin));
-      if(ty2 > ty1) ctx.fillRect(pad.l, ty1, cW, ty2 - ty1);
+    // Target band for non-weight charts only
+    if(key !== 'weight' && tgt.low && tgt.high) {
+      const ty1 = py(Math.min(tgt.high, vmax));
+      const ty2 = py(Math.max(tgt.low, vmin));
+      if(ty2 > ty1) { ctx.fillStyle = 'rgba(45,212,160,0.08)'; ctx.fillRect(pad.l, ty1, cW, ty2 - ty1); }
     }
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
