@@ -595,8 +595,8 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
       <div style="display:flex;gap:.5rem;align-items:center;">
         <div style="width:18px;height:2px;background:var(--gd);border-radius:2px;"></div>
         <span style="font-size:.65rem;color:var(--mt);">Daily</span>
-        <div style="width:18px;height:2px;background:var(--bl);border-radius:2px;border-top:2px dashed var(--bl);"></div>
-        <span style="font-size:.65rem;color:var(--mt);">7-day avg</span>
+        <div style="width:18px;height:2px;background:var(--bl);border-radius:2px;"></div>
+        <span style="font-size:.65rem;color:var(--mt);" id="wdash-avg-label">Weekly avg</span>
       </div>
       <div style="display:flex;gap:.25rem;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:.2rem;">
         <button id="wtog-W" onclick="setWeightView('W')" style="font-family:'Bebas Neue',sans-serif;font-size:.72rem;letter-spacing:1px;padding:.2rem .6rem;border-radius:4px;border:none;background:none;color:var(--mt);cursor:pointer;">W</button>
@@ -606,7 +606,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     </div>
     <div style="font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;margin-bottom:.5rem;" id="wdash-range">—</div>
     <div style="position:relative;width:100%;height:200px;">
-      <canvas id="weightTrendChart" role="img" aria-label="Weight trend over time with 7-day rolling average"></canvas>
+      <canvas id="weightTrendChart" role="img" aria-label="Weight trend over time with period averages"></canvas>
     </div>
   </div>
 
@@ -766,7 +766,7 @@ function showPg(id,btn){
   document.getElementById('pg-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
   refresh();
-  if(id==='weight') renderWeightDashboard();
+  if(id==='weight') requestAnimationFrame(() => renderWeightDashboard());
 }
 
 // ── METRICS ───────────────────────────────────────────────
@@ -2439,6 +2439,8 @@ function setWeightView(v) {
     const btn = document.getElementById('wtog-'+t);
     if(btn) { btn.style.background = t===v ? 'var(--bd)' : 'none'; btn.style.color = t===v ? 'var(--tx)' : 'var(--mt)'; }
   });
+  const lbl = document.getElementById('wdash-avg-label');
+  if(lbl) lbl.textContent = v==='W' ? 'No overlay' : v==='M' ? 'Weekly avg' : 'Monthly avg';
   renderWeightDashboard();
 }
 
@@ -2500,110 +2502,161 @@ function renderWeightDashboard() {
   const fmt = d => { const p=d.split('-'); return p[1]+'/'+p[2]; };
   if(el2('wdash-range')) el2('wdash-range').textContent = fmt(first) + ' — ' + fmt(last2);
 
-  const labels = filtered.map(m => fmt(m.date));
-  const dailyLbs = filtered.map(m => parseFloat((m.weight*2.20462).toFixed(1)));
+  const dailyLbs = filtered.map(m => parseFloat((m.weight*2.20462).toFixed(2)));
 
-  // 7-day rolling average
-  const rollingAvg = dailyLbs.map((_,i,arr) => {
-    const win = arr.slice(Math.max(0,i-3), i+4);
-    return parseFloat((win.reduce((a,b)=>a+b,0)/win.length).toFixed(2));
-  });
+  // Group into periods based on view
+  function getPeriods(data, view) {
+    const map = {};
+    data.forEach((m, i) => {
+      let key;
+      if(view === 'W') {
+        // Daily — each point is its own "period" (no overlay)
+        key = m.date;
+      } else if(view === 'M') {
+        // Weekly buckets: Monday-start week
+        const d = new Date(m.date+'T12:00:00'), day = d.getDay();
+        const mon = new Date(d); mon.setDate(d.getDate() - (day===0?6:day-1));
+        key = mon.toISOString().split('T')[0];
+      } else {
+        // Monthly buckets
+        key = m.date.slice(0,7);
+      }
+      if(!map[key]) map[key] = {key, indices:[], vals:[], dates:[]};
+      map[key].indices.push(i);
+      map[key].vals.push(dailyLbs[i]);
+      map[key].dates.push(m.date);
+    });
+    return Object.keys(map).sort().map(k => {
+      const g = map[k];
+      const avg = g.vals.reduce((a,b)=>a+b,0)/g.vals.length;
+      return { key: g.key, indices: g.indices, avg: parseFloat(avg.toFixed(2)), dates: g.dates };
+    });
+  }
 
-  // Goal line
-  const goalLine = dailyLbs.map(() => 175);
+  const periods = getPeriods(filtered, weightView);
 
+  // Draw on canvas manually — Chart.js can't do Garmin-style inline labels
   const canvas = document.getElementById('weightTrendChart');
   if(!canvas) return;
-
   if(weightChartInstance) { weightChartInstance.destroy(); weightChartInstance = null; }
 
-  // Load Chart.js if not already loaded
-  function buildChart() {
-    weightChartInstance = new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          {
-            label: 'Daily weight',
-            data: dailyLbs,
-            borderColor: '#9e7820',
-            backgroundColor: 'rgba(158,120,32,0.06)',
-            borderWidth: 1.5,
-            pointRadius: weightView==='W' ? 3 : 0,
-            pointHoverRadius: 4,
-            pointBackgroundColor: '#9e7820',
-            tension: 0.3,
-            fill: true,
-            order: 3
-          },
-          {
-            label: '7-day avg',
-            data: rollingAvg,
-            borderColor: '#3d6b9e',
-            borderWidth: 2,
-            borderDash: [5,3],
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            tension: 0.4,
-            fill: false,
-            order: 2
-          },
-          {
-            label: '175lb goal',
-            data: goalLine,
-            borderColor: 'rgba(31,122,69,0.35)',
-            borderWidth: 1,
-            borderDash: [3,4],
-            pointRadius: 0,
-            fill: false,
-            order: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#0c0c0c',
-            borderColor: '#1e1e1e',
-            borderWidth: 1,
-            titleColor: '#707070',
-            bodyColor: '#d0d0d0',
-            titleFont: { family: 'JetBrains Mono', size: 10 },
-            bodyFont: { family: 'JetBrains Mono', size: 11 },
-            callbacks: {
-              label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + ' lb'
-            }
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: '#1e1e1e' },
-            ticks: { color: '#707070', font: { family: 'JetBrains Mono', size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
-            border: { display: false }
-          },
-          y: {
-            grid: { color: '#1e1e1e' },
-            ticks: { color: '#707070', font: { family: 'JetBrains Mono', size: 9 }, callback: v => v.toFixed(0) + ' lb' },
-            border: { display: false }
-          }
-        }
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 320;
+  const H = 200;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const PAD = { t: 24, r: 12, b: 28, l: 38 };
+  const cW = W - PAD.l - PAD.r;
+  const cH = H - PAD.t - PAD.b;
+  const n = dailyLbs.length;
+
+  const allVals = dailyLbs.filter(v => v > 0);
+  const spread = Math.max(...allVals) - Math.min(...allVals) || 2;
+  const vMin = Math.min(...allVals) - spread * 0.25;
+  const vMax = Math.max(...allVals) + spread * 0.35;
+  const vRange = vMax - vMin;
+
+  const xP = i => PAD.l + (i / Math.max(n - 1, 1)) * cW;
+  const yP = v => PAD.t + cH - ((v - vMin) / vRange) * cH;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  const gridVals = [];
+  const step = vRange > 6 ? 2 : 1;
+  for(let v = Math.ceil(vMin); v <= vMax; v += step) gridVals.push(v);
+  gridVals.forEach(v => {
+    const y = yP(v);
+    ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + cW, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(0), PAD.l - 4, y + 3);
+  });
+
+  // X axis labels — month names for 6M, dates for others
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.textAlign = 'center';
+  if(weightView === '6M' && periods.length) {
+    periods.forEach(p => {
+      const midI = p.indices[Math.floor(p.indices.length/2)];
+      const x = xP(midI);
+      const mo = new Date(p.dates[0]+'T12:00:00').toLocaleDateString('en-CA',{month:'short'});
+      ctx.fillText(mo, x, H - 6);
+    });
+  } else {
+    const tickStep = Math.max(1, Math.floor(n / 6));
+    for(let i = 0; i < n; i += tickStep) {
+      const d = filtered[i].date.split('-');
+      ctx.fillText(d[1]+'/'+d[2], xP(i), H - 6);
+    }
+  }
+
+  // Daily weight line (thin, jagged, dim)
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(158,180,210,0.5)';
+  ctx.lineWidth = 1;
+  ctx.lineJoin = 'round';
+  dailyLbs.forEach((v, i) => {
+    if(i === 0) ctx.moveTo(xP(i), yP(v));
+    else ctx.lineTo(xP(i), yP(v));
+  });
+  ctx.stroke();
+
+  // Period segments — flat line + avg label above + pct label below
+  if(weightView !== 'W') {
+    periods.forEach((p, pi) => {
+      if(!p.indices.length) return;
+      const x1 = xP(p.indices[0]);
+      const x2 = xP(p.indices[p.indices.length-1]);
+      const y = yP(p.avg);
+      const GAP = 4; // gap between segments
+
+      // Flat white segment line
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 2;
+      ctx.moveTo(x1 + GAP, y);
+      ctx.lineTo(x2 - GAP, y);
+      ctx.stroke();
+
+      const midX = (x1 + x2) / 2;
+
+      // Avg label ABOVE the line
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = 'bold 10px DM Sans, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.avg.toFixed(1), midX, y - 5);
+
+      // +/-% label BELOW the line (from 2nd segment on)
+      if(pi > 0) {
+        const prev = periods[pi-1];
+        const pct = ((p.avg - prev.avg) / prev.avg * 100);
+        const sign = pct >= 0 ? '+' : '';
+        const pctStr = sign + pct.toFixed(1) + '%';
+        ctx.fillStyle = pct >= 0 ? '#1f7a45' : '#a02820';
+        ctx.font = '9px DM Sans, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(pctStr, midX, y + 14);
       }
     });
   }
 
-  if(typeof Chart !== 'undefined') {
-    buildChart();
-  } else {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
-    s.onload = buildChart;
-    document.head.appendChild(s);
-  }
+  // Latest dot
+  const lastI = dailyLbs.length - 1;
+  ctx.beginPath();
+  ctx.arc(xP(lastI), yP(dailyLbs[lastI]), 3, 0, Math.PI*2);
+  ctx.fillStyle = '#9e7820';
+  ctx.fill();
+
+  // Update legend label
+  const lbl = document.getElementById('wdash-avg-label');
+  if(lbl) lbl.textContent = weightView==='W' ? '(no overlay)' : weightView==='M' ? 'Weekly avg' : 'Monthly avg';
 
   // Recent log
   const logEl = document.getElementById('wdash-log');
