@@ -1511,7 +1511,11 @@ function openStatChart(key, label, unit, color) {
     if(key === 'surplus') return m.consumed && m.burned;
     return m[key] !== null && m[key] !== undefined;
   });
-  if(key !== 'weight') data = data.slice(0, 30);
+  if(key === 'weight') {
+    const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const cutoff = sixMonthsAgo.toISOString().split('T')[0];
+    data = data.filter(m => m.date >= cutoff);
+  } else { data = data.slice(0, 30); }
   data = data.reverse();
 
   const vals = data.map(m => key === 'surplus' ? m.consumed - m.burned : key === 'weight' ? m[key] * 2.20462 : m[key]);
@@ -1534,7 +1538,7 @@ function openStatChart(key, label, unit, color) {
 
   body.innerHTML = `
     <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:${hexColor};line-height:1;">${label}</div>
-    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">${key==='weight'?'Full history':'Last 30 days'}</div>
+    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">${key==='weight'?'Last 6 months':'Last 30 days'}</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.5rem;">
       <div style="background:var(--sf2);border-radius:7px;padding:.6rem;text-align:center;">
         <div style="font-size:.6rem;color:var(--mt);margin-bottom:.15rem;">LATEST</div>
@@ -1653,24 +1657,91 @@ function openStatChart(key, label, unit, color) {
         const g = monthMap[mo];
         const avg = g.vals.reduce((a,b)=>a+b,0) / g.vals.length;
         return { mo, i0: g.i0, i1: g.i1, avg: parseFloat(avg.toFixed(1)) };
-      }).filter(p => p.i1 >= p.i0);
+      });
 
-      // X-axis: month name centred in each segment
+      // For each month, compute x positions based on actual calendar date range
+      // rather than entry indices — so every month spans its full calendar width
+      const totalDays = (new Date(data[data.length-1].date+'T12:00:00') - new Date(data[0].date+'T12:00:00')) / 86400000 || 1;
+      const dateToX = dateStr => {
+        const days = (new Date(dateStr+'T12:00:00') - new Date(data[0].date+'T12:00:00')) / 86400000;
+        return pad.l + (days / totalDays) * cW;
+      };
+      // Also remap px to use calendar dates for the line itself
+      const pxDate = i => dateToX(data[i].date);
+
+      // Recalculate each period's x bounds from first/last calendar day of that month
+      moPeriods.forEach(p => {
+        const [yr, mo] = p.mo.split('-').map(Number);
+        const firstDay = p.mo + '-01';
+        const lastDay = new Date(yr, mo, 0).getDate(); // last day of month
+        const lastDayStr = p.mo + '-' + String(lastDay).padStart(2,'0');
+        // Clamp to data range
+        const x1 = Math.max(pad.l, dateToX(firstDay));
+        const x2 = Math.min(pad.l + cW, dateToX(lastDayStr));
+        p.x1 = x1;
+        p.x2 = x2;
+        p.midX = (x1 + x2) / 2;
+      });
+
+      // Redraw daily line using calendar-date x positions for even spacing
+      ctx.clearRect(0, 0, W, H);
+      // Redraw grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.t + (cH / 4) * i;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+        const val = (vmax - (range/4)*i).toFixed(1);
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(val, pad.l - 4, y + 4);
+      }
+      // Redraw gradient fill
+      const grad2 = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+      grad2.addColorStop(0, hexColor + '30');
+      grad2.addColorStop(1, hexColor + '05');
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pad.l, pad.t, cW, cH);
+      ctx.clip();
+      ctx.beginPath();
+      ctx.moveTo(pxDate(0), py(vals[0]));
+      for (let i = 1; i < vals.length; i++) ctx.lineTo(pxDate(i), py(vals[i]));
+      ctx.lineTo(pxDate(vals.length-1), pad.t + cH);
+      ctx.lineTo(pxDate(0), pad.t + cH);
+      ctx.closePath();
+      ctx.fillStyle = grad2;
+      ctx.fill();
+      ctx.restore();
+      ctx.beginPath();
+      ctx.strokeStyle = hexColor;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      ctx.moveTo(pxDate(0), py(vals[0]));
+      for (let i = 1; i < vals.length; i++) ctx.lineTo(pxDate(i), py(vals[i]));
+      ctx.stroke();
+      // Latest dot
+      ctx.beginPath();
+      ctx.arc(pxDate(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
+      ctx.fillStyle = hexColor;
+      ctx.fill();
+
+      // X-axis: month name centred in each calendar segment
       const MON_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       moPeriods.forEach(p => {
-        const midX = (px(p.i0) + px(p.i1)) / 2;
         const moName = MON_NAMES[parseInt(p.mo.slice(5,7)) - 1];
         ctx.fillStyle = 'rgba(255,255,255,0.28)';
         ctx.font = '9px DM Sans, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(moName, midX, H - 6);
+        ctx.fillText(moName, p.midX, H - 6);
       });
 
       moPeriods.forEach((p, pi) => {
-        const x1 = px(p.i0);
-        const x2 = px(p.i1);
+        const x1 = p.x1;
+        const x2 = p.x2;
         const y  = py(p.avg);
-        const midX = (x1 + x2) / 2;
+        const midX = p.midX;
         const segW = x2 - x1;
         const GAP = 4;
 
