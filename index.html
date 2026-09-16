@@ -348,6 +348,15 @@ if('serviceWorker' in navigator) {
         </div>
       </div>
 
+      <!-- STEPS SECTION -->
+      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Steps</div>
+        <div class="lg" style="margin-bottom:0;">
+          <div class="ig"><label class="il">Steps Taken</label><input type="number" class="if" id="m-stp" placeholder="8500"></div>
+          <div class="ig"><label class="il">Step Goal</label><input type="number" class="if" id="m-stg" placeholder="10000"></div>
+        </div>
+      </div>
+
       <!-- NUTRITION SECTION -->
       <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Nutrition</div>
@@ -745,10 +754,10 @@ function saveMetrics(){
   const sleepRaw=v('m-sl').trim();
   let sleepHrs=null;
   if(sleepRaw){const parts=sleepRaw.split(':');const slH=parseInt(parts[0])||0,slM=parseInt(parts[1])||0;sleepHrs=(slH||slM)?Math.round((slH+slM/60)*100)/100:null;}
-  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa',sleep_score:'m-ss',sleep_deep_min:'m-sd',sleep_light_min:'m-sl2',sleep_rem_min:'m-sr',sleep_awake_min:'m-saw',overnight_hrv:'m-ohrv',resting_hr:'m-rhr',body_battery:'m-bb',stress:'m-str',hrv_7day:'m-hrv'};
+  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa',sleep_score:'m-ss',sleep_deep_min:'m-sd',sleep_light_min:'m-sl2',sleep_rem_min:'m-sr',sleep_awake_min:'m-saw',overnight_hrv:'m-ohrv',resting_hr:'m-rhr',body_battery:'m-bb',stress:'m-str',hrv_7day:'m-hrv',steps:'m-stp',steps_goal:'m-stg'};
   const explicitlySet={};
   Object.entries(numFields).forEach(([key,id])=>{explicitlySet[key]=v(id).trim()!=='';});
-  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null,sleep_score:n('m-ss'),sleep_deep_min:n('m-sd'),sleep_light_min:n('m-sl2'),sleep_rem_min:n('m-sr'),sleep_awake_min:n('m-saw'),overnight_hrv:n('m-ohrv'),resting_hr:n('m-rhr'),body_battery:n('m-bb'),stress:n('m-str'),hrv_7day:n('m-hrv'),training_status:v('m-ts')||null};
+  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null,sleep_score:n('m-ss'),sleep_deep_min:n('m-sd'),sleep_light_min:n('m-sl2'),sleep_rem_min:n('m-sr'),sleep_awake_min:n('m-saw'),overnight_hrv:n('m-ohrv'),resting_hr:n('m-rhr'),body_battery:n('m-bb'),stress:n('m-str'),hrv_7day:n('m-hrv'),training_status:v('m-ts')||null,steps:n('m-stp'),steps_goal:n('m-stg')};
   if(!incoming.date){toast('Enter a date');return;}
   const existing=metrics.find(l=>l.date===incoming.date)||{};
   const e={...existing};
@@ -822,6 +831,8 @@ function loadEntryIntoForm(dateStr){
   el('m-str').value = entry.stress || '';
   el('m-hrv').value = entry.hrv_7day || '';
   const tsEl = el('m-ts'); if(tsEl) tsEl.value = entry.training_status || '';
+  el('m-stp').value = entry.steps || '';
+  el('m-stg').value = entry.steps_goal || '';
   // Restore tags
   const entryTags = (entry.tags || '').split(',').map(t=>t.trim()).filter(Boolean);
   el('m-tags').value = entry.tags || '';
@@ -842,7 +853,7 @@ function toggleTag(btn){
   el('m-tags').value = active.join(',');
 }
 
-function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags','m-ss','m-sd','m-sl2','m-sr','m-saw','m-ohrv','m-rhr','m-bb','m-str','m-hrv'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const tsEl=el('m-ts');if(tsEl)tsEl.value='';const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
+function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags','m-ss','m-sd','m-sl2','m-sr','m-saw','m-ohrv','m-rhr','m-bb','m-str','m-hrv','m-stp','m-stg'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const tsEl=el('m-ts');if(tsEl)tsEl.value='';const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
 
 function copyMorningLog(){
   const d=v('m-date')||today();
