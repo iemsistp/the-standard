@@ -2359,25 +2359,56 @@ function setInjSev(sev, btn) {
   el('inj-sev').value = sev;
 }
 
+let _injuryCache = null;
+
 function getInjuries() {
-  return JSON.parse(localStorage.getItem('injuries_v1') || '[]');
+  return _injuryCache || JSON.parse(localStorage.getItem('injuries_v1') || '[]');
 }
 
-function saveInjuryFromLog(date) {
+async function loadInjuriesFromSupabase() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/injury_log?order=date.desc', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+    _injuryCache = rows.map(r => ({
+      date: r.date, body: r.body, severity: r.severity,
+      trigger: r.trigger, ts: r.ts || new Date(r.created_at).getTime()
+    }));
+    localStorage.setItem('injuries_v1', JSON.stringify(_injuryCache));
+    renderInjuryList();
+  } catch(e) { console.warn('[Injuries]', e); }
+}
+
+async function saveInjuryFromLog(date) {
   const body = v('inj-body');
   const trigger = v('inj-trigger');
-  if(!body && !trigger) return; // nothing flagged, skip
+  if(!body && !trigger) return;
+  const ts = Date.now();
+  const inj = { date, body, severity: injSev, trigger, ts };
+
+  // Update local cache
   const injuries = getInjuries();
   const existingIdx = injuries.findIndex(i => i.date === date);
-  const inj = { date, body, severity: injSev, trigger, ts: Date.now() };
-  if(existingIdx !== -1) {
-    // Update existing entry for this date instead of creating a new one
-    injuries[existingIdx] = inj;
-  } else {
-    injuries.unshift(inj);
-  }
+  if(existingIdx !== -1) { injuries[existingIdx] = inj; }
+  else { injuries.unshift(inj); }
+  _injuryCache = injuries;
   localStorage.setItem('injuries_v1', JSON.stringify(injuries));
-  // Don't reset form — keep values so user can see what was saved
+
+  // Upsert to Supabase — use date as conflict key
+  try {
+    // Delete existing for this date then insert (upsert by date)
+    await fetch(SB_URL + '/rest/v1/injury_log?date=eq.' + date, {
+      method: 'DELETE',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    await fetch(SB_URL + '/rest/v1/injury_log', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ date, body, severity: injSev, trigger, ts })
+    });
+  } catch(e) { console.warn('[Injury save]', e); }
 }
 
 function renderInjuryList() {
@@ -3371,7 +3402,7 @@ setTimeout(async ()=>{
   // Auto-render tabs that need post-pull data
   setTimeout(() => {
     loadPRsFromSupabase();
-    renderInjuryList();
+    loadInjuriesFromSupabase();
     renderRecoveryDash();
   }, 300);
 }, 1500);
