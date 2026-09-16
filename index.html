@@ -1726,7 +1726,7 @@ function openStatChart(key, label, unit, color) {
       ctx.moveTo(xOfPoint(0), py(vals[0]));
       for (let i = 1; i < vals.length; i++) ctx.lineTo(xOfPoint(i), py(vals[i]));
       ctx.lineTo(xOfPoint(vals.length - 1), PAD.t + cH);
-      ctx.lineTo(xOfPoint(0), PAD.t + cH);
+      ctx.lineTo(PAD.l, PAD.t + cH);
       ctx.closePath();
       ctx.fillStyle = grad;
       ctx.fill();
@@ -2404,10 +2404,8 @@ function renderWeightSparkline(){
     return win.reduce((a,b)=>a+b,0)/win.length;
   });
   const maLine = maPoints.map((v,i)=>xS(i).toFixed(1)+','+yS(v).toFixed(1)).join(' ');
-  const goalLine = PAD+' '+gy+' '+(W-PAD)+' '+gy;
   svg.innerHTML='<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+(trend<=0?'rgba(31,122,69,.2)':'rgba(160,40,32,.12)')+'"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></linearGradient></defs>'
     +'<path d="'+areaD+'" fill="url(#wg)"/>'
-    +'<line x1="'+PAD+'" y1="'+gy+'" x2="'+(W-PAD)+'" y2="'+gy+'" stroke="rgba(61,107,158,.3)" stroke-width="1" stroke-dasharray="2,3"/>'
     +'<polyline points="'+linePoints+'" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<polyline points="'+maLine+'" fill="none" stroke="'+lc+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<circle cx="'+lx+'" cy="'+ly+'" r="2.5" fill="'+lc+'"/>';
