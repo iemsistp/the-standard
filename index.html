@@ -305,16 +305,60 @@ if('serviceWorker' in navigator) {
           </select>
         </div>
       </div>
-      <div class="ig">
-        <label class="il">Sleep</label>
-        <input type="text" class="if" id="m-sl" placeholder="8:30" maxlength="5" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
+
+      <!-- SLEEP SECTION -->
+      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Sleep</div>
+        <div class="lg" style="margin-bottom:0;">
+          <div class="ig"><label class="il">Sleep Score</label><input type="number" class="if" id="m-ss" placeholder="78"></div>
+          <div class="ig">
+            <label class="il">Duration</label>
+            <input type="text" class="if" id="m-sl" placeholder="8:30" maxlength="5" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
+          </div>
+          <div class="ig"><label class="il">Deep (min)</label><input type="number" class="if" id="m-sd" placeholder="90"></div>
+          <div class="ig"><label class="il">Light (min)</label><input type="number" class="if" id="m-sl2" placeholder="200"></div>
+          <div class="ig"><label class="il">REM (min)</label><input type="number" class="if" id="m-sr" placeholder="100"></div>
+          <div class="ig"><label class="il">Awake (min)</label><input type="number" class="if" id="m-saw" placeholder="20"></div>
+          <div class="ig"><label class="il">Resting HR</label><input type="number" class="if" id="m-rhr" placeholder="52"></div>
+          <div class="ig"><label class="il">Overnight HRV</label><input type="number" class="if" id="m-ohrv" placeholder="62" step="0.1"></div>
+        </div>
       </div>
-      <div class="ig"><label class="il">Recovery %</label><input type="number" class="if" id="m-re" placeholder="82"></div>
-      <div class="ig"><label class="il">Cal Burned</label><input type="number" class="if" id="m-bu" placeholder="2500"></div>
-      <div class="ig"><label class="il">Cal Consumed</label><input type="number" class="if" id="m-co" placeholder="3100"></div>
-      <div class="ig"><label class="il">Protein (g)</label><input type="number" class="if" id="m-pr" placeholder="185"></div>
-      <div class="ig"><label class="il">Carbs (g)</label><input type="number" class="if" id="m-ca" placeholder="340"></div>
-      <div class="ig"><label class="il">Fat (g)</label><input type="number" class="if" id="m-fa" placeholder="95"></div>
+
+      <!-- RECOVERY SECTION -->
+      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Recovery</div>
+        <div class="lg" style="margin-bottom:0;">
+          <div class="ig"><label class="il">Training Readiness</label><input type="number" class="if" id="m-re" placeholder="72"></div>
+          <div class="ig"><label class="il">Body Battery</label><input type="number" class="if" id="m-bb" placeholder="85"></div>
+          <div class="ig">
+            <label class="il">Training Status</label>
+            <select class="if" id="m-ts">
+              <option value="">Select...</option>
+              <option value="Productive">Productive</option>
+              <option value="Maintaining">Maintaining</option>
+              <option value="Peaking">Peaking</option>
+              <option value="Recovery">Recovery</option>
+              <option value="Unproductive">Unproductive</option>
+              <option value="Detraining">Detraining</option>
+              <option value="Overreaching">Overreaching</option>
+            </select>
+          </div>
+          <div class="ig"><label class="il">Stress Score</label><input type="number" class="if" id="m-str" placeholder="28"></div>
+          <div class="ig"><label class="il">7-Day Avg HRV</label><input type="number" class="if" id="m-hrv" placeholder="58" step="0.1"></div>
+        </div>
+      </div>
+
+      <!-- NUTRITION SECTION -->
+      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Nutrition</div>
+        <div class="lg" style="margin-bottom:0;">
+          <div class="ig"><label class="il">Cal Burned</label><input type="number" class="if" id="m-bu" placeholder="2500"></div>
+          <div class="ig"><label class="il">Cal Consumed</label><input type="number" class="if" id="m-co" placeholder="3100"></div>
+          <div class="ig"><label class="il">Carbs (g)</label><input type="number" class="if" id="m-ca" placeholder="340"></div>
+          <div class="ig"><label class="il">Fat (g)</label><input type="number" class="if" id="m-fa" placeholder="95"></div>
+          <div class="ig"><label class="il">Protein (g)</label><input type="number" class="if" id="m-pr" placeholder="185"></div>
+        </div>
+      </div>
 
       <div class="ig fw" style="grid-column:1/-1">
         <label class="il">Workout Tags</label>
@@ -347,7 +391,6 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     <div id="m-fb" style="margin-bottom:.85rem;"></div>
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveMetrics()" id="save-btn">Save Log</button>
-      <button class="btn btn-s" onclick="whoopPullToday()" id="whoop-pull-btn" style="display:none;">⟳ WHOOP</button>
       <button class="btn btn-s" onclick="copyMorningLog()" id="copy-morning-btn" style="display:none;">📋 Copy to Claude</button>
       <button class="btn" onclick="clearMetrics()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:8px;padding:.65rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.5px;">Clear</button>
     </div>
@@ -702,10 +745,10 @@ function saveMetrics(){
   const sleepRaw=v('m-sl').trim();
   let sleepHrs=null;
   if(sleepRaw){const parts=sleepRaw.split(':');const slH=parseInt(parts[0])||0,slM=parseInt(parts[1])||0;sleepHrs=(slH||slM)?Math.round((slH+slM/60)*100)/100:null;}
-  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa'};
+  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa',sleep_score:'m-ss',sleep_deep_min:'m-sd',sleep_light_min:'m-sl2',sleep_rem_min:'m-sr',sleep_awake_min:'m-saw',overnight_hrv:'m-ohrv',resting_hr:'m-rhr',body_battery:'m-bb',stress:'m-str',hrv_7day:'m-hrv'};
   const explicitlySet={};
   Object.entries(numFields).forEach(([key,id])=>{explicitlySet[key]=v(id).trim()!=='';});
-  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null};
+  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null,sleep_score:n('m-ss'),sleep_deep_min:n('m-sd'),sleep_light_min:n('m-sl2'),sleep_rem_min:n('m-sr'),sleep_awake_min:n('m-saw'),overnight_hrv:n('m-ohrv'),resting_hr:n('m-rhr'),body_battery:n('m-bb'),stress:n('m-str'),hrv_7day:n('m-hrv'),training_status:v('m-ts')||null};
   if(!incoming.date){toast('Enter a date');return;}
   const existing=metrics.find(l=>l.date===incoming.date)||{};
   const e={...existing};
@@ -768,6 +811,17 @@ function loadEntryIntoForm(dateStr){
   el('m-ca').value = entry.carbs || '';
   el('m-fa').value = entry.fat || '';
   el('m-no').value = entry.notes || '';
+  el('m-ss').value = entry.sleep_score || '';
+  el('m-sd').value = entry.sleep_deep_min || '';
+  el('m-sl2').value = entry.sleep_light_min || '';
+  el('m-sr').value = entry.sleep_rem_min || '';
+  el('m-saw').value = entry.sleep_awake_min || '';
+  el('m-ohrv').value = entry.overnight_hrv || '';
+  el('m-rhr').value = entry.resting_hr || '';
+  el('m-bb').value = entry.body_battery || '';
+  el('m-str').value = entry.stress || '';
+  el('m-hrv').value = entry.hrv_7day || '';
+  const tsEl = el('m-ts'); if(tsEl) tsEl.value = entry.training_status || '';
   // Restore tags
   const entryTags = (entry.tags || '').split(',').map(t=>t.trim()).filter(Boolean);
   el('m-tags').value = entry.tags || '';
@@ -788,7 +842,7 @@ function toggleTag(btn){
   el('m-tags').value = active.join(',');
 }
 
-function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
+function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags','m-ss','m-sd','m-sl2','m-sr','m-saw','m-ohrv','m-rhr','m-bb','m-str','m-hrv'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const tsEl=el('m-ts');if(tsEl)tsEl.value='';const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
 
 function copyMorningLog(){
   const d=v('m-date')||today();
