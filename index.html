@@ -215,6 +215,10 @@ if('serviceWorker' in navigator) {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     <span>Daily Log</span>
   </button>
+  <button class="btab" onclick="showPg('recovery',this)" data-label="Recovery">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <span>Recovery</span>
+  </button>
   <button class="btab" onclick="showPg('program',this)" data-label="Program">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
     <span>Program</span>
@@ -229,8 +233,7 @@ if('serviceWorker' in navigator) {
 <!-- DASHBOARD -->
 <div class="pg active" id="pg-dash">
   <div class="hero">
-    <div><div class="ht">THE<br><span>STANDARD</span></div><div class="hs">Strength · CrossFit · Muskoka 70.3 · July 2027</div></div>
-    <div class="hm"><div class="hg" id="cd-main">—</div><div class="hgs">days to Muskoka 70.3</div></div>
+    <div><div class="ht">THE<br><span>STANDARD</span></div></div>
   </div>
   <div id="sb-status" style="margin-bottom:.6rem;display:none;">
     <div class="fb fb-i" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
@@ -315,10 +318,10 @@ if('serviceWorker' in navigator) {
             <label class="il">Duration</label>
             <input type="text" class="if" id="m-sl" placeholder="8:30" maxlength="5" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
           </div>
-          <div class="ig"><label class="il">Deep (min)</label><input type="number" class="if" id="m-sd" placeholder="90"></div>
-          <div class="ig"><label class="il">Light (min)</label><input type="number" class="if" id="m-sl2" placeholder="200"></div>
-          <div class="ig"><label class="il">REM (min)</label><input type="number" class="if" id="m-sr" placeholder="100"></div>
-          <div class="ig"><label class="il">Awake (min)</label><input type="number" class="if" id="m-saw" placeholder="20"></div>
+          <div class="ig"><label class="il">Deep</label><input type="text" class="if" id="m-sd" placeholder="1:30" maxlength="5" oninput="fmtSleepInput(this)"></div>
+          <div class="ig"><label class="il">Light</label><input type="text" class="if" id="m-sl2" placeholder="3:20" maxlength="5" oninput="fmtSleepInput(this)"></div>
+          <div class="ig"><label class="il">REM</label><input type="text" class="if" id="m-sr" placeholder="1:40" maxlength="5" oninput="fmtSleepInput(this)"></div>
+          <div class="ig"><label class="il">Awake</label><input type="text" class="if" id="m-saw" placeholder="0:20" maxlength="5" oninput="fmtSleepInput(this)"></div>
           <div class="ig"><label class="il">Resting HR</label><input type="number" class="if" id="m-rhr" placeholder="52"></div>
           <div class="ig"><label class="il">Overnight HRV</label><input type="number" class="if" id="m-ohrv" placeholder="62" step="0.1"></div>
         </div>
@@ -396,6 +399,26 @@ AMRAP 18
 
 Add any notes: planning upper hypertrophy after, shoulder felt good..."></textarea>
       </div>
+
+      <!-- INJURY FLAG -->
+      <div class="ig fw" style="grid-column:1/-1;">
+        <label class="il">Flag / Injury <span style="color:var(--mt);font-weight:400;font-size:.6rem;">(optional)</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
+          <select class="if" id="inj-body" style="font-size:.8rem;">
+            <option value="">Body part...</option>
+            <option>Right shoulder</option><option>Left shoulder</option>
+            <option>Lower back</option><option>Right knee</option><option>Left knee</option>
+            <option>Hip / glute</option><option>Neck</option><option>Wrist</option><option>Other</option>
+          </select>
+          <div style="display:flex;gap:.35rem;">
+            <button type="button" id="sev-mild" onclick="setInjSev('mild',this)" class="btn btn-s" style="flex:1;font-size:.65rem;padding:.3rem .4rem;color:var(--gn);border-color:var(--gn);">Mild</button>
+            <button type="button" id="sev-mod" onclick="setInjSev('mod',this)" class="btn btn-s" style="flex:1;font-size:.65rem;padding:.3rem .4rem;">Mod</button>
+            <button type="button" id="sev-severe" onclick="setInjSev('severe',this)" class="btn btn-s" style="flex:1;font-size:.65rem;padding:.3rem .4rem;">Severe</button>
+          </div>
+        </div>
+        <input type="hidden" id="inj-sev" value="mild">
+        <input type="text" class="if" id="inj-trigger" placeholder="What triggered it... e.g. rear delt fly — pinching at bottom of ROM" style="font-size:.8rem;">
+      </div>
     </div>
     <div id="m-fb" style="margin-bottom:.85rem;"></div>
     <div class="btn-row">
@@ -432,6 +455,90 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
   <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;"><div><div class="ht" style="font-size:2rem;">Training<br><span>Program</span></div><div class="hs">Phase 1 · May → Oct 2026 · Tap any day for full breakdown</div></div></div>
 
   <!-- PHASE TIMELINE WITH MILESTONES -->
+
+  <div class="cd fw" style="margin-bottom:1.25rem;">
+    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Weekly Structure</span>
+      <button id="week-edit-btn" onclick="toggleWeekEdit()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:6px;padding:.2rem .65rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Edit</button>
+    </div>
+    <div class="week" id="prog-week"></div>
+    <div id="week-edit-grid" style="display:none;margin-top:.85rem;border-top:1px solid var(--bd);padding-top:.85rem;">
+      <div style="font-size:.62rem;color:var(--mt);margin-bottom:.6rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Tap to toggle sessions per day</div>
+      <div id="week-edit-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:.7rem;">
+        <button onclick="saveWeekStructure()" style="background:var(--sf2);border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:.3rem .85rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAXES TRACKER -->
+  <div class="cd fw" style="margin-bottom:1.25rem;">
+    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Maxes Tracker</span>
+      <button onclick="openLogPR()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:6px;padding:.2rem .65rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Log PR</button>
+    </div>
+
+    <!-- Column headers -->
+    <div style="display:grid;grid-template-columns:1fr 72px 72px 90px;gap:.5rem;padding:.3rem 0;margin-bottom:.2rem;">
+      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;">Lift</span>
+      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;text-align:center;">Tested</span>
+      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;text-align:center;">Est.</span>
+      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;text-align:center;">% → weight</span>
+    </div>
+
+    <!-- Lifts list -->
+    <div id="maxes-list" style="display:flex;flex-direction:column;gap:0;"></div>
+
+    <div style="margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bd);font-size:.68rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">
+      Est. via Epley formula · tap Tested to log a PR
+    </div>
+  </div>
+
+  <!-- INJURY / FLAG LOG -->
+  <div class="cd fw" style="margin-bottom:1.25rem;">
+    <div class="ct">Flag / Injury Log</div>
+    <div id="injury-list"><div class="empty"><div class="empty-i">🚩</div>No flags logged yet.</div></div>
+  </div>
+
+</div>
+
+<!-- LOG PR MODAL -->
+<div class="modal-ov" id="pr-modal" onclick="closePrModal(event)">
+  <div class="modal">
+    <button class="mcl" onclick="document.getElementById('pr-modal').classList.remove('show')">✕</button>
+    <div class="md-title">Log PR</div>
+    <div class="md-sub">Tested 1RM — marks lift as confirmed</div>
+    <div class="lg" style="margin-bottom:.85rem;">
+      <div class="ig fw">
+        <label class="il">Lift</label>
+        <select class="if" id="pr-lift">
+          <option value="">Select lift...</option>
+          <option>Bench Press</option><option>Back Squat</option><option>Conventional Deadlift</option>
+          <option>Front Squat</option><option>Power Clean</option><option>Split Jerk</option>
+          <option>Strict OHP</option><option>Power Snatch</option><option>Squat Snatch</option>
+          <option>Push Press</option>
+        </select>
+      </div>
+      <div class="ig"><label class="il">Weight (lb)</label><input type="number" class="if" id="pr-weight" placeholder="265"></div>
+      <div class="ig"><label class="il">Reps</label><input type="number" class="if" id="pr-reps" placeholder="1" min="1" max="20"></div>
+      <div class="ig"><label class="il">Date</label><input type="date" class="if" id="pr-date"></div>
+      <div class="ig fw"><label class="il">Notes</label><input type="text" class="if" id="pr-notes" placeholder="Competition, training max, fresh..."></div>
+    </div>
+    <button class="btn btn-p" onclick="savePR()">Save PR</button>
+  </div>
+</div>
+
+<!-- 70.3 PREP -->
+<div class="pg" id="pg-ironman">
+  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
+    <div><div class="ht" style="font-size:2rem;">Muskoka<br><span>70.3</span></div><div class="hs">1.9km Swim · 90km Bike · 21.1km Run · July 2027</div></div>
+    <div class="hm"><div class="hg" id="im-days">—</div><div class="hgs">days to race</div></div>
+  </div>
+  <div class="sg" style="grid-template-columns:repeat(3,1fr);">
+    <div class="sc" style="--ac:var(--cy)"><div class="sl">Swim</div><div class="sv">1.9</div><div class="su">km · biggest limiter</div></div>
+    <div class="sc" style="--ac:var(--gn)"><div class="sl">Bike</div><div class="sv">90</div><div class="su">km · road bike ready</div></div>
+    <div class="sc" style="--ac:var(--or)"><div class="sl">Run</div><div class="sv">21.1</div><div class="su">km · 5km @ 5:30/km</div></div>
+  </div>
   <div class="cd fw" style="margin-bottom:1.25rem;">
     <div class="ct">Training Phases → Muskoka 70.3</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.25rem;">
@@ -534,33 +641,6 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     </div>
   </div>
 
-  <div class="cd fw" style="margin-bottom:1.25rem;">
-    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>Weekly Structure</span>
-      <button id="week-edit-btn" onclick="toggleWeekEdit()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:6px;padding:.2rem .65rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Edit</button>
-    </div>
-    <div class="week" id="prog-week"></div>
-    <div id="week-edit-grid" style="display:none;margin-top:.85rem;border-top:1px solid var(--bd);padding-top:.85rem;">
-      <div style="font-size:.62rem;color:var(--mt);margin-bottom:.6rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Tap to toggle sessions per day</div>
-      <div id="week-edit-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;"></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:.7rem;">
-        <button onclick="saveWeekStructure()" style="background:var(--sf2);border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:.3rem .85rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 70.3 PREP -->
-<div class="pg" id="pg-ironman">
-  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
-    <div><div class="ht" style="font-size:2rem;">Muskoka<br><span>70.3</span></div><div class="hs">1.9km Swim · 90km Bike · 21.1km Run · July 2027</div></div>
-    <div class="hm"><div class="hg" id="im-days">—</div><div class="hgs">days to race</div></div>
-  </div>
-  <div class="sg" style="grid-template-columns:repeat(3,1fr);">
-    <div class="sc" style="--ac:var(--cy)"><div class="sl">Swim</div><div class="sv">1.9</div><div class="su">km · biggest limiter</div></div>
-    <div class="sc" style="--ac:var(--gn)"><div class="sl">Bike</div><div class="sv">90</div><div class="su">km · road bike ready</div></div>
-    <div class="sc" style="--ac:var(--or)"><div class="sl">Run</div><div class="sv">21.1</div><div class="su">km · 5km @ 5:30/km</div></div>
-  </div>
   <div class="mg">
     <div class="cd"><div class="ct">Countdown</div>
       <div class="cd-grid">
@@ -581,19 +661,80 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
         <div style="display:flex;gap:.6rem;align-items:center;padding:.55rem .72rem;background:var(--sf2);border-radius:7px;"><input type="checkbox" id="g6" style="accent-color:var(--bl);width:14px;height:14px;flex-shrink:0;"><label for="g6" style="font-size:.8rem;cursor:pointer;">Race-specific running shoes</label></div>
       </div>
     </div>
-    <div class="cd fw" style="margin-bottom:0;"><div class="ct">Phase Roadmap</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;">
-        <div style="padding:1rem;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.12);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--bl);letter-spacing:1px;margin-bottom:.38rem;">Phase 1 · Foundation</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">May—Oct 2026 ← NOW</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ 2 swims/week</li><li>→ CrossFit 3-4x</li><li>→ 2 hypertrophy sessions</li><li>→ Zone 2 bike 45-60 min</li><li>→ Goal: 400m swim</li></ul></div>
-        <div style="padding:1rem;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--mt);letter-spacing:1px;margin-bottom:.38rem;">Phase 2 · Build</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">Nov 2026—Feb 2027</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ Swim 1500-2000m</li><li>→ Long bike 90 min+</li><li>→ Long run 60-75 min</li><li>→ 1 hypertrophy session</li><li>→ Goal: swim 1.9km</li></ul></div>
-        <div style="padding:1rem;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--mt);letter-spacing:1px;margin-bottom:.38rem;">Phase 3 · Race Specific</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">Mar—Jun 2027</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ Bricks weekly</li><li>→ Open water swim</li><li>→ Race pace intervals</li><li>→ CrossFit 2x max</li></ul></div>
-        <div style="padding:1rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--gd);letter-spacing:1px;margin-bottom:.38rem;">Taper · Race Day</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">July 2027</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ Cut volume 40-50%</li><li>→ Keep intensity</li><li>→ Sleep priority</li><li>→ Muskoka 70.3 🏁</li></ul></div>
-      </div>
-    </div>
   </div>
 </div>
 <div id="target-tip" style="display:none;position:fixed;"></div>
 </main>
 
+
+
+<!-- RECOVERY TAB -->
+<div class="pg" id="pg-recovery">
+  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
+    <div>
+      <div class="ht" style="font-size:2rem;">Recovery<br><span>Dashboard</span></div>
+      <div class="hs" id="rec-dash-sub">Live from your logs</div>
+    </div>
+    <div class="hm">
+      <div class="hg" id="rec-dash-score" style="color:var(--cy);">—</div>
+      <div class="hgs">sleep performance</div>
+    </div>
+  </div>
+
+  <!-- SLEEP PERFORMANCE -->
+  <div class="cd" style="margin-bottom:1rem;">
+    <div class="ct">Last Night's Sleep Performance</div>
+    <div style="display:flex;align-items:flex-end;gap:.75rem;margin-bottom:.6rem;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;line-height:1;color:var(--cy);" id="sp-pct">—</div>
+      <div style="padding-bottom:.4rem;">
+        <div id="sp-badge" style="font-size:.7rem;font-family:'JetBrains Mono',monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;"></div>
+        <div style="font-size:.68rem;color:var(--mt);margin-top:.2rem;">vs 8h target</div>
+      </div>
+    </div>
+    <div style="height:6px;background:var(--sf2);border-radius:999px;overflow:hidden;margin-bottom:.85rem;">
+      <div id="sp-bar" style="height:100%;border-radius:999px;background:var(--cy);transition:width .6s ease;width:0%;"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;" id="sp-stats"></div>
+    <div style="margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--bd);font-size:.7rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">
+      r=0.56 correlation with next-day recovery · stronger signal than sleep debt (r=-0.10)
+    </div>
+  </div>
+
+  <!-- DAY OF WEEK -->
+  <div class="cd" style="margin-bottom:1rem;">
+    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Recovery by Day of Week</span>
+      <div style="display:flex;gap:.3rem;">
+        <button id="dow-btn-rec" onclick="setDowMetric('recovery')" class="btn btn-s" style="font-size:.65rem;padding:.2rem .55rem;color:var(--cy);border-color:var(--cy);">Recovery</button>
+        <button id="dow-btn-hrv" onclick="setDowMetric('hrv')" class="btn btn-s" style="font-size:.65rem;padding:.2rem .55rem;">HRV</button>
+        <button id="dow-btn-rhr" onclick="setDowMetric('rhr')" class="btn btn-s" style="font-size:.65rem;padding:.2rem .55rem;">RHR</button>
+      </div>
+    </div>
+    <div id="dow-chart" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:.6rem;align-items:flex-end;height:100px;"></div>
+    <div id="dow-labels" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;text-align:center;"></div>
+    <div style="margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bd);font-size:.72rem;color:var(--mt);line-height:1.6;" id="dow-insight"></div>
+  </div>
+
+  <!-- HRV MULTI-YEAR -->
+  <div class="cd" style="margin-bottom:1rem;">
+    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>HRV & RHR Multi-Year Trend</span>
+      <div id="hrv-best-year" style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--gn);"></div>
+    </div>
+    <div style="display:flex;gap:1rem;margin-bottom:.6rem;font-size:.68rem;color:var(--mt);">
+      <span style="display:flex;align-items:center;gap:.3rem;"><span style="width:16px;height:2px;background:var(--cy);display:inline-block;border-radius:2px;"></span>HRV (ms)</span>
+      <span style="display:flex;align-items:center;gap:.3rem;"><span style="width:16px;height:2px;background:var(--or);display:inline-block;border-radius:2px;border-top:2px dashed var(--or);"></span>RHR (bpm)</span>
+    </div>
+    <div style="position:relative;width:100%;height:180px;">
+      <canvas id="multiYearChart" role="img" aria-label="Multi-year HRV and resting heart rate trend"></canvas>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--bd);">
+      <div><div class="sl">HRV gained</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gn);" id="hrv-gained">—</div></div>
+      <div><div class="sl">RHR dropped</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gn);" id="rhr-dropped">—</div></div>
+      <div><div class="sl">Best year</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gd);" id="hrv-best">—</div></div>
+    </div>
+  </div>
+</div>
 
 
 <!-- STAT CHART MODAL -->
@@ -754,10 +895,22 @@ function saveMetrics(){
   const sleepRaw=v('m-sl').trim();
   let sleepHrs=null;
   if(sleepRaw){const parts=sleepRaw.split(':');const slH=parseInt(parts[0])||0,slM=parseInt(parts[1])||0;sleepHrs=(slH||slM)?Math.round((slH+slM/60)*100)/100:null;}
-  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa',sleep_score:'m-ss',sleep_deep_min:'m-sd',sleep_light_min:'m-sl2',sleep_rem_min:'m-sr',sleep_awake_min:'m-saw',overnight_hrv:'m-ohrv',resting_hr:'m-rhr',body_battery:'m-bb',stress:'m-str',hrv_7day:'m-hrv',steps:'m-stp',steps_goal:'m-stg'};
+  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa',sleep_score:'m-ss',overnight_hrv:'m-ohrv',resting_hr:'m-rhr',body_battery:'m-bb',stress:'m-str',hrv_7day:'m-hrv',steps:'m-stp',steps_goal:'m-stg'};
   const explicitlySet={};
   Object.entries(numFields).forEach(([key,id])=>{explicitlySet[key]=v(id).trim()!=='';});
   const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null,sleep_score:n('m-ss'),sleep_deep_min:n('m-sd'),sleep_light_min:n('m-sl2'),sleep_rem_min:n('m-sr'),sleep_awake_min:n('m-saw'),overnight_hrv:n('m-ohrv'),resting_hr:n('m-rhr'),body_battery:n('m-bb'),stress:n('m-str'),hrv_7day:n('m-hrv'),training_status:v('m-ts')||null,steps:n('m-stp'),steps_goal:n('m-stg')};
+  // Parse H:MM stage fields to minutes
+  function parseStageToMins(id) {
+    const raw = v(id).trim();
+    if(!raw) return null;
+    const parts = raw.split(':');
+    const h = parseInt(parts[0])||0, m = parseInt(parts[1])||0;
+    return (h||m) ? h*60+m : null;
+  }
+  incoming.sleep_deep_min  = parseStageToMins('m-sd');
+  incoming.sleep_light_min = parseStageToMins('m-sl2');
+  incoming.sleep_rem_min   = parseStageToMins('m-sr');
+  incoming.sleep_awake_min = parseStageToMins('m-saw');
   if(!incoming.date){toast('Enter a date');return;}
   const existing=metrics.find(l=>l.date===incoming.date)||{};
   const e={...existing};
@@ -771,6 +924,7 @@ function saveMetrics(){
   metrics=metrics.filter(l=>l.date!==e.date);metrics.push(e);metrics.sort((a,b)=>new Date(b.date)-new Date(a.date));
   sessionSavedDates.add(e.date);
   persist();
+  saveInjuryFromLog(e.date);
   toast('Log saved ✓');
   const mfb=el('m-fb');if(mfb)mfb.innerHTML='';
   refresh();
@@ -821,10 +975,10 @@ function loadEntryIntoForm(dateStr){
   el('m-fa').value = entry.fat || '';
   el('m-no').value = entry.notes || '';
   el('m-ss').value = entry.sleep_score || '';
-  el('m-sd').value = entry.sleep_deep_min || '';
-  el('m-sl2').value = entry.sleep_light_min || '';
-  el('m-sr').value = entry.sleep_rem_min || '';
-  el('m-saw').value = entry.sleep_awake_min || '';
+  el('m-sd').value = (() => { const mins = entry.sleep_deep_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
+  el('m-sl2').value = (() => { const mins = entry.sleep_light_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
+  el('m-sr').value = (() => { const mins = entry.sleep_rem_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
+  el('m-saw').value = (() => { const mins = entry.sleep_awake_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
   el('m-ohrv').value = entry.overnight_hrv || '';
   el('m-rhr').value = entry.resting_hr || '';
   el('m-bb').value = entry.body_battery || '';
@@ -972,6 +1126,7 @@ function saveLift(){
   if(!valid.length){toast('Add at least one set with reps');return;}
   const entry={date,cat,exercise:ex,sets:valid,notes:v('l-notes'),ts:Date.now()};
   lifts.unshift(entry);persist();syncAfterSave('lifts', entry);
+  if(document.getElementById('pg-program')?.classList.contains('active')) renderMaxesList();
   // Check PR
   const prev=lifts.slice(1).filter(l=>l.exercise===ex);
   const maxPrev=prev.length?Math.max(...prev.flatMap(l=>l.sets.map(s=>parseFloat(s.w)||0))):0;
@@ -2000,6 +2155,419 @@ function openSurplusMatrix() {
 
   document.getElementById('stat-canvas').style.display = 'none';
   document.getElementById('chart-ov').classList.add('show');
+}
+
+
+// ── MAXES TRACKER ────────────────────────────────────────
+const KEY_LIFTS_MAXES = ['Bench Press','Back Squat','Conventional Deadlift','Front Squat','Power Clean','Split Jerk','Strict OHP','Push Press','Power Snatch','Squat Snatch'];
+
+function epley1RM(w, r) { return r === 1 ? w : Math.round(w * (1 + r/30)); }
+
+function getEstimated1RMs() {
+  const result = {};
+  KEY_LIFTS_MAXES.forEach(name => {
+    const cat = Object.keys(EX).find(c => EX[c][name]);
+    const hist = lifts.filter(l => l.exercise === name);
+    const allSets = hist.flatMap(l => l.sets.map(s => ({w: parseFloat(s.w)||0, r: parseInt(s.r)||1, date: l.date})));
+    const validSets = allSets.filter(s => s.w > 0 && s.r > 0);
+
+    // Best estimated 1RM across ALL sets ever
+    let bestEst = null;
+    if(validSets.length) {
+      bestEst = Math.max(...validSets.map(s => epley1RM(s.w, s.r)));
+    }
+    if(!bestEst && cat && EX[cat][name]?.base) {
+      bestEst = Math.round(EX[cat][name].base * 1.15);
+    }
+
+    // Highest raw weight ever logged + reps at that weight
+    let highestWt = null, highestReps = null;
+    if(validSets.length) {
+      const maxWt = Math.max(...validSets.map(s => s.w));
+      const setsAtMax = validSets.filter(s => s.w === maxWt);
+      highestWt = maxWt;
+      highestReps = Math.max(...setsAtMax.map(s => s.r)); // highest reps at that weight
+    }
+
+    // Also check manually logged PRs
+    const prs = getTestedPRs().filter(p => p.lift === name);
+    if(prs.length) {
+      const maxPrWt = Math.max(...prs.map(p => p.weight));
+      if(!highestWt || maxPrWt > highestWt) {
+        highestWt = maxPrWt;
+        const prAtMax = prs.find(p => p.weight === maxPrWt);
+        highestReps = prAtMax?.reps || 1;
+      }
+      // Also check PR est1rms
+      const maxPrEst = Math.max(...prs.map(p => p.est1rm || p.weight));
+      if(!bestEst || maxPrEst > bestEst) bestEst = maxPrEst;
+    }
+
+    result[name] = {
+      est: bestEst,
+      highestWt,
+      highestReps,
+      unit: cat ? EX[cat][name]?.unit || 'lb' : 'lb'
+    };
+  });
+  return result;
+}
+
+function getTestedPRs() {
+  return JSON.parse(localStorage.getItem('prs_v1') || '[]');
+}
+
+function renderMaxesList() {
+  const container = el('maxes-list');
+  if(!container) return;
+  const estimated = getEstimated1RMs();
+  const tested = getTestedPRs();
+  const testedMap = {};
+  tested.forEach(pr => { if(!testedMap[pr.lift] || pr.date > testedMap[pr.lift].date) testedMap[pr.lift] = pr; });
+
+  container.innerHTML = KEY_LIFTS_MAXES.map((name, idx) => {
+    const est = estimated[name];
+    const pr = testedMap[name];
+    const highestWt = est.highestWt;
+    const highestReps = est.highestReps;
+    const estWt = est.est;
+    if(!highestWt && !estWt) return '';
+    const inputId = 'pct-' + idx;
+    const outId = 'pct-out-' + idx;
+    const maxForCalc = estWt || highestWt;
+    return `<div style="display:grid;grid-template-columns:1fr 72px 72px 90px;gap:.5rem;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--bd);">
+      <div style="font-size:.78rem;font-weight:500;color:var(--tx);">${name}</div>
+      <div style="text-align:center;">
+        ${highestWt
+          ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--gn);letter-spacing:1px;line-height:1;">${highestWt}<span style="font-size:.6rem;color:var(--mt);display:block;">${highestReps > 1 ? highestReps + ' reps' : 'lb'}</span></div>`
+          : `<button onclick="openLogPRFor('${name}')" style="font-size:.62rem;padding:.2rem .45rem;border-radius:5px;border:1px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">+ log</button>`
+        }
+      </div>
+      <div style="text-align:center;">
+        ${estWt
+          ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--bl);letter-spacing:1px;">${estWt}<span style="font-size:.6rem;color:var(--mt);">lb</span></div>`
+          : '<span style="color:var(--mt);font-size:.7rem;">—</span>'
+        }
+      </div>
+      <div style="display:flex;gap:.3rem;align-items:center;">
+        <input type="number" id="${inputId}" placeholder="%" min="1" max="110" style="width:40px;background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:.3rem .4rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.75rem;text-align:center;" oninput="calcPct(${maxForCalc},'${inputId}','${outId}')">
+        <div id="${outId}" style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--cy);min-width:38px;text-align:right;">—</div>
+      </div>
+    </div>`;
+  }).filter(Boolean).join('');
+}
+
+  const pct = parseFloat(document.getElementById(inputId)?.value);
+  const out = document.getElementById(outId);
+  if(!out) return;
+  if(!pct || isNaN(pct)) { out.textContent = '—'; return; }
+  out.textContent = Math.round(max * pct / 100) + 'lb';
+}
+
+function updateMaxCalc() {} // kept for compatibility
+
+function openLogPR() {
+  const d = el('pr-date'); if(d) d.value = today();
+  document.getElementById('pr-modal').classList.add('show');
+}
+
+function openLogPRFor(liftName) {
+  const d = el('pr-date'); if(d) d.value = today();
+  const sel = el('pr-lift'); if(sel) sel.value = liftName;
+  document.getElementById('pr-modal').classList.add('show');
+}
+
+function closePrModal(e) {
+  if(e.target === el('pr-modal')) el('pr-modal').classList.remove('show');
+}
+
+function savePR() {
+  const lift = v('pr-lift'), weight = parseFloat(v('pr-weight')), date = v('pr-date'), notes = v('pr-notes');
+  const reps = parseInt(v('pr-reps')) || 1;
+  if(!lift || !weight || !date) { toast('Fill in lift, weight and date'); return; }
+  const est1rm = reps === 1 ? weight : Math.round(weight * (1 + reps/30));
+  const isTrueSingle = reps === 1;
+  const prs = getTestedPRs();
+  prs.push({ lift, weight, reps, est1rm, isTrueSingle, date, notes, ts: Date.now() });
+  localStorage.setItem('prs_v1', JSON.stringify(prs));
+  el('pr-modal').classList.remove('show');
+  const label = isTrueSingle ? `PR saved ✓ — ${weight}lb` : `PR saved ✓ — ${weight}×${reps} → est. 1RM ${est1rm}lb`;
+  toast(label);
+  renderMaxesList();
+}
+
+// ── INJURY LOG ───────────────────────────────────────────
+let injSev = 'mild';
+
+function setInjSev(sev, btn) {
+  injSev = sev;
+  ['mild','mod','severe'].forEach(s => {
+    const b = el('sev-'+s);
+    if(!b) return;
+    b.style.color = 'var(--mt)'; b.style.borderColor = 'var(--bd)';
+  });
+  const cols = { mild: 'var(--gn)', mod: 'var(--or)', severe: 'var(--rd)' };
+  if(btn) { btn.style.color = cols[sev]; btn.style.borderColor = cols[sev]; }
+  el('inj-sev').value = sev;
+}
+
+function getInjuries() {
+  return JSON.parse(localStorage.getItem('injuries_v1') || '[]');
+}
+
+function saveInjuryFromLog(date) {
+  const body = v('inj-body');
+  const trigger = v('inj-trigger');
+  if(!body && !trigger) return; // nothing flagged, skip
+  const inj = { date, body, severity: injSev, trigger, ts: Date.now() };
+  const injuries = getInjuries();
+  injuries.unshift(inj);
+  localStorage.setItem('injuries_v1', JSON.stringify(injuries));
+  // Reset form
+  el('inj-body').value = ''; el('inj-trigger').value = ''; injSev = 'mild';
+  setInjSev('mild', el('sev-mild'));
+}
+
+function renderInjuryList() {
+  const container = el('injury-list');
+  if(!container) return;
+  const injuries = getInjuries();
+  if(!injuries.length) { container.innerHTML = '<div class="empty"><div class="empty-i">🚩</div>No flags logged yet.</div>'; return; }
+  const sevColor = { mild: 'var(--gn)', mod: 'var(--or)', severe: 'var(--rd)' };
+  container.innerHTML = injuries.slice(0,20).map(inj => `
+    <div style="display:flex;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--bd);align-items:flex-start;">
+      <div style="width:8px;height:8px;border-radius:50%;background:${sevColor[inj.severity]||'var(--mt)'};flex-shrink:0;margin-top:4px;"></div>
+      <div style="flex:1;">
+        <div style="font-size:.8rem;font-weight:500;color:var(--tx);">${inj.body||'Unspecified'}</div>
+        <div style="font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;margin-top:.1rem;">${inj.date} · ${inj.severity}</div>
+        ${inj.trigger ? `<div style="font-size:.75rem;color:var(--mt);margin-top:.25rem;">${inj.trigger}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+
+// Load Chart.js for recovery tab if not already loaded
+function ensureChartJs(cb) {
+  if(typeof Chart !== "undefined") { cb(); return; }
+  const s = document.createElement("script");
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js";
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+// ── RECOVERY DASHBOARD ───────────────────────────────────
+let dowMetric = 'recovery';
+let multiYearChart = null;
+
+function renderRecoveryDash() {
+  renderSleepPerformance();
+  renderDow('recovery');
+  renderMultiYear();
+}
+
+function renderSleepPerformance() {
+  // Find last entry with sleep data
+  const last = metrics.find(m => m.sleep);
+  if(!last) return;
+
+  const sleepNeed = 8; // hours — Garmin dynamic, we use 8h target
+  const pct = Math.min(100, Math.round((last.sleep / sleepNeed) * 100));
+  const h = Math.floor(last.sleep), mins = Math.round((last.sleep - h) * 60);
+
+  el('sp-pct').textContent = pct + '%';
+  el('rec-dash-score').textContent = pct + '%';
+  el('sp-bar').style.width = pct + '%';
+
+  const badge = el('sp-badge');
+  if(pct >= 90) { badge.textContent = 'Excellent'; badge.style.cssText = 'background:rgba(31,122,69,.15);color:var(--gn);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+  else if(pct >= 75) { badge.textContent = 'Good'; badge.style.cssText = 'background:rgba(9,122,138,.15);color:var(--cy);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+  else if(pct >= 60) { badge.textContent = 'Fair'; badge.style.cssText = 'background:rgba(168,101,48,.15);color:var(--or);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+  else { badge.textContent = 'Low'; badge.style.cssText = 'background:rgba(160,40,32,.15);color:var(--rd);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+
+  const stats = el('sp-stats');
+  const rhr = last.resting_hr || last.hrv || null;
+  const ohrv = last.overnight_hrv || null;
+  stats.innerHTML = [
+    { label:'duration', val: h + 'h' + (mins>0?mins+'m':'') },
+    { label:'score', val: last.sleep_score ? last.sleep_score : '—' },
+    { label:'resting HR', val: rhr ? rhr + 'bpm' : '—' },
+    { label:'overnight HRV', val: ohrv ? ohrv + 'ms' : '—' },
+  ].map(s => `<div style="text-align:center;padding:.5rem;background:var(--sf2);border-radius:7px;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--tx);">${s.val}</div>
+    <div style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;">${s.label}</div>
+  </div>`).join('');
+}
+
+function setDowMetric(metric) {
+  dowMetric = metric;
+  ['rec','hrv','rhr'].forEach(m => {
+    const btn = el('dow-btn-' + (m==='rec'?'rec':m));
+    if(btn) { btn.style.color='var(--mt)'; btn.style.borderColor='var(--bd)'; }
+  });
+  const activeId = metric==='recovery'?'dow-btn-rec':metric==='hrv'?'dow-btn-hrv':'dow-btn-rhr';
+  const activeBtn = el(activeId);
+  if(activeBtn) { activeBtn.style.color='var(--cy)'; activeBtn.style.borderColor='var(--cy)'; }
+  renderDow(metric);
+}
+
+function renderDow(metric) {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayData = {0:[],1:[],2:[],3:[],4:[],5:[],6:[]};
+
+  metrics.forEach(m => {
+    const d = new Date(m.date + 'T12:00:00');
+    const dow = (d.getDay() + 6) % 7; // 0=Mon, 6=Sun
+    let val = null;
+    if(metric === 'recovery') val = m.recovery;
+    else if(metric === 'hrv') val = m.hrv_7day || m.hrv;
+    else if(metric === 'rhr') val = m.resting_hr || (metric==='rhr'&&m.hrv?null:null);
+    if(val) dayData[dow].push(val);
+  });
+
+  const avgs = days.map((_, i) => {
+    const arr = dayData[i];
+    return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
+  });
+
+  const validAvgs = avgs.filter(v => v !== null);
+  if(!validAvgs.length) return;
+  const maxVal = Math.max(...validAvgs);
+  const minVal = Math.min(...validAvgs);
+  const range = maxVal - minVal || 1;
+  const units = { recovery:'%', hrv:'ms', rhr:'bpm' };
+
+  // Worst day index
+  const worstIdx = metric === 'rhr'
+    ? avgs.indexOf(Math.max(...avgs.filter(v=>v!==null)))
+    : avgs.indexOf(Math.min(...avgs.filter(v=>v!==null)));
+
+  const chart = el('dow-chart');
+  const labels = el('dow-labels');
+  if(!chart || !labels) return;
+
+  chart.innerHTML = days.map((d, i) => {
+    if(avgs[i] === null) return `<div style="display:flex;align-items:flex-end;justify-content:center;"><div style="width:100%;height:20px;background:var(--sf2);border-radius:4px 4px 0 0;opacity:.3;"></div></div>`;
+    const pct = metric === 'rhr'
+      ? (1 - (avgs[i] - minVal) / range) * 75 + 15
+      : ((avgs[i] - minVal) / range) * 75 + 15;
+    const isWorst = i === worstIdx;
+    const col = isWorst ? 'var(--rd)' : i >= 3 ? 'var(--or)' : 'var(--cy)';
+    return `<div style="display:flex;align-items:flex-end;justify-content:center;">
+      <div style="width:100%;height:${Math.round(pct)}px;background:${col};border-radius:4px 4px 0 0;opacity:${isWorst?1:.7};"></div>
+    </div>`;
+  }).join('');
+
+  labels.innerHTML = days.map((d, i) => {
+    const isWorst = i === worstIdx;
+    return `<div style="text-align:center;">
+      <div style="font-size:.6rem;color:${isWorst?'var(--rd)':'var(--mt)'};font-weight:${isWorst?'700':'400'};">${d}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:${isWorst?'var(--rd)':'var(--tx)'};">${avgs[i]!==null?avgs[i]+units[metric]:'—'}</div>
+    </div>`;
+  }).join('');
+
+  // Insight text
+  const insight = el('dow-insight');
+  if(insight) {
+    const worstDay = days[worstIdx];
+    const bestIdx = metric === 'rhr'
+      ? avgs.indexOf(Math.min(...avgs.filter(v=>v!==null)))
+      : avgs.indexOf(Math.max(...avgs.filter(v=>v!==null)));
+    const bestDay = days[bestIdx];
+    insight.innerHTML = `<span style="color:var(--rd);">${worstDay}</span> is consistently your lowest ${metric === 'recovery' ? 'recovery' : metric.toUpperCase()} day · <span style="color:var(--cy);">${bestDay}</span> is your best · Based on ${metrics.filter(m=>m.recovery).length} logged days`;
+  }
+}
+
+function renderMultiYear() {
+  if(typeof Chart === "undefined") { ensureChartJs(renderMultiYear); return; }
+  const yearMap = {};
+  metrics.forEach(m => {
+    const yr = m.date.slice(0,4);
+    if(!yearMap[yr]) yearMap[yr] = { hrv:[], rhr:[] };
+    const hrv = m.hrv_7day || m.hrv;
+    const rhr = m.resting_hr;
+    if(hrv) yearMap[yr].hrv.push(hrv);
+    if(rhr) yearMap[yr].rhr.push(rhr);
+  });
+
+  const years = Object.keys(yearMap).sort().filter(y => yearMap[y].hrv.length > 10);
+  const avgHrv = years.map(y => { const a = yearMap[y].hrv; return Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10; });
+  const avgRhr = years.map(y => { const a = yearMap[y].rhr; return a.length ? Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10 : null; });
+
+  if(years.length < 2) return;
+
+  // Stats
+  const firstHrv = avgHrv[0], lastHrv = avgHrv[avgHrv.length-1];
+  const firstRhr = avgRhr.find(v=>v), lastRhr = [...avgRhr].reverse().find(v=>v);
+  const bestYrIdx = avgHrv.indexOf(Math.max(...avgHrv));
+
+  el('hrv-gained').textContent = '+' + (lastHrv - firstHrv).toFixed(1) + 'ms';
+  el('rhr-dropped').textContent = firstRhr && lastRhr ? '−' + (firstRhr - lastRhr).toFixed(1) + 'bpm' : '—';
+  el('hrv-best').textContent = years[bestYrIdx];
+  el('hrv-best-year').textContent = years[bestYrIdx] + ' best HRV on record';
+
+  const canvas = el('multiYearChart');
+  if(!canvas) return;
+
+  if(multiYearChart) { multiYearChart.destroy(); multiYearChart = null; }
+
+  multiYearChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [
+        {
+          label: 'HRV (ms)',
+          data: avgHrv,
+          borderColor: '#097a8a',
+          backgroundColor: 'rgba(9,122,138,0.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#097a8a',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.35,
+          fill: true,
+          yAxisID: 'y',
+        },
+        {
+          label: 'RHR (bpm)',
+          data: avgRhr,
+          borderColor: '#a86530',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#a86530',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          borderDash: [5,3],
+          tension: 0.35,
+          fill: false,
+          yAxisID: 'y2',
+          spanGaps: true,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0c0c0c',
+          borderColor: '#1e1e1e',
+          borderWidth: 1,
+          titleColor: '#707070',
+          bodyColor: '#d0d0d0',
+          titleFont: { family:'JetBrains Mono', size:10 },
+          bodyFont: { family:'JetBrains Mono', size:11 },
+          callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y }
+        }
+      },
+      scales: {
+        x: { grid:{ color:'#1e1e1e' }, ticks:{ color:'#707070', font:{family:'JetBrains Mono',size:10} }, border:{display:false} },
+        y: { position:'left', grid:{ color:'#1e1e1e' }, ticks:{ color:'#707070', font:{family:'JetBrains Mono',size:10}, callback: v=>v+'ms' }, border:{display:false} },
+        y2: { position:'right', grid:{ display:false }, ticks:{ color:'#707070', font:{family:'JetBrains Mono',size:10}, callback: v=>v+'bpm' }, border:{display:false} }
+      }
+    }
+  });
 }
 
 
