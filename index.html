@@ -2710,7 +2710,7 @@ async function sbPull() {
   toast('Syncing...');
   try {
     const [sbMetrics, sbLifts, sbCardio] = await Promise.all([
-      sbFetch('metrics', 'GET', null, '?order=date.desc&limit=500'),
+      sbFetch('metrics', 'GET', null, '?order=date.desc&limit=2000'),
       sbFetch('lifts',   'GET', null, '?order=date.desc&limit=400'),
       sbFetch('cardio_log','GET',null,'?order=date.desc&limit=400'),
     ]);
