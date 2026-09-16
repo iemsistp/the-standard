@@ -2735,13 +2735,16 @@ async function sbPull() {
             const remoteUpdated = row.updated_at || '';
             if (!remoteUpdated) {
               // Remote has no updated_at — skip, local wins
-            } else if (!localUpdated) {
-              // HIST-only local entry — merge fields from remote
+            } else {
+              // Always merge remote fields on top of local — remote is source of truth
+              // for new columns (sleep_score, overnight_hrv, resting_hr, hrv_7day etc.)
               const merged_entry = {...metrics[idx]};
-              Object.keys(row).forEach(k => { if(row[k] !== null && row[k] !== undefined) merged_entry[k] = row[k]; });
+              Object.keys(row).forEach(k => {
+                if(row[k] !== null && row[k] !== undefined && row[k] !== '') {
+                  merged_entry[k] = row[k];
+                }
+              });
               metrics[idx] = merged_entry; merged++;
-            } else if (remoteUpdated > localUpdated) {
-              metrics[idx] = row; merged++;
             }
           }
         }
@@ -2770,7 +2773,7 @@ async function sbPull() {
           }
         } catch(e){ console.warn('[MS] restore error',e); }
       }
-      metrics = metrics.filter(m => m.date !== '0001-01-01' && m.date !== '0001-01-02');
+      metrics = metrics.filter(m => m.date !== '0001-01-01' && m.date !== '0001-01-02' && /^\d{4}-\d{2}-\d{2}$/.test(m.date));
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
