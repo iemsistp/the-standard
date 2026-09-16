@@ -710,6 +710,12 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
         <button id="dow-btn-rhr" onclick="setDowMetric('rhr')" class="btn btn-s" style="font-size:.65rem;padding:.2rem .55rem;">RHR</button>
       </div>
     </div>
+    <div style="display:flex;gap:.3rem;margin-bottom:.75rem;">
+      <button id="dow-tf-all" onclick="setDowTimeFilter('all',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;color:var(--cy);border-color:var(--cy);">All time</button>
+      <button id="dow-tf-ytd" onclick="setDowTimeFilter('ytd',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;">YTD</button>
+      <button id="dow-tf-6m" onclick="setDowTimeFilter('6m',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;">6M</button>
+      <button id="dow-tf-3m" onclick="setDowTimeFilter('3m',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;">3M</button>
+    </div>
     <div id="dow-chart" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:.6rem;align-items:flex-end;height:100px;"></div>
     <div id="dow-labels" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;text-align:center;"></div>
     <div style="margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bd);font-size:.72rem;color:var(--mt);line-height:1.6;" id="dow-insight"></div>
@@ -2358,6 +2364,7 @@ function ensureChartJs(cb) {
 
 // ── RECOVERY DASHBOARD ───────────────────────────────────
 let dowMetric = 'recovery';
+let dowTimeFilter = 'all';
 let multiYearChart = null;
 
 function renderRecoveryDash() {
@@ -2367,11 +2374,16 @@ function renderRecoveryDash() {
 }
 
 function renderSleepPerformance() {
-  // Find last entry with sleep data
-  const last = metrics.find(m => m.sleep);
-  if(!last) return;
+  // Find most recent entry that has sleep data — sort by date descending
+  const sorted = [...metrics].sort((a,b) => b.date.localeCompare(a.date));
+  const last = sorted.find(m => m.sleep && m.sleep > 0);
+  if(!last) {
+    el('sp-pct').textContent = '—';
+    el('rec-dash-score').textContent = '—';
+    return;
+  }
 
-  const sleepNeed = 8; // hours — Garmin dynamic, we use 8h target
+  const sleepNeed = 8;
   const pct = Math.min(100, Math.round((last.sleep / sleepNeed) * 100));
   const h = Math.floor(last.sleep), mins = Math.round((last.sleep - h) * 60);
 
@@ -2386,11 +2398,12 @@ function renderSleepPerformance() {
   else { badge.textContent = 'Low'; badge.style.cssText = 'background:rgba(160,40,32,.15);color:var(--rd);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
 
   const stats = el('sp-stats');
-  const rhr = last.resting_hr || last.hrv || null;
+  const rhr = last.resting_hr || null;
   const ohrv = last.overnight_hrv || null;
+  const durStr = last.sleep ? (h + 'h' + (mins > 0 ? mins + 'm' : '')) : '—';
   stats.innerHTML = [
-    { label:'duration', val: h + 'h' + (mins>0?mins+'m':'') },
-    { label:'score', val: last.sleep_score ? last.sleep_score : '—' },
+    { label:'duration', val: durStr },
+    { label:'score', val: last.sleep_score || '—' },
     { label:'resting HR', val: rhr ? rhr + 'bpm' : '—' },
     { label:'overnight HRV', val: ohrv ? ohrv + 'ms' : '—' },
   ].map(s => `<div style="text-align:center;padding:.5rem;background:var(--sf2);border-radius:7px;">
@@ -2402,7 +2415,7 @@ function renderSleepPerformance() {
 function setDowMetric(metric) {
   dowMetric = metric;
   ['rec','hrv','rhr'].forEach(m => {
-    const btn = el('dow-btn-' + (m==='rec'?'rec':m));
+    const btn = el('dow-btn-' + m);
     if(btn) { btn.style.color='var(--mt)'; btn.style.borderColor='var(--bd)'; }
   });
   const activeId = metric==='recovery'?'dow-btn-rec':metric==='hrv'?'dow-btn-hrv':'dow-btn-rhr';
@@ -2411,17 +2424,37 @@ function setDowMetric(metric) {
   renderDow(metric);
 }
 
+function setDowTimeFilter(tf, btn) {
+  dowTimeFilter = tf;
+  ['all','ytd','6m','3m'].forEach(t => {
+    const b = el('dow-tf-'+t);
+    if(b) { b.style.color='var(--mt)'; b.style.borderColor='var(--bd)'; }
+  });
+  if(btn) { btn.style.color='var(--cy)'; btn.style.borderColor='var(--cy)'; }
+  renderDow(dowMetric);
+}
+
 function renderDow(metric) {
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const dayData = {0:[],1:[],2:[],3:[],4:[],5:[],6:[]};
 
-  metrics.forEach(m => {
+  // Apply time filter
+  const now = new Date();
+  const cutoff = new Date(now);
+  if(dowTimeFilter === 'ytd') cutoff.setMonth(0, 1);
+  else if(dowTimeFilter === '6m') cutoff.setMonth(now.getMonth()-6);
+  else if(dowTimeFilter === '3m') cutoff.setMonth(now.getMonth()-3);
+  else cutoff.setFullYear(2000); // all time
+
+  const filteredMetrics = metrics.filter(m => new Date(m.date+'T12:00:00') >= cutoff);
+
+  filteredMetrics.forEach(m => {
     const d = new Date(m.date + 'T12:00:00');
     const dow = (d.getDay() + 6) % 7; // 0=Mon, 6=Sun
     let val = null;
     if(metric === 'recovery') val = m.recovery;
-    else if(metric === 'hrv') val = m.hrv_7day || m.hrv;
-    else if(metric === 'rhr') val = m.resting_hr || (metric==='rhr'&&m.hrv?null:null);
+    else if(metric === 'hrv') val = m.hrv_7day || m.hrv || null;
+    else if(metric === 'rhr') val = m.resting_hr || null;
     if(val) dayData[dow].push(val);
   });
 
@@ -2481,16 +2514,19 @@ function renderDow(metric) {
 function renderMultiYear() {
   if(typeof Chart === "undefined") { ensureChartJs(renderMultiYear); return; }
   const yearMap = {};
-  metrics.forEach(m => {
+  // Sort metrics by date ascending for correct year grouping
+  const sorted = [...metrics].sort((a,b) => a.date.localeCompare(b.date));
+  sorted.forEach(m => {
     const yr = m.date.slice(0,4);
+    if(!yr || yr === '0001') return; // skip reserved rows
     if(!yearMap[yr]) yearMap[yr] = { hrv:[], rhr:[] };
     const hrv = m.hrv_7day || m.hrv;
-    const rhr = m.resting_hr;
-    if(hrv) yearMap[yr].hrv.push(hrv);
-    if(rhr) yearMap[yr].rhr.push(rhr);
+    const rhr = m.resting_hr || null;
+    if(hrv && hrv > 0 && hrv < 300) yearMap[yr].hrv.push(hrv);
+    if(rhr && rhr > 30 && rhr < 120) yearMap[yr].rhr.push(rhr);
   });
 
-  const years = Object.keys(yearMap).sort().filter(y => yearMap[y].hrv.length > 10);
+  const years = Object.keys(yearMap).sort().filter(y => yearMap[y].hrv.length >= 5);
   const avgHrv = years.map(y => { const a = yearMap[y].hrv; return Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10; });
   const avgRhr = years.map(y => { const a = yearMap[y].rhr; return a.length ? Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10 : null; });
 
@@ -2772,6 +2808,7 @@ async function sbPull() {
     refresh();
     const newestDate = metrics.filter(m=>m.updated_at).sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'none';
     toast('Synced ✓ — ' + metrics.filter(m=>m.updated_at).length + ' saved entries, newest: ' + newestDate);
+    if(document.getElementById('pg-recovery')?.classList.contains('active')) { renderRecoveryDash(); }
   } catch(e) {
     console.error('Sync error', e);
     toast('Sync failed — offline?');
