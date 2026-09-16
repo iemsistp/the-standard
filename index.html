@@ -2257,6 +2257,7 @@ function renderMaxesList() {
   }).filter(Boolean).join('');
 }
 
+function calcPct(max, inputId, outId) {
   const pct = parseFloat(document.getElementById(inputId)?.value);
   const out = document.getElementById(outId);
   if(!out) return;
