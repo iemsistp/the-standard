@@ -1023,44 +1023,71 @@ function toggleTag(btn){
 
 function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags','m-ss','m-sd','m-sl2','m-sr','m-saw','m-ohrv','m-rhr','m-bb','m-str','m-hrv','m-stp','m-stg'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const tsEl=el('m-ts');if(tsEl)tsEl.value='';const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
 
+function buildEntryText(entry, date, header) {
+  const s = entry.burned&&entry.consumed ? entry.consumed-entry.burned : null;
+  const dow = new Date(date+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
+  let text = header + ' — ' + date + ' (' + dow + ')\n';
+  text += '─'.repeat(40) + '\n';
+
+  if(entry.weight) text += 'Weight:           ' + (entry.weight*2.20462).toFixed(1) + 'lb (' + entry.weight + 'kg)\n';
+
+  if(entry.sleep||entry.sleep_score) {
+    text += '\n[SLEEP]\n';
+    if(entry.sleep_score) text += 'Score:            ' + entry.sleep_score + '\n';
+    if(entry.sleep) { const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60); text+='Duration:         '+sh+'h'+(sm>0?sm+'m':'')+'\n'; }
+    if(entry.sleep_deep_min||entry.sleep_rem_min) {
+      const fmt=function(m){var h=Math.floor(m/60),mn=m%60;return h+'h'+(mn>0?mn+'m':'');};
+      text+='Stages:           Deep '+(entry.sleep_deep_min?fmt(entry.sleep_deep_min):'—')+' · REM '+(entry.sleep_rem_min?fmt(entry.sleep_rem_min):'—')+' · Light '+(entry.sleep_light_min?fmt(entry.sleep_light_min):'—')+' · Awake '+(entry.sleep_awake_min?fmt(entry.sleep_awake_min):'—')+'\n';
+    }
+    if(entry.resting_hr) text += 'Resting HR:       ' + entry.resting_hr + 'bpm\n';
+    if(entry.overnight_hrv) text += 'Overnight HRV:    ' + entry.overnight_hrv + 'ms\n';
+  }
+
+  if(entry.recovery||entry.body_battery||entry.training_status||entry.stress||entry.hrv_7day) {
+    text += '\n[RECOVERY]\n';
+    if(entry.recovery) text += 'Training ready:   ' + entry.recovery + '%\n';
+    if(entry.body_battery) text += 'Body battery:     ' + entry.body_battery + '\n';
+    if(entry.training_status) text += 'Training status:  ' + entry.training_status + '\n';
+    if(entry.stress) text += 'Stress score:     ' + entry.stress + '\n';
+    if(entry.hrv_7day) text += '7-day HRV avg:    ' + entry.hrv_7day + 'ms\n';
+  }
+
+  if(entry.steps) text += '\nSteps:            ' + entry.steps + (entry.steps_goal?' / '+entry.steps_goal+' goal':'') + '\n';
+
+  if(entry.consumed||entry.burned) {
+    text += '\n[NUTRITION]\n';
+    if(entry.burned) text += 'Burned:           ' + entry.burned + ' kcal\n';
+    if(entry.consumed) text += 'Consumed:         ' + entry.consumed + ' kcal\n';
+    if(s!==null) text += 'Surplus:          ' + (s>0?'+':'') + Math.round(s) + ' kcal\n';
+    if(entry.carbs) text += 'Carbs:            ' + entry.carbs + 'g\n';
+    if(entry.fat) text += 'Fat:              ' + entry.fat + 'g\n';
+    if(entry.protein) text += 'Protein:          ' + entry.protein + 'g\n';
+  }
+
+  const inj = getInjuries().find(function(i){return i.date===date;});
+  if(inj&&(inj.body||inj.trigger)) text += '\n🚩 FLAG: ' + (inj.body||'') + ' (' + inj.severity + ') — ' + (inj.trigger||'') + '\n';
+
+  if(entry.notes) text += '\n[WORKOUT]\n' + entry.notes + '\n';
+
+  const recent = metrics.slice(0,7);
+  const avgRec = recent.map(function(l){return l.recovery;}).filter(function(x){return x;});
+  if(avgRec.length) text += '\n7-day avg readiness: ' + Math.round(avgRec.reduce(function(a,b){return a+b;},0)/avgRec.length) + '%';
+  const avgSleep = recent.map(function(l){return l.sleep;}).filter(function(x){return x;});
+  if(avgSleep.length) { const a=avgSleep.reduce(function(s,v){return s+v;},0)/avgSleep.length; const h=Math.floor(a),m=Math.round((a-h)*60); text+='  ·  7-day avg sleep: '+h+'h'+(m>0?m+'m':''); }
+
+  return text;
+}
+
 function copyMorningLog(){
-  const d=v('m-date')||today();
-  const entry=metrics.find(l=>l.date===d)||{};
-  const s=entry.burned&&entry.consumed?entry.consumed-entry.burned:null;
-  const dow=new Date(d+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
-  let text=`[MORNING CHECK-IN — ${d} (${dow})]\n`;
-  if(entry.weight) text+=`Weight: ${(entry.weight*2.20462).toFixed(1)}lb (${entry.weight}kg)\n`;
-  if(entry.recovery) text+=`Recovery: ${entry.recovery}%\n`;
-  if(entry.sleep){const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60);text+=`Sleep: ${sh}h${sm>0?' '+sm+'min':''}\n`;}
-  if(entry.burned) text+=`Calories burned yesterday: ${entry.burned}\n`;
-  if(entry.consumed) text+=`Calories consumed yesterday: ${entry.consumed}\n`;
-  if(s!==null) text+=`Surplus/deficit: ${s>0?'+':''}${Math.round(s)} kcal\n`;
-  if(entry.protein) text+=`Protein: ${entry.protein}g\n`;
-  if(entry.carbs) text+=`Carbs: ${entry.carbs}g\n`;
-  if(entry.fat) text+=`Fat: ${entry.fat}g\n`;
-  if(entry.notes) text+=`\nToday's workout plan:\n${entry.notes}\n`;
-  // Append recent context
-  const recent=metrics.slice(0,7);
-  const avgRec=recent.map(l=>l.recovery).filter(x=>x).reduce((a,b,_,arr)=>a+b/arr.length,0);
-  if(avgRec) text+=`\n7-day avg recovery: ${Math.round(avgRec)}%`;
-  doCopy(text);
+  const d = v('m-date')||today();
+  const entry = metrics.find(function(l){return l.date===d;})||{};
+  doCopy(buildEntryText(entry, d, '[MORNING CHECK-IN]'));
 }
 
 function copyEntryLog(dateStr){
-  const entry=metrics.find(l=>l.date===dateStr);
+  const entry = metrics.find(function(l){return l.date===dateStr;});
   if(!entry){toast('Entry not found');return;}
-  const s=entry.burned&&entry.consumed?entry.consumed-entry.burned:null;
-  const dow=new Date(dateStr+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
-  let text=`[TRAINING LOG — ${dateStr} (${dow})]\n`;
-  if(entry.weight) text+=`Weight: ${(entry.weight*2.20462).toFixed(1)}lb (${entry.weight}kg)\n`;
-  if(entry.recovery) text+=`Recovery: ${entry.recovery}%\n`;
-  if(entry.sleep){const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60);text+=`Sleep: ${sh}h${sm>0?' '+sm+'min':''}\n`;}
-  if(entry.burned) text+=`Calories burned: ${entry.burned}\n`;
-  if(entry.consumed) text+=`Calories consumed: ${entry.consumed}\n`;
-  if(s!==null) text+=`Surplus: ${s>0?'+':''}${Math.round(s)} kcal\n`;
-  if(entry.protein) text+=`Protein: ${entry.protein}g | Carbs: ${entry.carbs||'?'}g | Fat: ${entry.fat||'?'}g\n`;
-  if(entry.notes) text+=`\nWorkout / Results:\n${entry.notes}\n`;
-  doCopy(text);
+  doCopy(buildEntryText(entry, dateStr, '[TRAINING LOG]'));
 }
 
 function doCopy(text){
