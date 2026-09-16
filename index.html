@@ -417,7 +417,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
           </div>
         </div>
         <input type="hidden" id="inj-sev" value="mild">
-        <input type="text" class="if" id="inj-trigger" placeholder="What triggered it... e.g. rear delt fly — pinching at bottom of ROM" style="font-size:.8rem;">
+        <textarea class="if" id="inj-trigger" rows="3" placeholder="What triggered it... e.g. rear delt fly — pinching at bottom of ROM" style="font-size:.8rem;resize:vertical;line-height:1.6;font-family:'JetBrains Mono',monospace;"></textarea>
       </div>
     </div>
     <div id="m-fb" style="margin-bottom:.85rem;"></div>
@@ -989,6 +989,18 @@ function loadEntryIntoForm(dateStr){
   const tsEl = el('m-ts'); if(tsEl) tsEl.value = entry.training_status || '';
   el('m-stp').value = entry.steps || '';
   el('m-stg').value = entry.steps_goal || '';
+  // Load most recent injury flag for this date
+  const injForDate = getInjuries().find(i => i.date === dateStr);
+  if(injForDate) {
+    const injBody = el('inj-body'); if(injBody) injBody.value = injForDate.body || '';
+    const injTrigger = el('inj-trigger'); if(injTrigger) injTrigger.value = injForDate.trigger || '';
+    injSev = injForDate.severity || 'mild';
+    setInjSev(injSev, el('sev-' + injSev));
+  } else {
+    const injBody = el('inj-body'); if(injBody) injBody.value = '';
+    const injTrigger = el('inj-trigger'); if(injTrigger) injTrigger.value = '';
+    injSev = 'mild'; setInjSev('mild', el('sev-mild'));
+  }
   // Restore tags
   const entryTags = (entry.tags || '').split(',').map(t=>t.trim()).filter(Boolean);
   el('m-tags').value = entry.tags || '';
@@ -2253,7 +2265,8 @@ function renderMaxesList() {
   const testedMap = {};
   tested.forEach(pr => { if(!testedMap[pr.lift] || pr.date > testedMap[pr.lift].date) testedMap[pr.lift] = pr; });
 
-  container.innerHTML = KEY_LIFTS_MAXES.map((name, idx) => {
+  const sortedLifts = [...KEY_LIFTS_MAXES].sort();
+  container.innerHTML = sortedLifts.map((name, idx) => {
     const est = estimated[name];
     const pr = testedMap[name];
     const highestWt = est.highestWt;
@@ -3349,7 +3362,15 @@ updateWhoopBtn();
 refresh();
 // Pull from Supabase on load (merge remote → local)
 // Small delay so page renders first
-setTimeout(()=>sbPull(),1500);
+setTimeout(async ()=>{
+  await sbPull();
+  // Auto-render tabs that need post-pull data
+  setTimeout(() => {
+    loadPRsFromSupabase();
+    renderInjuryList();
+    renderRecoveryDash();
+  }, 300);
+}, 1500);
 setTimeout(()=>{
   // Show upload-all prompt if we have local historical data
   const hasHist = metrics.filter(m => !m.id).length > 0 || lifts.filter(l => !l.id).length > 0;
