@@ -347,7 +347,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     <div id="m-fb" style="margin-bottom:.85rem;"></div>
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveMetrics()" id="save-btn">Save Log</button>
-      <button class="btn btn-s" onclick="garminSync()" id="garmin-btn" style="color:var(--gn);border-color:var(--gn);">⟳ Garmin</button>
+      <button class="btn btn-s" onclick="whoopPullToday()" id="whoop-pull-btn" style="display:none;">⟳ WHOOP</button>
       <button class="btn btn-s" onclick="copyMorningLog()" id="copy-morning-btn" style="display:none;">📋 Copy to Claude</button>
       <button class="btn" onclick="clearMetrics()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:8px;padding:.65rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.5px;">Clear</button>
     </div>
@@ -1763,97 +1763,6 @@ function openStatChart(key, label, unit, color) {
       for (let i = 0; i < dates.length; i += step) ctx.fillText(dates[i], px2(i), H - 6);
     }
   });
-}
-
-
-const GARMIN_SYNC_URL = 'https://garmin-sync-ry2f.onrender.com';
-
-async function garminSync() {
-  const btn = el('garmin-btn');
-  const selectedDate = v('m-date') || today();
-
-  // Render spins down — warn user it may take 30s on first call
-  btn.textContent = '⟳ Waking up...';
-  btn.disabled = true;
-  toast('Connecting to Garmin — may take 30s if server is sleeping...');
-
-  try {
-    // Trigger sync for selected date + previous date (for calories burned)
-    const res = await fetch(GARMIN_SYNC_URL + '/sync?date=' + selectedDate, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (!res.ok) throw new Error('Server error ' + res.status);
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Sync failed');
-
-    btn.textContent = '✓ Garmin';
-    toast('Garmin synced — pulling to form...');
-
-    // Small delay then pull from garmin_daily into form
-    setTimeout(() => garminFillForm(selectedDate), 800);
-
-  } catch(e) {
-    btn.textContent = '⟳ Garmin';
-    btn.disabled = false;
-    toast('Garmin sync failed: ' + e.message);
-    console.error('[Garmin]', e);
-  }
-}
-
-async function garminFillForm(targetDate) {
-  const btn = el('garmin-btn');
-  try {
-    // Pull from garmin_daily Supabase table
-    const res = await fetch(
-      SB_URL + '/rest/v1/garmin_daily?date=eq.' + targetDate + '&limit=1',
-      { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } }
-    );
-    const rows = await res.json();
-    const g = rows?.[0];
-    if (!g) { toast('No Garmin data found for ' + targetDate); btn.disabled = false; return; }
-
-    const filled = [];
-
-    // Sleep duration → H:MM format
-    if (g.sleep_duration_hrs) {
-      const h = Math.floor(g.sleep_duration_hrs);
-      const m = Math.round((g.sleep_duration_hrs - h) * 60);
-      el('m-sl').value = h + ':' + String(m).padStart(2, '0');
-      filled.push('Sleep ' + h + 'h' + m + 'm');
-    }
-
-    // Recovery → use training readiness as proxy
-    if (g.training_readiness) {
-      el('m-re').value = g.training_readiness;
-      filled.push('Readiness ' + g.training_readiness + '%');
-    }
-
-    // Calories burned (yesterday's)
-    if (g.calories_burned) {
-      el('m-bu').value = g.calories_burned;
-      filled.push('Burned ' + g.calories_burned + ' kcal');
-    }
-
-    toast(filled.length
-      ? 'Garmin: ' + filled.join(' · ')
-      : 'Garmin: connected but no data for ' + targetDate
-    );
-
-    btn.disabled = false;
-    btn.textContent = '✓ Garmin';
-
-    // Show copy button
-    const copyBtn = el('copy-morning-btn');
-    if (copyBtn) copyBtn.style.display = 'inline-flex';
-
-  } catch(e) {
-    toast('Garmin fill failed: ' + e.message);
-    btn.disabled = false;
-    btn.textContent = '⟳ Garmin';
-    console.error('[Garmin fill]', e);
-  }
 }
 
 
