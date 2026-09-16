@@ -670,14 +670,10 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
 
 <!-- RECOVERY TAB -->
 <div class="pg" id="pg-recovery">
-  <div class="hero">
+  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
     <div>
-      <div class="ht">Recovery<br><span>Dashboard</span></div>
+      <div class="ht" style="font-size:2rem;">Recovery<br><span>Dashboard</span></div>
       <div class="hs">Sleep · HRV · Day of week patterns</div>
-    </div>
-    <div class="hm">
-      <div class="hg" id="rec-dash-score" style="color:var(--cy);">—</div>
-      <div class="hgs">sleep performance</div>
     </div>
   </div>
 
@@ -2379,7 +2375,6 @@ function renderSleepPerformance() {
   const last = sorted.find(m => m.sleep && m.sleep > 0);
   if(!last) {
     el('sp-pct').textContent = '—';
-    el('rec-dash-score').textContent = '—';
     return;
   }
 
@@ -2388,7 +2383,6 @@ function renderSleepPerformance() {
   const h = Math.floor(last.sleep), mins = Math.round((last.sleep - h) * 60);
 
   el('sp-pct').textContent = pct + '%';
-  el('rec-dash-score').textContent = pct + '%';
   el('sp-bar').style.width = pct + '%';
 
   const badge = el('sp-badge');
