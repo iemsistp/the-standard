@@ -2215,8 +2215,34 @@ function getEstimated1RMs() {
   return result;
 }
 
+// In-memory cache of PRs from Supabase
+let _prCache = null;
+
 function getTestedPRs() {
-  return JSON.parse(localStorage.getItem('prs_v1') || '[]');
+  return _prCache || JSON.parse(localStorage.getItem('prs_v1') || '[]');
+}
+
+async function loadPRsFromSupabase() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/pr_maxes?order=date.desc', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+    // Normalize to match local PR format
+    _prCache = rows.map(r => ({
+      lift: r.lift,
+      weight: r.weight,
+      reps: r.reps || 1,
+      est1rm: r.est_1rm || r.weight,
+      isTrueSingle: r.reps === 1,
+      date: r.date,
+      notes: r.notes,
+      type: r.type,
+      ts: new Date(r.created_at).getTime()
+    })).filter(r => r.weight);
+    renderMaxesList();
+  } catch(e) { console.warn('[PRs]', e); }
 }
 
 function renderMaxesList() {
@@ -2293,6 +2319,12 @@ function savePR() {
   const prs = getTestedPRs();
   prs.push({ lift, weight, reps, est1rm, isTrueSingle, date, notes, ts: Date.now() });
   localStorage.setItem('prs_v1', JSON.stringify(prs));
+  // Also push to Supabase pr_maxes
+  fetch(SB_URL + '/rest/v1/pr_maxes', {
+    method: 'POST',
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ lift, weight, reps, est_1rm: est1rm, type: isTrueSingle ? 'tested' : 'estimated', date, notes })
+  }).then(() => loadPRsFromSupabase()).catch(e => console.warn('[PR save]', e));
   el('pr-modal').classList.remove('show');
   const label = isTrueSingle ? `PR saved ✓ — ${weight}lb` : `PR saved ✓ — ${weight}×${reps} → est. 1RM ${est1rm}lb`;
   toast(label);
@@ -2378,12 +2410,14 @@ function renderSleepPerformance() {
     return;
   }
 
-  const sleepNeed = 8;
-  const pct = Math.min(100, Math.round((last.sleep / sleepNeed) * 100));
-  const h = Math.floor(last.sleep), mins = Math.round((last.sleep - h) * 60);
+  // Use Garmin sleep score directly when available — it's a real composite score
+  // Fall back to duration/8h only when sleep score wasn't logged
+  const sleepScore = last.sleep_score ? parseInt(last.sleep_score) : null;
+  const pct = sleepScore || Math.min(100, Math.round(((last.sleep||0) / 8) * 100));
+  const h = Math.floor(last.sleep||0), mins = Math.round(((last.sleep||0) - h) * 60);
 
-  el('sp-pct').textContent = pct + '%';
-  el('sp-bar').style.width = pct + '%';
+  el('sp-pct').textContent = pct + (sleepScore ? '' : '%');
+  el('sp-bar').style.width = Math.min(100, pct) + '%';
 
   const badge = el('sp-badge');
   if(pct >= 90) { badge.textContent = 'Excellent'; badge.style.cssText = 'background:rgba(31,122,69,.15);color:var(--gn);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
@@ -2806,6 +2840,7 @@ async function sbPull() {
     const newestDate = metrics.filter(m=>m.updated_at).sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'none';
     toast('Synced ✓ — ' + metrics.filter(m=>m.updated_at).length + ' saved entries, newest: ' + newestDate);
     if(document.getElementById('pg-recovery')?.classList.contains('active')) { renderRecoveryDash(); }
+    if(document.getElementById('pg-program')?.classList.contains('active')) { renderMaxesList(); renderInjuryList(); }
   } catch(e) {
     console.error('Sync error', e);
     toast('Sync failed — offline?');
