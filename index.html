@@ -743,6 +743,12 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     </div>
   </div>
 
+  <!-- RECOVERY ANOMALY -->
+  <div class="cd" style="margin-bottom:1rem;" id="anomaly-card" style="display:none;">
+    <div class="ct" id="anomaly-title">Recovery anomaly check</div>
+    <div id="anomaly-body"></div>
+  </div>
+
   <!-- DAY OF WEEK -->
   <div class="cd" style="margin-bottom:1rem;">
     <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
@@ -2512,6 +2518,201 @@ function ensureChartJs(cb) {
   document.head.appendChild(s);
 }
 
+// ── RECOVERY ANOMALY DETECTION ────────────────────────────
+const ANOMALY_TAGS_KEY = 'anomaly_tags_v1';
+
+let _anomalyTagCache = null;
+
+function getAnomalyTags() {
+  return _anomalyTagCache || JSON.parse(localStorage.getItem(ANOMALY_TAGS_KEY) || '{}');
+}
+
+async function loadAnomalyTagsFromSupabase() {
+  try {
+    const res = await fetch(SB_URL + '/rest/v1/anomaly_tags?order=date.desc', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+    const map = {};
+    rows.forEach(function(r){ map[r.date] = r.tag; });
+    _anomalyTagCache = map;
+    localStorage.setItem(ANOMALY_TAGS_KEY, JSON.stringify(map));
+    renderAnomalyDetection();
+  } catch(e) { console.warn('[AnomalyTags]', e); }
+}
+
+async function saveAnomalyTag(date, tag) {
+  const tags = getAnomalyTags();
+  tags[date] = tag;
+  _anomalyTagCache = tags;
+  localStorage.setItem(ANOMALY_TAGS_KEY, JSON.stringify(tags));
+
+  try {
+    await fetch(SB_URL + '/rest/v1/anomaly_tags', {
+      method: 'POST',
+      headers: {
+        'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ date, tag })
+    });
+  } catch(e) { console.warn('[AnomalyTag save]', e); }
+}
+
+function computeBaseline(sorted, endExcludeDays) {
+  // Trailing 60 days, excluding most recent N days
+  const now = new Date();
+  const excl = new Date(now); excl.setDate(now.getDate() - endExcludeDays);
+  const cutoff = new Date(now); cutoff.setDate(now.getDate() - endExcludeDays - 60);
+  const window = sorted.filter(function(m) {
+    const d = new Date(m.date + 'T12:00:00');
+    return d >= cutoff && d < excl;
+  });
+  function stats(vals) {
+    if(vals.length < 20) return null;
+    const mean = vals.reduce(function(a,b){return a+b;},0) / vals.length;
+    const sd = Math.sqrt(vals.reduce(function(s,v){return s+Math.pow(v-mean,2);},0) / vals.length);
+    return {mean, sd, n: vals.length};
+  }
+  const rhrVals = window.map(function(m){return parseFloat(m.resting_hr);}).filter(function(v){return v>30&&v<120;});
+  const ohrvVals = window.map(function(m){return parseFloat(m.overnight_hrv||m.hrv);}).filter(function(v){return v>10&&v<200;});
+  return { rhr: stats(rhrVals), ohrv: stats(ohrvVals) };
+}
+
+function getBand(val, stats, higherBetter) {
+  if(!val || !stats) return null;
+  const diff = higherBetter ? (val - stats.mean) / stats.sd : (stats.mean - val) / stats.sd;
+  if(diff >= -0.5) return 'green';
+  if(diff >= -1.5) return 'yellow';
+  return 'red';
+}
+
+function renderAnomalyDetection() {
+  const card = document.getElementById('anomaly-card');
+  const titleEl = document.getElementById('anomaly-title');
+  const bodyEl = document.getElementById('anomaly-body');
+  if(!card || !bodyEl) return;
+
+  const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
+  const baseline = computeBaseline(sorted, 2);
+
+  if(!baseline.rhr || !baseline.ohrv) {
+    card.style.display = 'none';
+    return;
+  }
+
+  // Get bands for last 3 days
+  const recent3 = sorted.slice(0,3);
+  const bands = recent3.map(function(m) {
+    const rhr = parseFloat(m.resting_hr);
+    const ohrv = parseFloat(m.overnight_hrv || m.hrv);
+    return {
+      date: m.date,
+      rhr: rhr, ohrv: ohrv,
+      rhrBand: getBand(rhr, baseline.rhr, false),
+      ohrvBand: getBand(ohrv, baseline.ohrv, true)
+    };
+  });
+
+  const tags = getAnomalyTags();
+
+  // Persistence check — both RED for N consecutive days
+  const redDays = bands.filter(function(b){ return b.rhrBand==='red' && b.ohrvBand==='red'; }).length;
+
+  // Day 3 escalation: 3 consecutive red/red AND unexplained on day 1 or 2
+  const day1Tag = tags[bands[0]?.date];
+  const day2Tag = tags[bands[1]?.date];
+  const escalate = redDays >= 3
+    && (day1Tag === 'unexplained' || day2Tag === 'unexplained')
+    && day1Tag !== 'social' && day2Tag !== 'social';
+
+  const alert2 = redDays >= 2 && !escalate;
+  const normal = redDays < 2;
+
+  if(normal) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+
+  function pill(label, type) {
+    const styles = {
+      green: 'background:rgba(31,122,69,.15);color:var(--gn);border:0.5px solid rgba(31,122,69,.3)',
+      yellow: 'background:rgba(168,101,48,.15);color:var(--or);border:0.5px solid rgba(168,101,48,.3)',
+      red: 'background:rgba(160,40,32,.15);color:var(--rd);border:0.5px solid rgba(160,40,32,.3)',
+    };
+    return '<span style="font-size:.65rem;font-weight:700;padding:.15rem .5rem;border-radius:999px;'+styles[type]+'">'+label+'</span>';
+  }
+
+  function metricRow(label, val, unit, band, ctx) {
+    const bandLabel = band==='green'?'Good':band==='yellow'?'Fair':'Low';
+    const valColor = band==='red'?'var(--rd)':band==='yellow'?'var(--or)':'var(--tx)';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:0.5px solid var(--bd);">'
+      + '<div><div style="font-size:.75rem;color:var(--tx);">'+label+'</div><div style="font-size:.62rem;color:var(--mt);font-family:\'JetBrains Mono\',monospace;">'+ctx+'</div></div>'
+      + '<div style="text-align:right;display:flex;align-items:center;gap:.5rem;">'
+      + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.2rem;color:'+valColor+';">'+val+'<span style="font-size:.65rem;color:var(--mt);">'+unit+'</span></div>'
+      + pill(bandLabel, band)
+      + '</div></div>';
+  }
+
+  const today = bands[0];
+  const rhrCtx = '60d avg ' + baseline.rhr.mean.toFixed(0) + 'bpm ± ' + baseline.rhr.sd.toFixed(1);
+  const ohrvCtx = '60d avg ' + baseline.ohrv.mean.toFixed(0) + 'ms ± ' + baseline.ohrv.sd.toFixed(1);
+
+  let html = metricRow('Resting HR', today.rhr || '—', 'bpm', today.rhrBand, rhrCtx);
+  html += metricRow('Overnight HRV', today.ohrv ? today.ohrv.toFixed(0) : '—', 'ms', today.ohrvBand, ohrvCtx);
+
+  if(escalate) {
+    // Day 3 escalation
+    titleEl.innerHTML = 'Extended recovery disruption &nbsp;' + pill('Day ' + redDays, 'red');
+    titleEl.style.color = 'var(--rd)';
+    card.style.borderColor = 'rgba(160,40,32,.4)';
+    html += '<div style="margin-top:.75rem;background:rgba(160,40,32,.08);border:0.5px solid rgba(160,40,32,.25);border-radius:8px;padding:.75rem;">'
+      + '<div style="font-size:.78rem;font-weight:500;color:var(--rd);margin-bottom:.35rem;">3 consecutive days — unexplained</div>'
+      + '<div style="font-size:.72rem;color:var(--mt);line-height:1.6;">This pattern is atypical. Normal social/alcohol dips resolve within 1–2 nights. Consider a rest day and monitor for symptoms. If it continues, worth checking in with a doctor.</div>'
+      + '<div style="display:flex;gap:.4rem;margin-top:.65rem;flex-wrap:wrap;">'
+      + '<button onclick="acknowledgeAnomaly(\'' + today.date + '\')" style="font-size:.68rem;padding:.3rem .65rem;border-radius:6px;border:0.5px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">Acknowledge</button>'
+      + '</div></div>';
+  } else {
+    // Day 2 alert
+    titleEl.innerHTML = 'Recovery markers outside normal range &nbsp;' + pill('Day ' + redDays, 'yellow');
+    titleEl.style.color = 'var(--or)';
+    card.style.borderColor = 'rgba(168,101,48,.4)';
+    const todayTag = tags[today.date];
+    html += '<div style="margin-top:.75rem;padding-top:.65rem;border-top:0.5px solid var(--bd);">'
+      + '<div style="font-size:.72rem;color:var(--mt);margin-bottom:.6rem;">Both HRV and RHR outside normal range for 2+ days. What\'s the likely cause?</div>'
+      + '<div style="display:flex;gap:.4rem;flex-wrap:wrap;">'
+      + ['social', 'load', 'unexplained'].map(function(tag) {
+          const labels = {social:'Social / alcohol', load:'Training load', unexplained:'Unexplained'};
+          const active = todayTag === tag;
+          return '<button onclick="tagAnomaly(\'' + today.date + '\',\'' + tag + '\')" style="font-size:.68rem;padding:.3rem .65rem;border-radius:6px;border:0.5px solid '+(active?'var(--or)':'var(--bd)')+';background:'+(active?'rgba(168,101,48,.12)':'none')+';color:'+(active?'var(--or)':'var(--mt)')+';cursor:pointer;">'+labels[tag]+'</button>';
+        }).join('')
+      + '</div>'
+      + (todayTag ? '<div style="font-size:.68rem;color:var(--mt);margin-top:.5rem;font-family:\'JetBrains Mono\',monospace;">'
+          + (todayTag==='social' ? 'Tagged — escalation suppressed. Expected to resolve within 1–2 nights.'
+            : todayTag==='load' ? 'Tagged — monitoring for resolution. Consider deload if it persists.'
+            : 'Tagged as unexplained — escalation will fire if markers remain red tomorrow.')
+          + '</div>' : '')
+      + '</div>';
+  }
+
+  bodyEl.innerHTML = html;
+}
+
+async function tagAnomaly(date, tag) {
+  await saveAnomalyTag(date, tag);
+  renderAnomalyDetection();
+}
+
+async function acknowledgeAnomaly(date) {
+  await saveAnomalyTag(date, 'acknowledged');
+  renderAnomalyDetection();
+}
+
+
 // ── RECOVERY DASHBOARD ───────────────────────────────────
 let dowMetric = 'recovery';
 let dowTimeFilter = 'all';
@@ -2519,6 +2720,7 @@ let multiYearChart = null;
 
 function renderRecoveryDash() {
   renderSleepPerformance();
+  renderAnomalyDetection();
   renderDow('recovery');
   renderMultiYear();
 }
@@ -3536,6 +3738,7 @@ setTimeout(async ()=>{
   setTimeout(() => {
     loadPRsFromSupabase();
     loadInjuriesFromSupabase();
+    loadAnomalyTagsFromSupabase();
     renderRecoveryDash();
   }, 300);
 }, 1500);
