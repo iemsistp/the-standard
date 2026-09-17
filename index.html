@@ -215,10 +215,6 @@ if('serviceWorker' in navigator) {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     <span>Daily Log</span>
   </button>
-  <button class="btab" onclick="showPg('recovery',this)" data-label="Recovery">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    <span>Recovery</span>
-  </button>
   <button class="btab" onclick="showPg('program',this)" data-label="Program">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
     <span>Program</span>
@@ -233,7 +229,8 @@ if('serviceWorker' in navigator) {
 <!-- DASHBOARD -->
 <div class="pg active" id="pg-dash">
   <div class="hero">
-    <div><div class="ht">THE<br><span>STANDARD</span></div></div>
+    <div><div class="ht">THE<br><span>STANDARD</span></div><div class="hs">Strength · CrossFit · Muskoka 70.3 · July 2027</div></div>
+    <div class="hm"><div class="hg" id="cd-main">—</div><div class="hgs">days to Muskoka 70.3</div></div>
   </div>
   <div id="sb-status" style="margin-bottom:.6rem;display:none;">
     <div class="fb fb-i" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
@@ -252,12 +249,12 @@ if('serviceWorker' in navigator) {
       <span class="st-badge" id="d-wt-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
       <svg id="wt-sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" style="width:100%;height:48px;margin-top:.4rem;display:block;"></svg>
     </div>
-    <div class="sc sc-click" style="--ac:var(--or)" onclick="openSurplusMatrix()">
+    <div class="sc sc-click" style="--ac:var(--or)" onclick="openStatChart('surplus','Daily Surplus','kcal','var(--or)')">
       <div class="sl">7d Surplus</div><div class="sv" id="d-sur">—</div>
       <div class="su">kcal · target +400-500</div><span class="st-badge" id="d-sur-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
       <svg id="sur-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" style="width:100%;height:38px;margin-top:.4rem;display:block;"></svg>
     </div>
-    <div class="sc sc-click" style="--ac:var(--cy)" onclick="openRecoveryMatrix()">
+    <div class="sc sc-click" style="--ac:var(--cy)" onclick="openStatChart('recovery','Recovery %','%','var(--cy)')">
       <div class="sl">Recovery</div><div class="sv" id="d-rec">—</div>
       <div class="su">% · target 70%+</div><span class="st-badge" id="d-rec-wow" style="position:static;font-size:.6rem;display:inline-block;margin-top:.15rem;"></span>
       <svg id="rec-sparkline" viewBox="0 0 200 40" preserveAspectRatio="none" style="width:100%;height:38px;margin-top:.4rem;display:block;"></svg>
@@ -308,69 +305,16 @@ if('serviceWorker' in navigator) {
           </select>
         </div>
       </div>
-
-      <!-- SLEEP SECTION -->
-      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Sleep</div>
-        <div class="lg" style="margin-bottom:0;">
-          <div class="ig"><label class="il">Sleep Score</label><input type="number" class="if" id="m-ss" placeholder="78"></div>
-          <div class="ig">
-            <label class="il">Duration</label>
-            <input type="text" class="if" id="m-sl" placeholder="8:30" maxlength="5" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
-          </div>
-          <div class="ig"><label class="il">Deep</label><input type="text" class="if" id="m-sd" placeholder="1:30" maxlength="5" oninput="fmtSleepInput(this)"></div>
-          <div class="ig"><label class="il">Light</label><input type="text" class="if" id="m-sl2" placeholder="3:20" maxlength="5" oninput="fmtSleepInput(this)"></div>
-          <div class="ig"><label class="il">REM</label><input type="text" class="if" id="m-sr" placeholder="1:40" maxlength="5" oninput="fmtSleepInput(this)"></div>
-          <div class="ig"><label class="il">Awake</label><input type="text" class="if" id="m-saw" placeholder="0:20" maxlength="5" oninput="fmtSleepInput(this)"></div>
-          <div class="ig"><label class="il">Resting HR</label><input type="number" class="if" id="m-rhr" placeholder="52"></div>
-          <div class="ig"><label class="il">Overnight HRV</label><input type="number" class="if" id="m-ohrv" placeholder="62" step="0.1"></div>
-        </div>
+      <div class="ig">
+        <label class="il">Sleep</label>
+        <input type="text" class="if" id="m-sl" placeholder="830" maxlength="5" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
       </div>
-
-      <!-- RECOVERY SECTION -->
-      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Recovery</div>
-        <div class="lg" style="margin-bottom:0;">
-          <div class="ig"><label class="il">Training Readiness</label><input type="number" class="if" id="m-re" placeholder="72"></div>
-          <div class="ig"><label class="il">Body Battery</label><input type="number" class="if" id="m-bb" placeholder="85"></div>
-          <div class="ig">
-            <label class="il">Training Status</label>
-            <select class="if" id="m-ts">
-              <option value="">Select...</option>
-              <option value="Productive">Productive</option>
-              <option value="Maintaining">Maintaining</option>
-              <option value="Peaking">Peaking</option>
-              <option value="Recovery">Recovery</option>
-              <option value="Unproductive">Unproductive</option>
-              <option value="Detraining">Detraining</option>
-              <option value="Overreaching">Overreaching</option>
-            </select>
-          </div>
-          <div class="ig"><label class="il">Stress Score</label><input type="number" class="if" id="m-str" placeholder="28"></div>
-          <div class="ig"><label class="il">7-Day Avg HRV</label><input type="number" class="if" id="m-hrv" placeholder="58" step="0.1"></div>
-        </div>
-      </div>
-
-      <!-- STEPS SECTION -->
-      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Steps</div>
-        <div class="lg" style="margin-bottom:0;">
-          <div class="ig"><label class="il">Steps Taken</label><input type="number" class="if" id="m-stp" placeholder="8500"></div>
-          <div class="ig"><label class="il">Step Goal</label><input type="number" class="if" id="m-stg" placeholder="10000"></div>
-        </div>
-      </div>
-
-      <!-- NUTRITION SECTION -->
-      <div class="ig fw" style="grid-column:1/-1;margin-top:.25rem;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:.78rem;letter-spacing:2px;color:var(--mt);margin-bottom:.5rem;">Nutrition</div>
-        <div class="lg" style="margin-bottom:0;">
-          <div class="ig"><label class="il">Cal Burned</label><input type="number" class="if" id="m-bu" placeholder="2500"></div>
-          <div class="ig"><label class="il">Cal Consumed</label><input type="number" class="if" id="m-co" placeholder="3100"></div>
-          <div class="ig"><label class="il">Carbs (g)</label><input type="number" class="if" id="m-ca" placeholder="340"></div>
-          <div class="ig"><label class="il">Fat (g)</label><input type="number" class="if" id="m-fa" placeholder="95"></div>
-          <div class="ig"><label class="il">Protein (g)</label><input type="number" class="if" id="m-pr" placeholder="185"></div>
-        </div>
-      </div>
+      <div class="ig"><label class="il">Recovery %</label><input type="number" class="if" id="m-re" placeholder="82"></div>
+      <div class="ig"><label class="il">Cal Burned</label><input type="number" class="if" id="m-bu" placeholder="2500"></div>
+      <div class="ig"><label class="il">Cal Consumed</label><input type="number" class="if" id="m-co" placeholder="3100"></div>
+      <div class="ig"><label class="il">Protein (g)</label><input type="number" class="if" id="m-pr" placeholder="185"></div>
+      <div class="ig"><label class="il">Carbs (g)</label><input type="number" class="if" id="m-ca" placeholder="340"></div>
+      <div class="ig"><label class="il">Fat (g)</label><input type="number" class="if" id="m-fa" placeholder="95"></div>
 
       <div class="ig fw" style="grid-column:1/-1">
         <label class="il">Workout Tags</label>
@@ -399,30 +343,11 @@ AMRAP 18
 
 Add any notes: planning upper hypertrophy after, shoulder felt good..."></textarea>
       </div>
-
-      <!-- INJURY FLAG -->
-      <div class="ig fw" style="grid-column:1/-1;">
-        <label class="il">Flag / Injury <span style="color:var(--mt);font-weight:400;font-size:.6rem;">(optional)</span></label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
-          <select class="if" id="inj-body" style="font-size:.8rem;">
-            <option value="">Body part...</option>
-            <option>Right shoulder</option><option>Left shoulder</option>
-            <option>Lower back</option><option>Right knee</option><option>Left knee</option>
-            <option>Hip / glute</option><option>Neck</option><option>Wrist</option><option>Other</option>
-          </select>
-          <div style="display:flex;gap:.35rem;">
-            <button type="button" id="sev-mild" onclick="setInjSev('mild',this)" class="btn btn-s" style="flex:1;font-size:.65rem;padding:.3rem .4rem;color:var(--gn);border-color:var(--gn);">Mild</button>
-            <button type="button" id="sev-mod" onclick="setInjSev('mod',this)" class="btn btn-s" style="flex:1;font-size:.65rem;padding:.3rem .4rem;">Mod</button>
-            <button type="button" id="sev-severe" onclick="setInjSev('severe',this)" class="btn btn-s" style="flex:1;font-size:.65rem;padding:.3rem .4rem;">Severe</button>
-          </div>
-        </div>
-        <input type="hidden" id="inj-sev" value="mild">
-        <textarea class="if" id="inj-trigger" rows="3" placeholder="What triggered it... e.g. rear delt fly — pinching at bottom of ROM" style="font-size:.8rem;resize:vertical;line-height:1.6;font-family:'JetBrains Mono',monospace;"></textarea>
-      </div>
     </div>
     <div id="m-fb" style="margin-bottom:.85rem;"></div>
     <div class="btn-row">
       <button class="btn btn-p" onclick="saveMetrics()" id="save-btn">Save Log</button>
+      <button class="btn btn-s" onclick="whoopPullToday()" id="whoop-pull-btn" style="display:none;">⟳ WHOOP</button>
       <button class="btn btn-s" onclick="copyMorningLog()" id="copy-morning-btn" style="display:none;">📋 Copy to Claude</button>
       <button class="btn" onclick="clearMetrics()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:8px;padding:.65rem 1.25rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.5px;">Clear</button>
     </div>
@@ -455,90 +380,6 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
   <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;"><div><div class="ht" style="font-size:2rem;">Training<br><span>Program</span></div><div class="hs">Phase 1 · May → Oct 2026 · Tap any day for full breakdown</div></div></div>
 
   <!-- PHASE TIMELINE WITH MILESTONES -->
-
-  <div class="cd fw" style="margin-bottom:1.25rem;">
-    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>Weekly Structure</span>
-      <button id="week-edit-btn" onclick="toggleWeekEdit()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:6px;padding:.2rem .65rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Edit</button>
-    </div>
-    <div class="week" id="prog-week"></div>
-    <div id="week-edit-grid" style="display:none;margin-top:.85rem;border-top:1px solid var(--bd);padding-top:.85rem;">
-      <div style="font-size:.62rem;color:var(--mt);margin-bottom:.6rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Tap to toggle sessions per day</div>
-      <div id="week-edit-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;"></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:.7rem;">
-        <button onclick="saveWeekStructure()" style="background:var(--sf2);border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:.3rem .85rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAXES TRACKER -->
-  <div class="cd fw" style="margin-bottom:1.25rem;">
-    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>Maxes Tracker</span>
-      <button onclick="openLogPR()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:6px;padding:.2rem .65rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Log PR</button>
-    </div>
-
-    <!-- Column headers -->
-    <div style="display:grid;grid-template-columns:1fr 72px 72px 90px;gap:.5rem;padding:.3rem 0;margin-bottom:.2rem;">
-      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;">Lift</span>
-      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;text-align:center;">Tested</span>
-      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;text-align:center;">Est.</span>
-      <span style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;text-align:center;">% → weight</span>
-    </div>
-
-    <!-- Lifts list -->
-    <div id="maxes-list" style="display:flex;flex-direction:column;gap:0;"></div>
-
-    <div style="margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bd);font-size:.68rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">
-      Est. via Epley formula · tap Tested to log a PR
-    </div>
-  </div>
-
-  <!-- INJURY / FLAG LOG -->
-  <div class="cd fw" style="margin-bottom:1.25rem;">
-    <div class="ct">Flag / Injury Log</div>
-    <div id="injury-list"><div class="empty"><div class="empty-i">🚩</div>No flags logged yet.</div></div>
-  </div>
-
-</div>
-
-<!-- LOG PR MODAL -->
-<div class="modal-ov" id="pr-modal" onclick="closePrModal(event)">
-  <div class="modal">
-    <button class="mcl" onclick="document.getElementById('pr-modal').classList.remove('show')">✕</button>
-    <div class="md-title">Log PR</div>
-    <div class="md-sub">Tested 1RM — marks lift as confirmed</div>
-    <div class="lg" style="margin-bottom:.85rem;">
-      <div class="ig fw">
-        <label class="il">Lift</label>
-        <select class="if" id="pr-lift">
-          <option value="">Select lift...</option>
-          <option>Bench Press</option><option>Back Squat</option><option>Conventional Deadlift</option>
-          <option>Front Squat</option><option>Power Clean</option><option>Split Jerk</option>
-          <option>Strict OHP</option><option>Power Snatch</option><option>Squat Snatch</option>
-          <option>Push Press</option>
-        </select>
-      </div>
-      <div class="ig"><label class="il">Weight (lb)</label><input type="number" class="if" id="pr-weight" placeholder="265"></div>
-      <div class="ig"><label class="il">Reps</label><input type="number" class="if" id="pr-reps" placeholder="1" min="1" max="20"></div>
-      <div class="ig"><label class="il">Date</label><input type="date" class="if" id="pr-date"></div>
-      <div class="ig fw"><label class="il">Notes</label><input type="text" class="if" id="pr-notes" placeholder="Competition, training max, fresh..."></div>
-    </div>
-    <button class="btn btn-p" onclick="savePR()">Save PR</button>
-  </div>
-</div>
-
-<!-- 70.3 PREP -->
-<div class="pg" id="pg-ironman">
-  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
-    <div><div class="ht" style="font-size:2rem;">Muskoka<br><span>70.3</span></div><div class="hs">1.9km Swim · 90km Bike · 21.1km Run · July 2027</div></div>
-    <div class="hm"><div class="hg" id="im-days">—</div><div class="hgs">days to race</div></div>
-  </div>
-  <div class="sg" style="grid-template-columns:repeat(3,1fr);">
-    <div class="sc" style="--ac:var(--cy)"><div class="sl">Swim</div><div class="sv">1.9</div><div class="su">km · biggest limiter</div></div>
-    <div class="sc" style="--ac:var(--gn)"><div class="sl">Bike</div><div class="sv">90</div><div class="su">km · road bike ready</div></div>
-    <div class="sc" style="--ac:var(--or)"><div class="sl">Run</div><div class="sv">21.1</div><div class="su">km · 5km @ 5:30/km</div></div>
-  </div>
   <div class="cd fw" style="margin-bottom:1.25rem;">
     <div class="ct">Training Phases → Muskoka 70.3</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;margin-bottom:1.25rem;">
@@ -641,6 +482,33 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     </div>
   </div>
 
+  <div class="cd fw" style="margin-bottom:1.25rem;">
+    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>Weekly Structure</span>
+      <button id="week-edit-btn" onclick="toggleWeekEdit()" style="background:none;border:1px solid var(--bd);color:var(--mt);border-radius:6px;padding:.2rem .65rem;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Edit</button>
+    </div>
+    <div class="week" id="prog-week"></div>
+    <div id="week-edit-grid" style="display:none;margin-top:.85rem;border-top:1px solid var(--bd);padding-top:.85rem;">
+      <div style="font-size:.62rem;color:var(--mt);margin-bottom:.6rem;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Tap to toggle sessions per day</div>
+      <div id="week-edit-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:.7rem;">
+        <button onclick="saveWeekStructure()" style="background:var(--sf2);border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:.3rem .85rem;font-size:.72rem;cursor:pointer;font-family:'DM Sans',sans-serif;">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 70.3 PREP -->
+<div class="pg" id="pg-ironman">
+  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
+    <div><div class="ht" style="font-size:2rem;">Muskoka<br><span>70.3</span></div><div class="hs">1.9km Swim · 90km Bike · 21.1km Run · July 2027</div></div>
+    <div class="hm"><div class="hg" id="im-days">—</div><div class="hgs">days to race</div></div>
+  </div>
+  <div class="sg" style="grid-template-columns:repeat(3,1fr);">
+    <div class="sc" style="--ac:var(--cy)"><div class="sl">Swim</div><div class="sv">1.9</div><div class="su">km · biggest limiter</div></div>
+    <div class="sc" style="--ac:var(--gn)"><div class="sl">Bike</div><div class="sv">90</div><div class="su">km · road bike ready</div></div>
+    <div class="sc" style="--ac:var(--or)"><div class="sl">Run</div><div class="sv">21.1</div><div class="su">km · 5km @ 5:30/km</div></div>
+  </div>
   <div class="mg">
     <div class="cd"><div class="ct">Countdown</div>
       <div class="cd-grid">
@@ -661,136 +529,18 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
         <div style="display:flex;gap:.6rem;align-items:center;padding:.55rem .72rem;background:var(--sf2);border-radius:7px;"><input type="checkbox" id="g6" style="accent-color:var(--bl);width:14px;height:14px;flex-shrink:0;"><label for="g6" style="font-size:.8rem;cursor:pointer;">Race-specific running shoes</label></div>
       </div>
     </div>
+    <div class="cd fw" style="margin-bottom:0;"><div class="ct">Phase Roadmap</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.85rem;">
+        <div style="padding:1rem;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.12);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--bl);letter-spacing:1px;margin-bottom:.38rem;">Phase 1 · Foundation</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">May—Oct 2026 ← NOW</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ 2 swims/week</li><li>→ CrossFit 3-4x</li><li>→ 2 hypertrophy sessions</li><li>→ Zone 2 bike 45-60 min</li><li>→ Goal: 400m swim</li></ul></div>
+        <div style="padding:1rem;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--mt);letter-spacing:1px;margin-bottom:.38rem;">Phase 2 · Build</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">Nov 2026—Feb 2027</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ Swim 1500-2000m</li><li>→ Long bike 90 min+</li><li>→ Long run 60-75 min</li><li>→ 1 hypertrophy session</li><li>→ Goal: swim 1.9km</li></ul></div>
+        <div style="padding:1rem;background:var(--sf2);border:1px solid var(--bd);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--mt);letter-spacing:1px;margin-bottom:.38rem;">Phase 3 · Race Specific</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">Mar—Jun 2027</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ Bricks weekly</li><li>→ Open water swim</li><li>→ Race pace intervals</li><li>→ CrossFit 2x max</li></ul></div>
+        <div style="padding:1rem;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:9px;"><div style="font-family:'Bebas Neue',sans-serif;font-size:.95rem;color:var(--gd);letter-spacing:1px;margin-bottom:.38rem;">Taper · Race Day</div><div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--mt);margin-bottom:.6rem;">July 2027</div><ul style="font-size:.73rem;color:var(--mt);list-style:none;display:flex;flex-direction:column;gap:.28rem;"><li>→ Cut volume 40-50%</li><li>→ Keep intensity</li><li>→ Sleep priority</li><li>→ Muskoka 70.3 🏁</li></ul></div>
+      </div>
+    </div>
   </div>
 </div>
 <div id="target-tip" style="display:none;position:fixed;"></div>
 </main>
-
-
-
-<!-- RECOVERY TAB -->
-<div class="pg" id="pg-recovery">
-  <div class="hero" style="padding-bottom:1.25rem;margin-bottom:1.25rem;">
-    <div>
-      <div class="ht" style="font-size:2rem;">Recovery<br><span>Dashboard</span></div>
-      <div class="hs">Sleep · HRV · Day of week patterns</div>
-    </div>
-  </div>
-
-  <!-- RECOVERY CARD -->
-  <div class="cd" style="margin-bottom:1rem;">
-    <div class="ct">Recovery</div>
-
-    <!-- Training Readiness headline -->
-    <div style="display:flex;align-items:flex-end;gap:.75rem;margin-bottom:.75rem;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;line-height:1;color:var(--cy);" id="sp-pct">—</div>
-      <div style="padding-bottom:.5rem;">
-        <div id="sp-badge" style="font-size:.7rem;font-family:'JetBrains Mono',monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;"></div>
-        <div style="font-size:.65rem;color:var(--mt);margin-top:.2rem;font-family:'JetBrains Mono',monospace;">training readiness</div>
-      </div>
-    </div>
-
-    <!-- Sleep section -->
-    <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;margin-bottom:.65rem;">
-      <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.5rem;">Sleep</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
-        <div>
-          <div style="font-size:.62rem;color:var(--mt);">Duration vs 8h target</div>
-          <div style="display:flex;align-items:center;gap:.5rem;margin-top:.25rem;">
-            <div style="flex:1;height:4px;background:var(--bd);border-radius:999px;overflow:hidden;">
-              <div id="sp-bar" style="height:100%;border-radius:999px;background:var(--cy);transition:width .6s ease;width:0%;"></div>
-            </div>
-            <span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);" id="sp-dur">—</span>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:.62rem;color:var(--mt);">Sleep performance</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-sleep-pct">—</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
-        <div>
-          <div style="font-size:.62rem;color:var(--mt);">Sleep score</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-score">—</div>
-        </div>
-        <div>
-          <div style="font-size:.62rem;color:var(--mt);">7-day sleep debt</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--mt);margin-top:.25rem;" id="sp-debt">—</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RHR + HRV with personal banding -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
-      <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;">
-        <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.4rem;">Resting HR</div>
-        <div style="display:flex;align-items:baseline;gap:.3rem;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1;" id="sp-rhr">—</div>
-          <div style="font-size:.65rem;color:var(--mt);">bpm</div>
-          <div id="sp-rhr-badge" style="margin-left:auto;font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;"></div>
-        </div>
-        <div style="font-size:.6rem;color:var(--mt);margin-top:.3rem;font-family:'JetBrains Mono',monospace;" id="sp-rhr-ctx"></div>
-      </div>
-      <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;">
-        <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.4rem;">Overnight HRV</div>
-        <div style="display:flex;align-items:baseline;gap:.3rem;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1;" id="sp-ohrv">—</div>
-          <div style="font-size:.65rem;color:var(--mt);">ms</div>
-          <div id="sp-ohrv-badge" style="margin-left:auto;font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;"></div>
-        </div>
-        <div style="font-size:.6rem;color:var(--mt);margin-top:.3rem;font-family:'JetBrains Mono',monospace;" id="sp-ohrv-ctx"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- RECOVERY ANOMALY -->
-  <div class="cd" style="margin-bottom:1rem;" id="anomaly-card" style="display:none;">
-    <div class="ct" id="anomaly-title">Recovery anomaly check</div>
-    <div id="anomaly-body"></div>
-  </div>
-
-  <!-- DAY OF WEEK -->
-  <div class="cd" style="margin-bottom:1rem;">
-    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>Recovery by Day of Week</span>
-      <div style="display:flex;gap:.3rem;">
-        <button id="dow-btn-rec" onclick="setDowMetric('recovery')" class="btn btn-s" style="font-size:.65rem;padding:.2rem .55rem;color:var(--cy);border-color:var(--cy);">Recovery</button>
-        <button id="dow-btn-hrv" onclick="setDowMetric('hrv')" class="btn btn-s" style="font-size:.65rem;padding:.2rem .55rem;">HRV</button>
-        <button id="dow-btn-rhr" onclick="setDowMetric('rhr')" class="btn btn-s" style="font-size:.65rem;padding:.2rem .55rem;">RHR</button>
-      </div>
-    </div>
-    <div style="display:flex;gap:.3rem;margin-bottom:.75rem;">
-      <button id="dow-tf-all" onclick="setDowTimeFilter('all',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;color:var(--cy);border-color:var(--cy);">All time</button>
-      <button id="dow-tf-ytd" onclick="setDowTimeFilter('ytd',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;">YTD</button>
-      <button id="dow-tf-6m" onclick="setDowTimeFilter('6m',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;">6M</button>
-      <button id="dow-tf-3m" onclick="setDowTimeFilter('3m',this)" class="btn btn-s" style="font-size:.6rem;padding:.15rem .45rem;">3M</button>
-    </div>
-    <div id="dow-chart" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-bottom:.6rem;align-items:flex-end;height:100px;"></div>
-    <div id="dow-labels" style="display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;text-align:center;"></div>
-    <div style="margin-top:.75rem;padding-top:.65rem;border-top:1px solid var(--bd);font-size:.72rem;color:var(--mt);line-height:1.6;" id="dow-insight"></div>
-  </div>
-
-  <!-- HRV MULTI-YEAR -->
-  <div class="cd" style="margin-bottom:1rem;">
-    <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
-      <span>HRV & RHR Multi-Year Trend</span>
-      <div id="hrv-best-year" style="font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--gn);"></div>
-    </div>
-    <div style="display:flex;gap:1rem;margin-bottom:.6rem;font-size:.68rem;color:var(--mt);">
-      <span style="display:flex;align-items:center;gap:.3rem;"><span style="width:16px;height:2px;background:var(--cy);display:inline-block;border-radius:2px;"></span>HRV (ms)</span>
-      <span style="display:flex;align-items:center;gap:.3rem;"><span style="width:16px;height:2px;background:var(--or);display:inline-block;border-radius:2px;border-top:2px dashed var(--or);"></span>RHR (bpm)</span>
-    </div>
-    <div style="position:relative;width:100%;height:180px;">
-      <canvas id="multiYearChart" role="img" aria-label="Multi-year HRV and resting heart rate trend"></canvas>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--bd);">
-      <div><div class="sl">HRV gained</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gn);" id="hrv-gained">—</div></div>
-      <div><div class="sl">RHR dropped</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gn);" id="rhr-dropped">—</div></div>
-      <div><div class="sl">Best year</div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gd);" id="hrv-best">—</div></div>
-    </div>
-  </div>
-</div>
-
 
 <!-- STAT CHART MODAL -->
 <div class="modal-ov" id="chart-ov" onclick="closeChartOv(event)" style="z-index:510;">
@@ -950,22 +700,10 @@ function saveMetrics(){
   const sleepRaw=v('m-sl').trim();
   let sleepHrs=null;
   if(sleepRaw){const parts=sleepRaw.split(':');const slH=parseInt(parts[0])||0,slM=parseInt(parts[1])||0;sleepHrs=(slH||slM)?Math.round((slH+slM/60)*100)/100:null;}
-  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa',sleep_score:'m-ss',overnight_hrv:'m-ohrv',resting_hr:'m-rhr',body_battery:'m-bb',stress:'m-str',hrv_7day:'m-hrv',steps:'m-stp',steps_goal:'m-stg'};
+  const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa'};
   const explicitlySet={};
   Object.entries(numFields).forEach(([key,id])=>{explicitlySet[key]=v(id).trim()!=='';});
-  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null,sleep_score:n('m-ss'),sleep_deep_min:n('m-sd'),sleep_light_min:n('m-sl2'),sleep_rem_min:n('m-sr'),sleep_awake_min:n('m-saw'),overnight_hrv:n('m-ohrv'),resting_hr:n('m-rhr'),body_battery:n('m-bb'),stress:n('m-str'),hrv_7day:n('m-hrv'),training_status:v('m-ts')||null,steps:n('m-stp'),steps_goal:n('m-stg')};
-  // Parse H:MM stage fields to minutes
-  function parseStageToMins(id) {
-    const raw = v(id).trim();
-    if(!raw) return null;
-    const parts = raw.split(':');
-    const h = parseInt(parts[0])||0, m = parseInt(parts[1])||0;
-    return (h||m) ? h*60+m : null;
-  }
-  incoming.sleep_deep_min  = parseStageToMins('m-sd');
-  incoming.sleep_light_min = parseStageToMins('m-sl2');
-  incoming.sleep_rem_min   = parseStageToMins('m-sr');
-  incoming.sleep_awake_min = parseStageToMins('m-saw');
+  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null};
   if(!incoming.date){toast('Enter a date');return;}
   const existing=metrics.find(l=>l.date===incoming.date)||{};
   const e={...existing};
@@ -979,7 +717,6 @@ function saveMetrics(){
   metrics=metrics.filter(l=>l.date!==e.date);metrics.push(e);metrics.sort((a,b)=>new Date(b.date)-new Date(a.date));
   sessionSavedDates.add(e.date);
   persist();
-  saveInjuryFromLog(e.date);
   toast('Log saved ✓');
   const mfb=el('m-fb');if(mfb)mfb.innerHTML='';
   refresh();
@@ -994,10 +731,20 @@ function updateWeightUnit(){
 }
 
 function fmtSleepInput(el){
-  // Auto-insert colon after 2 digits if user hasn't typed one
-  let val=el.value.replace(/[^0-9:]/g,'');
-  if(val.length===2&&!val.includes(':')&&el._prev&&el._prev.length===1) val=val+':';
-  el._prev=val;el.value=val;
+  // Clock-style masked input — digits fill right to left, no colon needed
+  // Type 830 → 08:30, type 30 → 00:30, type 5 → 00:05
+  const raw = el.value.replace(/[^0-9]/g,'').slice(0,4); // digits only, max 4
+  if(!raw){ el.value=''; return; }
+  // Pad to 4 digits then format as HH:MM
+  const padded = raw.padStart(4,'0');
+  const h = padded.slice(0,2), m = padded.slice(2,4);
+  // Validate: minutes 0-59
+  if(parseInt(m) > 59){ el.value = el._prev||''; return; }
+  el._prev = h+':'+m;
+  el.value = h+':'+m;
+  // Move cursor to end
+  const pos = el.value.length;
+  el.setSelectionRange(pos,pos);
 }
 
 function formatSleep(hrs){
@@ -1029,31 +776,6 @@ function loadEntryIntoForm(dateStr){
   el('m-ca').value = entry.carbs || '';
   el('m-fa').value = entry.fat || '';
   el('m-no').value = entry.notes || '';
-  el('m-ss').value = entry.sleep_score || '';
-  el('m-sd').value = (() => { const mins = entry.sleep_deep_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
-  el('m-sl2').value = (() => { const mins = entry.sleep_light_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
-  el('m-sr').value = (() => { const mins = entry.sleep_rem_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
-  el('m-saw').value = (() => { const mins = entry.sleep_awake_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
-  el('m-ohrv').value = entry.overnight_hrv || '';
-  el('m-rhr').value = entry.resting_hr || '';
-  el('m-bb').value = entry.body_battery || '';
-  el('m-str').value = entry.stress || '';
-  el('m-hrv').value = entry.hrv_7day || '';
-  const tsEl = el('m-ts'); if(tsEl) tsEl.value = entry.training_status || '';
-  el('m-stp').value = entry.steps || '';
-  el('m-stg').value = entry.steps_goal || '';
-  // Load most recent injury flag for this date
-  const injForDate = getInjuries().find(i => i.date === dateStr);
-  if(injForDate) {
-    const injBody = el('inj-body'); if(injBody) injBody.value = injForDate.body || '';
-    const injTrigger = el('inj-trigger'); if(injTrigger) injTrigger.value = injForDate.trigger || '';
-    injSev = injForDate.severity || 'mild';
-    setInjSev(injSev, el('sev-' + injSev));
-  } else {
-    const injBody = el('inj-body'); if(injBody) injBody.value = '';
-    const injTrigger = el('inj-trigger'); if(injTrigger) injTrigger.value = '';
-    injSev = 'mild'; setInjSev('mild', el('sev-mild'));
-  }
   // Restore tags
   const entryTags = (entry.tags || '').split(',').map(t=>t.trim()).filter(Boolean);
   el('m-tags').value = entry.tags || '';
@@ -1074,73 +796,46 @@ function toggleTag(btn){
   el('m-tags').value = active.join(',');
 }
 
-function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags','m-ss','m-sd','m-sl2','m-sr','m-saw','m-ohrv','m-rhr','m-bb','m-str','m-hrv','m-stp','m-stg','inj-trigger'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const tsEl=el('m-ts');if(tsEl)tsEl.value='';const injB=el('inj-body');if(injB)injB.value='';injSev='mild';setInjSev('mild',el('sev-mild'));const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
-
-function buildEntryText(entry, date, header) {
-  const s = entry.burned&&entry.consumed ? entry.consumed-entry.burned : null;
-  const dow = new Date(date+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
-  let text = header + ' — ' + date + ' (' + dow + ')\n';
-  text += '─'.repeat(40) + '\n';
-
-  if(entry.weight) text += 'Weight:           ' + (entry.weight*2.20462).toFixed(1) + 'lb (' + entry.weight + 'kg)\n';
-
-  if(entry.sleep||entry.sleep_score) {
-    text += '\n[SLEEP]\n';
-    if(entry.sleep_score) text += 'Score:            ' + entry.sleep_score + '\n';
-    if(entry.sleep) { const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60); text+='Duration:         '+sh+'h'+(sm>0?sm+'m':'')+'\n'; }
-    if(entry.sleep_deep_min||entry.sleep_rem_min) {
-      const fmt=function(m){var h=Math.floor(m/60),mn=m%60;return h+'h'+(mn>0?mn+'m':'');};
-      text+='Stages:           Deep '+(entry.sleep_deep_min?fmt(entry.sleep_deep_min):'—')+' · REM '+(entry.sleep_rem_min?fmt(entry.sleep_rem_min):'—')+' · Light '+(entry.sleep_light_min?fmt(entry.sleep_light_min):'—')+' · Awake '+(entry.sleep_awake_min?fmt(entry.sleep_awake_min):'—')+'\n';
-    }
-    if(entry.resting_hr) text += 'Resting HR:       ' + entry.resting_hr + 'bpm\n';
-    if(entry.overnight_hrv) text += 'Overnight HRV:    ' + entry.overnight_hrv + 'ms\n';
-  }
-
-  if(entry.recovery||entry.body_battery||entry.training_status||entry.stress||entry.hrv_7day) {
-    text += '\n[RECOVERY]\n';
-    if(entry.recovery) text += 'Training ready:   ' + entry.recovery + '%\n';
-    if(entry.body_battery) text += 'Body battery:     ' + entry.body_battery + '\n';
-    if(entry.training_status) text += 'Training status:  ' + entry.training_status + '\n';
-    if(entry.stress) text += 'Stress score:     ' + entry.stress + '\n';
-    if(entry.hrv_7day) text += '7-day HRV avg:    ' + entry.hrv_7day + 'ms\n';
-  }
-
-  if(entry.steps) text += '\nSteps:            ' + entry.steps + (entry.steps_goal?' / '+entry.steps_goal+' goal':'') + '\n';
-
-  if(entry.consumed||entry.burned) {
-    text += '\n[NUTRITION]\n';
-    if(entry.burned) text += 'Burned:           ' + entry.burned + ' kcal\n';
-    if(entry.consumed) text += 'Consumed:         ' + entry.consumed + ' kcal\n';
-    if(s!==null) text += 'Surplus:          ' + (s>0?'+':'') + Math.round(s) + ' kcal\n';
-    if(entry.carbs) text += 'Carbs:            ' + entry.carbs + 'g\n';
-    if(entry.fat) text += 'Fat:              ' + entry.fat + 'g\n';
-    if(entry.protein) text += 'Protein:          ' + entry.protein + 'g\n';
-  }
-
-  const inj = getInjuries().find(function(i){return i.date===date;});
-  if(inj&&(inj.body||inj.trigger)) text += '\n🚩 FLAG: ' + (inj.body||'') + ' (' + inj.severity + ') — ' + (inj.trigger||'') + '\n';
-
-  if(entry.notes) text += '\n[WORKOUT]\n' + entry.notes + '\n';
-
-  const recent = metrics.slice(0,7);
-  const avgRec = recent.map(function(l){return l.recovery;}).filter(function(x){return x;});
-  if(avgRec.length) text += '\n7-day avg readiness: ' + Math.round(avgRec.reduce(function(a,b){return a+b;},0)/avgRec.length) + '%';
-  const avgSleep = recent.map(function(l){return l.sleep;}).filter(function(x){return x;});
-  if(avgSleep.length) { const a=avgSleep.reduce(function(s,v){return s+v;},0)/avgSleep.length; const h=Math.floor(a),m=Math.round((a-h)*60); text+='  ·  7-day avg sleep: '+h+'h'+(m>0?m+'m':''); }
-
-  return text;
-}
+function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
 
 function copyMorningLog(){
-  const d = v('m-date')||today();
-  const entry = metrics.find(function(l){return l.date===d;})||{};
-  doCopy(buildEntryText(entry, d, '[MORNING CHECK-IN]'));
+  const d=v('m-date')||today();
+  const entry=metrics.find(l=>l.date===d)||{};
+  const s=entry.burned&&entry.consumed?entry.consumed-entry.burned:null;
+  const dow=new Date(d+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
+  let text=`[MORNING CHECK-IN — ${d} (${dow})]\n`;
+  if(entry.weight) text+=`Weight: ${(entry.weight*2.20462).toFixed(1)}lb (${entry.weight}kg)\n`;
+  if(entry.recovery) text+=`Recovery: ${entry.recovery}%\n`;
+  if(entry.sleep){const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60);text+=`Sleep: ${sh}h${sm>0?' '+sm+'min':''}\n`;}
+  if(entry.burned) text+=`Calories burned yesterday: ${entry.burned}\n`;
+  if(entry.consumed) text+=`Calories consumed yesterday: ${entry.consumed}\n`;
+  if(s!==null) text+=`Surplus/deficit: ${s>0?'+':''}${Math.round(s)} kcal\n`;
+  if(entry.protein) text+=`Protein: ${entry.protein}g\n`;
+  if(entry.carbs) text+=`Carbs: ${entry.carbs}g\n`;
+  if(entry.fat) text+=`Fat: ${entry.fat}g\n`;
+  if(entry.notes) text+=`\nToday's workout plan:\n${entry.notes}\n`;
+  // Append recent context
+  const recent=metrics.slice(0,7);
+  const avgRec=recent.map(l=>l.recovery).filter(x=>x).reduce((a,b,_,arr)=>a+b/arr.length,0);
+  if(avgRec) text+=`\n7-day avg recovery: ${Math.round(avgRec)}%`;
+  doCopy(text);
 }
 
 function copyEntryLog(dateStr){
-  const entry = metrics.find(function(l){return l.date===dateStr;});
+  const entry=metrics.find(l=>l.date===dateStr);
   if(!entry){toast('Entry not found');return;}
-  doCopy(buildEntryText(entry, dateStr, '[TRAINING LOG]'));
+  const s=entry.burned&&entry.consumed?entry.consumed-entry.burned:null;
+  const dow=new Date(dateStr+'T12:00:00').toLocaleDateString('en-CA',{weekday:'long'});
+  let text=`[TRAINING LOG — ${dateStr} (${dow})]\n`;
+  if(entry.weight) text+=`Weight: ${(entry.weight*2.20462).toFixed(1)}lb (${entry.weight}kg)\n`;
+  if(entry.recovery) text+=`Recovery: ${entry.recovery}%\n`;
+  if(entry.sleep){const sh=Math.floor(entry.sleep),sm=Math.round((entry.sleep-sh)*60);text+=`Sleep: ${sh}h${sm>0?' '+sm+'min':''}\n`;}
+  if(entry.burned) text+=`Calories burned: ${entry.burned}\n`;
+  if(entry.consumed) text+=`Calories consumed: ${entry.consumed}\n`;
+  if(s!==null) text+=`Surplus: ${s>0?'+':''}${Math.round(s)} kcal\n`;
+  if(entry.protein) text+=`Protein: ${entry.protein}g | Carbs: ${entry.carbs||'?'}g | Fat: ${entry.fat||'?'}g\n`;
+  if(entry.notes) text+=`\nWorkout / Results:\n${entry.notes}\n`;
+  doCopy(text);
 }
 
 function doCopy(text){
@@ -1220,7 +915,6 @@ function saveLift(){
   if(!valid.length){toast('Add at least one set with reps');return;}
   const entry={date,cat,exercise:ex,sets:valid,notes:v('l-notes'),ts:Date.now()};
   lifts.unshift(entry);persist();syncAfterSave('lifts', entry);
-  if(document.getElementById('pg-program')?.classList.contains('active')) renderMaxesList();
   // Check PR
   const prev=lifts.slice(1).filter(l=>l.exercise===ex);
   const maxPrev=prev.length?Math.max(...prev.flatMap(l=>l.sets.map(s=>parseFloat(s.w)||0))):0;
@@ -1825,11 +1519,7 @@ function openStatChart(key, label, unit, color) {
     if(key === 'surplus') return m.consumed && m.burned;
     return m[key] !== null && m[key] !== undefined;
   });
-  if(key === 'weight') {
-    const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    const cutoff = sixMonthsAgo.toISOString().split('T')[0];
-    data = data.filter(m => m.date >= cutoff);
-  } else { data = data.slice(0, 30); }
+  if(key !== 'weight') data = data.slice(0, 30);
   data = data.reverse();
 
   const vals = data.map(m => key === 'surplus' ? m.consumed - m.burned : key === 'weight' ? m[key] * 2.20462 : m[key]);
@@ -1852,7 +1542,7 @@ function openStatChart(key, label, unit, color) {
 
   body.innerHTML = `
     <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:${hexColor};line-height:1;">${label}</div>
-    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">${key==='weight'?'Last 6 months':'Last 30 days'}</div>
+    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">${key==='weight'?'Full history':'Last 30 days'}</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;margin-bottom:.5rem;">
       <div style="background:var(--sf2);border-radius:7px;padding:.6rem;text-align:center;">
         <div style="font-size:.6rem;color:var(--mt);margin-bottom:.15rem;">LATEST</div>
@@ -1881,1139 +1571,74 @@ function openStatChart(key, label, unit, color) {
 
   requestAnimationFrame(() => {
     const dpr = window.devicePixelRatio || 1;
-    const W = canvas.offsetWidth || 420;
-    const H = key === 'weight' ? 240 : 160;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.height = H + 'px';
+    const W_actual = canvas.offsetWidth || 420;
+    canvas.width = W_actual * dpr;
+    canvas.height = 160 * dpr;
+    canvas.style.height = '160px';
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
+    const W = W_actual, H = 160;
+    const pad = {t:16, r:16, b:28, l:42};
+    const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
     ctx.clearRect(0, 0, W, H);
-
-    const PAD = { t: 20, r: 16, b: 30, l: 44 };
-    const cW = W - PAD.l - PAD.r;
-    const cH = H - PAD.t - PAD.b;
-
-    // ── Y scale ──────────────────────────────────────────
-    let vmin, vmax;
-    if (key === 'weight') {
-      const recent = vals.slice(Math.max(0, vals.length - 60));
-      const rMin = Math.min(...recent), rMax = Math.max(...recent);
-      const rSp = rMax - rMin || 2;
-      vmin = rMin - rSp * 0.5;
-      vmax = rMax + rSp * 0.6;
-    } else {
-      const sp = Math.max(...vals) - Math.min(...vals) || 1;
-      vmin = Math.min(...vals) - sp * 0.1;
-      vmax = Math.max(...vals) + sp * 0.1;
-    }
+    const _spread = Math.max(...vals) - Math.min(...vals) || 1;
+    const vmin = Math.min(...vals) - _spread * 0.1;
+    const vmax = Math.max(...vals) + _spread * 0.1;
     const range = vmax - vmin || 1;
-    const py = v => PAD.t + cH - ((v - vmin) / range) * cH;
-
-    // ── Grid ─────────────────────────────────────────────
+    const px = i => pad.l + (i / (vals.length-1)) * cW;
+    const py = v => pad.t + cH - ((v - vmin) / range) * cH;
+    if (tgt.low && tgt.high) {
+      const tLow = key === 'weight' ? tgt.low * 2.20462 : tgt.low;
+      const tHigh = key === 'weight' ? tgt.high * 2.20462 : tgt.high;
+      ctx.fillStyle = 'rgba(45,212,160,0.08)';
+      const ty1 = py(Math.min(tHigh, vmax));
+      const ty2 = py(Math.max(tLow, vmin));
+      if(ty2 > ty1) ctx.fillRect(pad.l, ty1, cW, ty2 - ty1);
+    }
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
-      const y = PAD.t + (cH / 4) * i;
-      ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + cW, y); ctx.stroke();
+      const y = pad.t + (cH / 4) * i;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
+      const val = (vmax - (range/4)*i).toFixed(1);
       ctx.fillStyle = 'rgba(255,255,255,0.25)';
       ctx.font = '10px JetBrains Mono, monospace';
       ctx.textAlign = 'right';
-      ctx.fillText((vmax - (range / 4) * i).toFixed(1), PAD.l - 4, y + 4);
+      ctx.fillText(val, pad.l - 4, y + 4);
     }
-
-    // ── Target band (non-weight only) ────────────────────
-    if (key !== 'weight' && tgt.low && tgt.high) {
-      const ty1 = py(Math.min(tgt.high, vmax));
-      const ty2 = py(Math.max(tgt.low, vmin));
-      if (ty2 > ty1) { ctx.fillStyle = 'rgba(45,212,160,0.08)'; ctx.fillRect(PAD.l, ty1, cW, ty2 - ty1); }
-    }
-
-    if (key === 'weight') {
-      // ── WEIGHT CHART ─────────────────────────────────────
-      // Group by month — each month gets equal column width
-      const monthMap = {};
-      data.forEach((d, i) => {
-        const mo = d.date.slice(0, 7);
-        if (!monthMap[mo]) monthMap[mo] = { i0: i, i1: i, vals: [] };
-        monthMap[mo].i1 = i;
-        monthMap[mo].vals.push(vals[i]);
-      });
-      const months = Object.keys(monthMap).sort();
-      const N = months.length || 1;
-      const colW = cW / N;
-
-      const moPeriods = months.map((mo, pi) => {
-        const g = monthMap[mo];
-        const avg = g.vals.reduce((a, b) => a + b, 0) / g.vals.length;
-        const x1 = PAD.l + pi * colW;
-        const x2 = PAD.l + (pi + 1) * colW;
-        return { mo, i0: g.i0, i1: g.i1, avg: parseFloat(avg.toFixed(1)), x1, x2, midX: (x1 + x2) / 2 };
-      });
-
-      // Map each data point to x using its month column + day fraction
-      const moColMap = {};
-      moPeriods.forEach(p => { moColMap[p.mo] = p; });
-      const xOfPoint = i => {
-        const p = moColMap[data[i].date.slice(0, 7)];
-        if (!p) return PAD.l;
-        const day = parseInt(data[i].date.slice(8, 10));
-        const [yr, moNum] = p.mo.split('-').map(Number);
-        const daysInMo = new Date(yr, moNum, 0).getDate();
-        return p.x1 + ((day - 1) / (daysInMo - 1 || 1)) * (p.x2 - p.x1);
-      };
-
-      // Draw gradient fill
-      const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + cH);
-      grad.addColorStop(0, hexColor + '28');
-      grad.addColorStop(1, hexColor + '04');
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(PAD.l, PAD.t, cW, cH);
-      ctx.clip();
-      ctx.beginPath();
-      ctx.moveTo(xOfPoint(0), py(vals[0]));
-      for (let i = 1; i < vals.length; i++) ctx.lineTo(xOfPoint(i), py(vals[i]));
-      ctx.lineTo(xOfPoint(vals.length - 1), PAD.t + cH);
-      ctx.lineTo(PAD.l, PAD.t + cH);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-      ctx.restore();
-
-      // Draw daily line
-      ctx.beginPath();
-      ctx.strokeStyle = hexColor;
-      ctx.lineWidth = 1.5;
-      ctx.lineJoin = 'round';
-      ctx.moveTo(xOfPoint(0), py(vals[0]));
-      for (let i = 1; i < vals.length; i++) ctx.lineTo(xOfPoint(i), py(vals[i]));
-      ctx.stroke();
-
-      // Latest dot
-      ctx.beginPath();
-      ctx.arc(xOfPoint(vals.length - 1), py(vals[vals.length - 1]), 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = hexColor;
-      ctx.fill();
-
-      // Monthly avg lines + labels
-      const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const GAP = 5;
-      const pill = (cx, cy, txt, fg, bg) => {
-        ctx.font = 'bold 11px DM Sans, sans-serif';
-        const tw = ctx.measureText(txt).width + 6;
-        ctx.fillStyle = bg;
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(cx - tw/2, cy - 10, tw, 13, 3);
-        else ctx.rect(cx - tw/2, cy - 10, tw, 13);
-        ctx.fill();
-        ctx.fillStyle = fg;
-        ctx.textAlign = 'center';
-        ctx.fillText(txt, cx, cy);
-      };
-
-      moPeriods.forEach((p, pi) => {
-        const y = py(p.avg);
-        // Segment line
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(255,255,255,0.88)';
-        ctx.lineWidth = 2.5;
-        ctx.moveTo(p.x1 + GAP, y);
-        ctx.lineTo(p.x2 - GAP, y);
-        ctx.stroke();
-
-        // Avg above
-        pill(p.midX, y - 8, p.avg.toFixed(1), 'rgba(255,255,255,0.95)', 'rgba(8,8,8,0.8)');
-
-        // % below (2nd month onward)
-        if (pi > 0) {
-          const pct = (p.avg - moPeriods[pi-1].avg) / moPeriods[pi-1].avg * 100;
-          const sign = pct >= 0 ? '+' : '';
-          pill(p.midX, y + 16, sign + pct.toFixed(1) + '%', pct >= 0 ? '#4ade80' : '#f87171', 'rgba(8,8,8,0.8)');
-        }
-
-        // Month label on x-axis
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '9px DM Sans, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(MON[parseInt(p.mo.slice(5,7)) - 1], p.midX, H - 6);
-      });
-
-    } else {
-      // ── NON-WEIGHT CHART (index-based x) ─────────────────
-      const px2 = i => PAD.l + (i / (vals.length - 1)) * cW;
-      const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + cH);
-      grad.addColorStop(0, hexColor + '30');
-      grad.addColorStop(1, hexColor + '05');
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(PAD.l, PAD.t, cW, cH);
-      ctx.clip();
-      ctx.beginPath();
-      ctx.moveTo(px2(0), py(vals[0]));
-      for (let i = 1; i < vals.length; i++) ctx.lineTo(px2(i), py(vals[i]));
-      ctx.lineTo(px2(vals.length - 1), PAD.t + cH);
-      ctx.lineTo(px2(0), PAD.t + cH);
-      ctx.closePath();
-      ctx.fillStyle = grad;
-      ctx.fill();
-      ctx.restore();
-      ctx.beginPath();
-      ctx.strokeStyle = hexColor;
-      ctx.lineWidth = 2;
-      ctx.lineJoin = 'round';
-      ctx.moveTo(px2(0), py(vals[0]));
-      for (let i = 1; i < vals.length; i++) ctx.lineTo(px2(i), py(vals[i]));
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(px2(vals.length - 1), py(vals[vals.length - 1]), 4, 0, Math.PI * 2);
-      ctx.fillStyle = hexColor;
-      ctx.fill();
-      // X-axis dates
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.font = '9px DM Sans, sans-serif';
-      ctx.textAlign = 'center';
-      const step = Math.max(1, Math.floor(dates.length / 5));
-      for (let i = 0; i < dates.length; i += step) ctx.fillText(dates[i], px2(i), H - 6);
-    }
-  });
-}
-
-
-function openRecoveryMatrix() {
-  const monthMap = {};
-  metrics.forEach(m => {
-    const mo = m.date.slice(0,7);
-    if(!monthMap[mo]) monthMap[mo] = {sleep:[],recovery:[],weight:[]};
-    if(m.sleep) monthMap[mo].sleep.push(m.sleep);
-    if(m.recovery) monthMap[mo].recovery.push(m.recovery);
-    if(m.weight) monthMap[mo].weight.push(m.weight * 2.20462);
-  });
-
-  const now = new Date();
-  const sixAgo = new Date(now); sixAgo.setMonth(now.getMonth()-6);
-  const cutoff = sixAgo.toISOString().slice(0,7);
-  const months = Object.keys(monthMap).filter(mo => mo >= cutoff && /^\d{4}-\d{2}$/.test(mo)).sort();
-
-  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
-  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  const periods = months.map((mo, pi) => {
-    const g = monthMap[mo];
-    const avgSleep = avg(g.sleep);
-    const avgRec = avg(g.recovery);
-    const avgWt = avg(g.weight);
-    let wtChange = null;
-    if(pi > 0) {
-      const prevWt = avg(monthMap[months[pi-1]]?.weight || []);
-      if(prevWt && avgWt) wtChange = avgWt - prevWt;
-    }
-    return { mo, avgSleep, avgRec, avgWt, wtChange, label: MON[parseInt(mo.slice(5))-1] };
-  });
-
-  const dot = (bg, fg, display) => `<div style="width:34px;height:34px;border-radius:6px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:${fg};margin:auto;line-height:1.2;text-align:center;">${display}</div>`;
-
-  // Color ranges
-  const wtC  = v => v===null?'#333':v>0.5?'#1baf7a':v>0?'#9fe1cb':'#e24b4a';
-  const wtF  = v => v===null?'#666':v>0.5?'#fff':v>0?'#085041':'#fff';
-  const slC  = v => v===null?'#333':v>=8?'#1baf7a':v>=7?'#9fe1cb':'#e24b4a';
-  const slF  = v => v===null?'#666':v>=8?'#fff':v>=7?'#085041':'#fff';
-  const recC = v => v===null?'#333':v>=70?'#1baf7a':v>=50?'#9fe1cb':'#e24b4a';
-  const recF = v => v===null?'#666':v>=70?'#fff':v>=50?'#085041':'#fff';
-
-  const slFmt = v => {
-    if(v===null) return '—';
-    const h=Math.floor(v), m=Math.round((v-h)*60);
-    return h+'h'+(m>0?m+'m':'');
-  };
-
-  const rows = [
-    { label: 'Wt ↑',     cells: periods.map(p => dot(wtC(p.wtChange),  wtF(p.wtChange),  p.wtChange!==null?(p.wtChange>0?'+':'')+p.wtChange.toFixed(1)+'lb':'—')) },
-    { label: 'Sleep',    cells: periods.map(p => dot(slC(p.avgSleep),  slF(p.avgSleep),  slFmt(p.avgSleep))) },
-    { label: 'Recovery', cells: periods.map(p => dot(recC(p.avgRec),   recF(p.avgRec),   p.avgRec!==null?Math.round(p.avgRec)+'%':'—')) },
-  ];
-
-  const gridCols = `52px repeat(${periods.length},1fr)`;
-  const colHeaders = periods.map(p => `<span style="font-size:11px;color:var(--mt);text-align:center;">${p.label}</span>`).join('');
-  const tableHTML = rows.map(row => `
-    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;align-items:center;margin-bottom:5px;">
-      <span style="font-size:11px;color:var(--mt);">${row.label}</span>
-      ${row.cells.join('')}
-    </div>`).join('');
-
-  const body = document.getElementById('chart-modal-body');
-  body.innerHTML = `
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:var(--cy);line-height:1;">Recovery</div>
-    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">Last 6 months · monthly avg</div>
-    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;margin-bottom:6px;">
-      <span></span>${colHeaders}
-    </div>
-    ${tableHTML}
-    <div style="display:flex;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bd);">
-      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#1baf7a;display:inline-block;"></span>on track</span>
-      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#9fe1cb;display:inline-block;"></span>close</span>
-      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#e24b4a;display:inline-block;"></span>off</span>
-    </div>
-    <div style="margin-top:10px;font-size:.72rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">Target: sleep 8h+ · recovery 70%+</div>
-  `;
-
-  document.getElementById('stat-canvas').style.display = 'none';
-  document.getElementById('chart-ov').classList.add('show');
-}
-
-
-function openSurplusMatrix() {
-  // Build monthly buckets from metrics
-  const monthMap = {};
-  metrics.forEach(m => {
-    if(!m.consumed || !m.burned) return;
-    const mo = m.date.slice(0,7);
-    if(!monthMap[mo]) monthMap[mo] = {surplus:[],protein:[],carbs:[],weight:[]};
-    monthMap[mo].surplus.push(m.consumed - m.burned);
-    if(m.protein) monthMap[mo].protein.push(m.protein);
-    if(m.carbs) monthMap[mo].carbs.push(m.carbs);
-    if(m.weight) monthMap[mo].weight.push(m.weight * 2.20462);
-  });
-
-  // Last 6 months only
-  const now = new Date();
-  const sixAgo = new Date(now); sixAgo.setMonth(now.getMonth()-6);
-  const cutoff = sixAgo.toISOString().slice(0,7);
-  const months = Object.keys(monthMap).filter(mo => mo >= cutoff && /^\d{4}-\d{2}$/.test(mo)).sort();
-
-  const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
-  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  const periods = months.map((mo, pi) => {
-    const g = monthMap[mo];
-    const avgSur = avg(g.surplus);
-    const avgPro = avg(g.protein);
-    const avgCarb = avg(g.carbs);
-    const avgWt = avg(g.weight);
-    // Weight change vs previous month
-    let wtChange = null;
-    if(pi > 0) {
-      const prevMo = months[pi-1];
-      const prevWt = avg(monthMap[prevMo]?.weight || []);
-      if(prevWt && avgWt) wtChange = avgWt - prevWt;
-    }
-    return { mo, avgSur, avgPro, avgCarb, avgWt, wtChange, label: MON[parseInt(mo.slice(5))-1] };
-  });
-
-  // Color helpers — green/pale-green/red based on targets
-  const surCol = v => v===null?'#444':v>=400&&v<=700?'#1baf7a':v>0&&v<400?'#9fe1cb':'#e24b4a';
-  const surTxt = v => v===null?'#888':v>=400&&v<=700?'#fff':v>0&&v<400?'#085041':'#fff';
-  const proCol = v => v===null?'#444':v>=180?'#1baf7a':v>=160?'#9fe1cb':'#e24b4a';
-  const proTxt = v => v===null?'#888':v>=180?'#fff':v>=160?'#085041':'#fff';
-  const carbCol = v => v===null?'#444':v>=310&&v<=360?'#1baf7a':v>=270?'#9fe1cb':'#e24b4a';
-  const carbTxt = v => v===null?'#888':v>=310&&v<=360?'#fff':v>=270?'#085041':'#fff';
-  const wtCol = v => v===null?'#444':v>0.5?'#1baf7a':v>0?'#9fe1cb':'#e24b4a';
-  const wtTxt = v => v===null?'#888':v>0.5?'#fff':v>0?'#085041':'#fff';
-
-  const dot = (val, display, bg, fg) => `<div style="width:34px;height:34px;border-radius:6px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:${fg};margin:auto;line-height:1.2;text-align:center;">${display}</div>`;
-
-  const rows = [
-    { label: 'Wt ↑', cells: periods.map(p => dot(p.wtChange, p.wtChange!==null?(p.wtChange>0?'+':'')+p.wtChange.toFixed(1):'—', wtCol(p.wtChange), wtTxt(p.wtChange))) },
-    { label: 'Surplus', cells: periods.map(p => dot(p.avgSur, p.avgSur!==null?'+'+(Math.round(p.avgSur)):'—', surCol(p.avgSur), surTxt(p.avgSur))) },
-    { label: 'Protein', cells: periods.map(p => dot(p.avgPro, p.avgPro!==null?Math.round(p.avgPro)+'g':'—', proCol(p.avgPro), proTxt(p.avgPro))) },
-    { label: 'Carbs', cells: periods.map(p => dot(p.avgCarb, p.avgCarb!==null?Math.round(p.avgCarb)+'g':'—', carbCol(p.avgCarb), carbTxt(p.avgCarb))) },
-  ];
-
-  const colHeaders = periods.map(p => `<span style="font-size:11px;color:var(--mt);text-align:center;">${p.label}</span>`).join('');
-  const gridCols = `52px repeat(${periods.length},1fr)`;
-
-  const tableHTML = rows.map(row => `
-    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;align-items:center;margin-bottom:5px;">
-      <span style="font-size:11px;color:var(--mt);">${row.label}</span>
-      ${row.cells.join('')}
-    </div>`).join('');
-
-  const legendHTML = `
-    <div style="display:flex;gap:12px;margin-top:10px;padding-top:8px;border-top:1px solid var(--bd);">
-      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#1baf7a;display:inline-block;"></span>on track</span>
-      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#9fe1cb;display:inline-block;"></span>close</span>
-      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mt);"><span style="width:10px;height:10px;border-radius:2px;background:#e24b4a;display:inline-block;"></span>off</span>
-    </div>`;
-
-  const body = document.getElementById('chart-modal-body');
-  body.innerHTML = `
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:var(--or);line-height:1;">Surplus</div>
-    <div style="font-size:.68rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem;">Last 6 months · monthly avg</div>
-    <div style="display:grid;grid-template-columns:${gridCols};gap:5px;margin-bottom:6px;">
-      <span></span>${colHeaders}
-    </div>
-    ${tableHTML}
-    ${legendHTML}
-    <div style="margin-top:10px;font-size:.72rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">Target: surplus +400–600 · protein 180g+ · carbs 310–360g</div>
-  `;
-
-  document.getElementById('stat-canvas').style.display = 'none';
-  document.getElementById('chart-ov').classList.add('show');
-}
-
-
-// ── MAXES TRACKER ────────────────────────────────────────
-const KEY_LIFTS_MAXES = ['Bench Press','Back Squat','Conventional Deadlift','Front Squat','Power Clean','Split Jerk','Strict OHP','Push Press','Power Snatch','Squat Snatch'];
-
-function epley1RM(w, r) { return r === 1 ? w : Math.round(w * (1 + r/30)); }
-
-function getEstimated1RMs() {
-  const result = {};
-  KEY_LIFTS_MAXES.forEach(name => {
-    const cat = Object.keys(EX).find(c => EX[c][name]);
-    const hist = lifts.filter(l => l.exercise === name);
-    const allSets = hist.flatMap(l => l.sets.map(s => ({w: parseFloat(s.w)||0, r: parseInt(s.r)||1, date: l.date})));
-    const validSets = allSets.filter(s => s.w > 0 && s.r > 0);
-
-    // Best estimated 1RM across ALL sets ever
-    let bestEst = null;
-    if(validSets.length) {
-      bestEst = Math.max(...validSets.map(s => epley1RM(s.w, s.r)));
-    }
-    if(!bestEst && cat && EX[cat][name]?.base) {
-      bestEst = Math.round(EX[cat][name].base * 1.15);
-    }
-
-    // Highest raw weight ever logged + reps at that weight
-    let highestWt = null, highestReps = null;
-    if(validSets.length) {
-      const maxWt = Math.max(...validSets.map(s => s.w));
-      const setsAtMax = validSets.filter(s => s.w === maxWt);
-      highestWt = maxWt;
-      highestReps = Math.max(...setsAtMax.map(s => s.r)); // highest reps at that weight
-    }
-
-    // Also check manually logged PRs
-    const prs = getTestedPRs().filter(p => p.lift === name);
-    if(prs.length) {
-      const maxPrWt = Math.max(...prs.map(p => p.weight));
-      if(!highestWt || maxPrWt > highestWt) {
-        highestWt = maxPrWt;
-        const prAtMax = prs.find(p => p.weight === maxPrWt);
-        highestReps = prAtMax?.reps || 1;
-      }
-      // Also check PR est1rms
-      const maxPrEst = Math.max(...prs.map(p => p.est1rm || p.weight));
-      if(!bestEst || maxPrEst > bestEst) bestEst = maxPrEst;
-    }
-
-    result[name] = {
-      est: bestEst,
-      highestWt,
-      highestReps,
-      unit: cat ? EX[cat][name]?.unit || 'lb' : 'lb'
-    };
-  });
-  return result;
-}
-
-// In-memory cache of PRs from Supabase
-let _prCache = null;
-
-function getTestedPRs() {
-  return _prCache || JSON.parse(localStorage.getItem('prs_v1') || '[]');
-}
-
-async function loadPRsFromSupabase() {
-  try {
-    const res = await fetch(SB_URL + '/rest/v1/pr_maxes?order=date.desc', {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-    });
-    if(!res.ok) return;
-    const rows = await res.json();
-    // Normalize to match local PR format
-    _prCache = rows.map(r => ({
-      lift: r.lift,
-      weight: r.weight,
-      reps: r.reps || 1,
-      est1rm: r.est_1rm || r.weight,
-      isTrueSingle: r.reps === 1,
-      date: r.date,
-      notes: r.notes,
-      type: r.type,
-      ts: new Date(r.created_at).getTime()
-    })).filter(r => r.weight);
-    renderMaxesList();
-  } catch(e) { console.warn('[PRs]', e); }
-}
-
-function renderMaxesList() {
-  const container = el('maxes-list');
-  if(!container) return;
-  const estimated = getEstimated1RMs();
-  const tested = getTestedPRs();
-  const testedMap = {};
-  tested.forEach(pr => { if(!testedMap[pr.lift] || pr.date > testedMap[pr.lift].date) testedMap[pr.lift] = pr; });
-
-  const sortedLifts = [...KEY_LIFTS_MAXES].sort();
-  container.innerHTML = sortedLifts.map((name, idx) => {
-    const est = estimated[name];
-    const pr = testedMap[name];
-    const highestWt = est.highestWt;
-    const highestReps = est.highestReps;
-    const estWt = est.est;
-    if(!highestWt && !estWt) return '';
-    const inputId = 'pct-' + idx;
-    const outId = 'pct-out-' + idx;
-    const maxForCalc = estWt || highestWt;
-    return `<div style="display:grid;grid-template-columns:1fr 72px 72px 90px;gap:.5rem;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--bd);">
-      <div style="font-size:.78rem;font-weight:500;color:var(--tx);">${name}</div>
-      <div style="text-align:center;">
-        ${highestWt
-          ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--gn);letter-spacing:1px;line-height:1;">${highestWt}<span style="font-size:.6rem;color:var(--mt);display:block;">${highestReps > 1 ? highestReps + ' reps' : 'lb'}</span></div>`
-          : `<button onclick="openLogPRFor('${name}')" style="font-size:.62rem;padding:.2rem .45rem;border-radius:5px;border:1px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">+ log</button>`
-        }
-      </div>
-      <div style="text-align:center;">
-        ${estWt
-          ? `<div style="font-family:'Bebas Neue',sans-serif;font-size:1.25rem;color:var(--bl);letter-spacing:1px;">${estWt}<span style="font-size:.6rem;color:var(--mt);">lb</span></div>`
-          : '<span style="color:var(--mt);font-size:.7rem;">—</span>'
-        }
-      </div>
-      <div style="display:flex;gap:.3rem;align-items:center;">
-        <input type="number" id="${inputId}" placeholder="%" min="1" max="110" style="width:40px;background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:.3rem .4rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.75rem;text-align:center;" oninput="calcPct(${maxForCalc},'${inputId}','${outId}')">
-        <div id="${outId}" style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--cy);min-width:38px;text-align:right;">—</div>
-      </div>
-    </div>`;
-  }).filter(Boolean).join('');
-}
-
-function calcPct(max, inputId, outId) {
-  const pct = parseFloat(document.getElementById(inputId)?.value);
-  const out = document.getElementById(outId);
-  if(!out) return;
-  if(!pct || isNaN(pct)) { out.textContent = '—'; return; }
-  out.textContent = Math.round(max * pct / 100) + 'lb';
-}
-
-function updateMaxCalc() {} // kept for compatibility
-
-function openLogPR() {
-  const d = el('pr-date'); if(d) d.value = today();
-  document.getElementById('pr-modal').classList.add('show');
-}
-
-function openLogPRFor(liftName) {
-  const d = el('pr-date'); if(d) d.value = today();
-  const sel = el('pr-lift'); if(sel) sel.value = liftName;
-  document.getElementById('pr-modal').classList.add('show');
-}
-
-function closePrModal(e) {
-  if(e.target === el('pr-modal')) el('pr-modal').classList.remove('show');
-}
-
-function savePR() {
-  const lift = v('pr-lift'), weight = parseFloat(v('pr-weight')), date = v('pr-date'), notes = v('pr-notes');
-  const reps = parseInt(v('pr-reps')) || 1;
-  if(!lift || !weight || !date) { toast('Fill in lift, weight and date'); return; }
-  const est1rm = reps === 1 ? weight : Math.round(weight * (1 + reps/30));
-  const isTrueSingle = reps === 1;
-  const prs = getTestedPRs();
-  prs.push({ lift, weight, reps, est1rm, isTrueSingle, date, notes, ts: Date.now() });
-  localStorage.setItem('prs_v1', JSON.stringify(prs));
-  // Also push to Supabase pr_maxes
-  fetch(SB_URL + '/rest/v1/pr_maxes', {
-    method: 'POST',
-    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-    body: JSON.stringify({ lift, weight, reps, est_1rm: est1rm, type: isTrueSingle ? 'tested' : 'estimated', date, notes })
-  }).then(() => loadPRsFromSupabase()).catch(e => console.warn('[PR save]', e));
-  el('pr-modal').classList.remove('show');
-  const label = isTrueSingle ? `PR saved ✓ — ${weight}lb` : `PR saved ✓ — ${weight}×${reps} → est. 1RM ${est1rm}lb`;
-  toast(label);
-  renderMaxesList();
-}
-
-// ── INJURY LOG ───────────────────────────────────────────
-let injSev = 'mild';
-
-function setInjSev(sev, btn) {
-  injSev = sev;
-  ['mild','mod','severe'].forEach(s => {
-    const b = el('sev-'+s);
-    if(!b) return;
-    b.style.color = 'var(--mt)'; b.style.borderColor = 'var(--bd)';
-  });
-  const cols = { mild: 'var(--gn)', mod: 'var(--or)', severe: 'var(--rd)' };
-  if(btn) { btn.style.color = cols[sev]; btn.style.borderColor = cols[sev]; }
-  el('inj-sev').value = sev;
-}
-
-let _injuryCache = null;
-
-function getInjuries() {
-  return _injuryCache || JSON.parse(localStorage.getItem('injuries_v1') || '[]');
-}
-
-async function loadInjuriesFromSupabase() {
-  try {
-    const res = await fetch(SB_URL + '/rest/v1/injury_log?order=date.desc', {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-    });
-    if(!res.ok) return;
-    const rows = await res.json();
-    _injuryCache = rows.map(r => ({
-      date: r.date, body: r.body, severity: r.severity,
-      trigger: r.trigger, ts: r.ts || new Date(r.created_at).getTime()
-    }));
-    localStorage.setItem('injuries_v1', JSON.stringify(_injuryCache));
-    renderInjuryList();
-  } catch(e) { console.warn('[Injuries]', e); }
-}
-
-async function saveInjuryFromLog(date) {
-  const body = v('inj-body');
-  const trigger = v('inj-trigger');
-  if(!body && !trigger) return;
-  const ts = Date.now();
-  const inj = { date, body, severity: injSev, trigger, ts };
-
-  // Update local cache
-  const injuries = getInjuries();
-  const existingIdx = injuries.findIndex(i => i.date === date);
-  if(existingIdx !== -1) { injuries[existingIdx] = inj; }
-  else { injuries.unshift(inj); }
-  _injuryCache = injuries;
-  localStorage.setItem('injuries_v1', JSON.stringify(injuries));
-
-  // Upsert to Supabase — use date as conflict key
-  try {
-    // Delete existing for this date then insert (upsert by date)
-    await fetch(SB_URL + '/rest/v1/injury_log?date=eq.' + date, {
-      method: 'DELETE',
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-    });
-    await fetch(SB_URL + '/rest/v1/injury_log', {
-      method: 'POST',
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ date, body, severity: injSev, trigger, ts })
-    });
-  } catch(e) { console.warn('[Injury save]', e); }
-}
-
-function renderInjuryList() {
-  const container = el('injury-list');
-  if(!container) return;
-  const injuries = getInjuries();
-  if(!injuries.length) { container.innerHTML = '<div class="empty"><div class="empty-i">🚩</div>No flags logged yet.</div>'; return; }
-  const sevColor = { mild: 'var(--gn)', mod: 'var(--or)', severe: 'var(--rd)' };
-  container.innerHTML = injuries.slice(0,20).map(inj => `
-    <div style="display:flex;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--bd);align-items:flex-start;">
-      <div style="width:8px;height:8px;border-radius:50%;background:${sevColor[inj.severity]||'var(--mt)'};flex-shrink:0;margin-top:4px;"></div>
-      <div style="flex:1;">
-        <div style="font-size:.8rem;font-weight:500;color:var(--tx);">${inj.body||'Unspecified'}</div>
-        <div style="font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;margin-top:.1rem;">${inj.date} · ${inj.severity}</div>
-        ${inj.trigger ? `<div style="font-size:.75rem;color:var(--mt);margin-top:.25rem;">${inj.trigger}</div>` : ''}
-      </div>
-    </div>`).join('');
-}
-
-
-// Load Chart.js for recovery tab if not already loaded
-function ensureChartJs(cb) {
-  if(typeof Chart !== "undefined") { cb(); return; }
-  const s = document.createElement("script");
-  s.src = "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js";
-  s.onload = cb;
-  document.head.appendChild(s);
-}
-
-// ── RECOVERY ANOMALY DETECTION ────────────────────────────
-const ANOMALY_TAGS_KEY = 'anomaly_tags_v1';
-
-let _anomalyTagCache = null;
-
-function getAnomalyTags() {
-  return _anomalyTagCache || JSON.parse(localStorage.getItem(ANOMALY_TAGS_KEY) || '{}');
-}
-
-async function loadAnomalyTagsFromSupabase() {
-  try {
-    const res = await fetch(SB_URL + '/rest/v1/anomaly_tags?order=date.desc', {
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
-    });
-    if(!res.ok) return;
-    const rows = await res.json();
-    const map = {};
-    rows.forEach(function(r){ map[r.date] = r.tag; });
-    _anomalyTagCache = map;
-    localStorage.setItem(ANOMALY_TAGS_KEY, JSON.stringify(map));
-    renderAnomalyDetection();
-  } catch(e) { console.warn('[AnomalyTags]', e); }
-}
-
-async function saveAnomalyTag(date, tag) {
-  const tags = getAnomalyTags();
-  tags[date] = tag;
-  _anomalyTagCache = tags;
-  localStorage.setItem(ANOMALY_TAGS_KEY, JSON.stringify(tags));
-
-  try {
-    await fetch(SB_URL + '/rest/v1/anomaly_tags', {
-      method: 'POST',
-      headers: {
-        'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify({ date, tag })
-    });
-  } catch(e) { console.warn('[AnomalyTag save]', e); }
-}
-
-function computeBaseline(sorted, endExcludeDays) {
-  // Trailing 60 days, excluding most recent N days
-  const now = new Date();
-  const excl = new Date(now); excl.setDate(now.getDate() - endExcludeDays);
-  const cutoff = new Date(now); cutoff.setDate(now.getDate() - endExcludeDays - 60);
-  const window = sorted.filter(function(m) {
-    const d = new Date(m.date + 'T12:00:00');
-    return d >= cutoff && d < excl;
-  });
-  function stats(vals) {
-    if(vals.length < 20) return null;
-    const mean = vals.reduce(function(a,b){return a+b;},0) / vals.length;
-    const sd = Math.sqrt(vals.reduce(function(s,v){return s+Math.pow(v-mean,2);},0) / vals.length);
-    return {mean, sd, n: vals.length};
-  }
-  const rhrVals = window.map(function(m){return parseFloat(m.resting_hr);}).filter(function(v){return v>30&&v<120;});
-  const ohrvVals = window.map(function(m){return parseFloat(m.overnight_hrv||m.hrv);}).filter(function(v){return v>10&&v<200;});
-  return { rhr: stats(rhrVals), ohrv: stats(ohrvVals) };
-}
-
-function getBand(val, stats, higherBetter) {
-  if(!val || !stats) return null;
-  const diff = higherBetter ? (val - stats.mean) / stats.sd : (stats.mean - val) / stats.sd;
-  if(diff >= -0.5) return 'green';
-  if(diff >= -1.5) return 'yellow';
-  return 'red';
-}
-
-function renderAnomalyDetection() {
-  const card = document.getElementById('anomaly-card');
-  const titleEl = document.getElementById('anomaly-title');
-  const bodyEl = document.getElementById('anomaly-body');
-  if(!card || !bodyEl) return;
-
-  const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
-  const baseline = computeBaseline(sorted, 2);
-
-  if(!baseline.rhr || !baseline.ohrv) {
-    card.style.display = 'none';
-    return;
-  }
-
-  // Get bands for last 3 days
-  const recent3 = sorted.slice(0,3);
-  const bands = recent3.map(function(m) {
-    const rhr = parseFloat(m.resting_hr);
-    const ohrv = parseFloat(m.overnight_hrv || m.hrv);
-    return {
-      date: m.date,
-      rhr: rhr, ohrv: ohrv,
-      rhrBand: getBand(rhr, baseline.rhr, false),
-      ohrvBand: getBand(ohrv, baseline.ohrv, true)
-    };
-  });
-
-  const tags = getAnomalyTags();
-
-  // Persistence check — both RED for N consecutive days
-  const redDays = bands.filter(function(b){ return b.rhrBand==='red' && b.ohrvBand==='red'; }).length;
-
-  // Day 3 escalation: 3 consecutive red/red AND unexplained on day 1 or 2
-  const day1Tag = tags[bands[0]?.date];
-  const day2Tag = tags[bands[1]?.date];
-  const escalate = redDays >= 3
-    && (day1Tag === 'unexplained' || day2Tag === 'unexplained')
-    && day1Tag !== 'social' && day2Tag !== 'social';
-
-  const alert2 = redDays >= 2 && !escalate;
-  const normal = redDays < 2;
-
-  if(normal) {
-    card.style.display = 'none';
-    return;
-  }
-
-  card.style.display = 'block';
-
-  function pill(label, type) {
-    const styles = {
-      green: 'background:rgba(31,122,69,.15);color:var(--gn);border:0.5px solid rgba(31,122,69,.3)',
-      yellow: 'background:rgba(168,101,48,.15);color:var(--or);border:0.5px solid rgba(168,101,48,.3)',
-      red: 'background:rgba(160,40,32,.15);color:var(--rd);border:0.5px solid rgba(160,40,32,.3)',
-    };
-    return '<span style="font-size:.65rem;font-weight:700;padding:.15rem .5rem;border-radius:999px;'+styles[type]+'">'+label+'</span>';
-  }
-
-  function metricRow(label, val, unit, band, ctx) {
-    const bandLabel = band==='green'?'Good':band==='yellow'?'Fair':'Low';
-    const valColor = band==='red'?'var(--rd)':band==='yellow'?'var(--or)':'var(--tx)';
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:0.5px solid var(--bd);">'
-      + '<div><div style="font-size:.75rem;color:var(--tx);">'+label+'</div><div style="font-size:.62rem;color:var(--mt);font-family:\'JetBrains Mono\',monospace;">'+ctx+'</div></div>'
-      + '<div style="text-align:right;display:flex;align-items:center;gap:.5rem;">'
-      + '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:1.2rem;color:'+valColor+';">'+val+'<span style="font-size:.65rem;color:var(--mt);">'+unit+'</span></div>'
-      + pill(bandLabel, band)
-      + '</div></div>';
-  }
-
-  const today = bands[0];
-  const rhrCtx = '60d avg ' + baseline.rhr.mean.toFixed(0) + 'bpm ± ' + baseline.rhr.sd.toFixed(1);
-  const ohrvCtx = '60d avg ' + baseline.ohrv.mean.toFixed(0) + 'ms ± ' + baseline.ohrv.sd.toFixed(1);
-
-  let html = metricRow('Resting HR', today.rhr || '—', 'bpm', today.rhrBand, rhrCtx);
-  html += metricRow('Overnight HRV', today.ohrv ? today.ohrv.toFixed(0) : '—', 'ms', today.ohrvBand, ohrvCtx);
-
-  if(escalate) {
-    // Day 3 escalation
-    titleEl.innerHTML = 'Extended recovery disruption &nbsp;' + pill('Day ' + redDays, 'red');
-    titleEl.style.color = 'var(--rd)';
-    card.style.borderColor = 'rgba(160,40,32,.4)';
-    html += '<div style="margin-top:.75rem;background:rgba(160,40,32,.08);border:0.5px solid rgba(160,40,32,.25);border-radius:8px;padding:.75rem;">'
-      + '<div style="font-size:.78rem;font-weight:500;color:var(--rd);margin-bottom:.35rem;">3 consecutive days — unexplained</div>'
-      + '<div style="font-size:.72rem;color:var(--mt);line-height:1.6;">This pattern is atypical. Normal social/alcohol dips resolve within 1–2 nights. Consider a rest day and monitor for symptoms. If it continues, worth checking in with a doctor.</div>'
-      + '<div style="display:flex;gap:.4rem;margin-top:.65rem;flex-wrap:wrap;">'
-      + '<button onclick="acknowledgeAnomaly(\'' + today.date + '\')" style="font-size:.68rem;padding:.3rem .65rem;border-radius:6px;border:0.5px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">Acknowledge</button>'
-      + '</div></div>';
-  } else {
-    // Day 2 alert
-    titleEl.innerHTML = 'Recovery markers outside normal range &nbsp;' + pill('Day ' + redDays, 'yellow');
-    titleEl.style.color = 'var(--or)';
-    card.style.borderColor = 'rgba(168,101,48,.4)';
-    const todayTag = tags[today.date];
-    html += '<div style="margin-top:.75rem;padding-top:.65rem;border-top:0.5px solid var(--bd);">'
-      + '<div style="font-size:.72rem;color:var(--mt);margin-bottom:.6rem;">Both HRV and RHR outside normal range for 2+ days. What\'s the likely cause?</div>'
-      + '<div style="display:flex;gap:.4rem;flex-wrap:wrap;">'
-      + ['social', 'load', 'unexplained'].map(function(tag) {
-          const labels = {social:'Social / alcohol', load:'Training load', unexplained:'Unexplained'};
-          const active = todayTag === tag;
-          return '<button onclick="tagAnomaly(\'' + today.date + '\',\'' + tag + '\')" style="font-size:.68rem;padding:.3rem .65rem;border-radius:6px;border:0.5px solid '+(active?'var(--or)':'var(--bd)')+';background:'+(active?'rgba(168,101,48,.12)':'none')+';color:'+(active?'var(--or)':'var(--mt)')+';cursor:pointer;">'+labels[tag]+'</button>';
-        }).join('')
-      + '</div>'
-      + (todayTag ? '<div style="font-size:.68rem;color:var(--mt);margin-top:.5rem;font-family:\'JetBrains Mono\',monospace;">'
-          + (todayTag==='social' ? 'Tagged — escalation suppressed. Expected to resolve within 1–2 nights.'
-            : todayTag==='load' ? 'Tagged — monitoring for resolution. Consider deload if it persists.'
-            : 'Tagged as unexplained — escalation will fire if markers remain red tomorrow.')
-          + '</div>' : '')
-      + '</div>';
-  }
-
-  bodyEl.innerHTML = html;
-}
-
-async function tagAnomaly(date, tag) {
-  await saveAnomalyTag(date, tag);
-  renderAnomalyDetection();
-}
-
-async function acknowledgeAnomaly(date) {
-  await saveAnomalyTag(date, 'acknowledged');
-  renderAnomalyDetection();
-}
-
-
-// ── RECOVERY DASHBOARD ───────────────────────────────────
-let dowMetric = 'recovery';
-let dowTimeFilter = 'all';
-let multiYearChart = null;
-
-function renderRecoveryDash() {
-  renderSleepPerformance();
-  renderAnomalyDetection();
-  renderDow('recovery');
-  renderMultiYear();
-}
-
-function renderSleepPerformance() {
-  const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
-  // Find most recent entry with any recovery/sleep data
-  const last = sorted.find(function(m){return m.recovery||m.sleep||m.sleep_score;});
-  if(!last) return;
-
-  // ── Training Readiness headline ──────────────────────
-  const readiness = last.recovery ? parseInt(last.recovery) : null;
-  const pctEl = el('sp-pct');
-  if(pctEl) pctEl.textContent = readiness !== null ? readiness + '%' : '—';
-
-  const badge = el('sp-badge');
-  if(badge && readiness !== null) {
-    if(readiness >= 75)      { badge.textContent='Ready'; badge.style.cssText='background:rgba(31,122,69,.15);color:var(--gn);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-    else if(readiness >= 50) { badge.textContent='Moderate'; badge.style.cssText='background:rgba(9,122,138,.15);color:var(--cy);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-    else if(readiness >= 25) { badge.textContent='Low'; badge.style.cssText='background:rgba(168,101,48,.15);color:var(--or);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-    else                     { badge.textContent='Very Low'; badge.style.cssText='background:rgba(160,40,32,.15);color:var(--rd);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-  }
-
-  // ── Sleep section ─────────────────────────────────────
-  const sleepHrs = parseFloat(last.sleep) || 0;
-  const durPct = Math.min(100, Math.round((sleepHrs / 8) * 100));
-  const sh = Math.floor(sleepHrs), sm = Math.round((sleepHrs - sh) * 60);
-  const durStr = sleepHrs > 0 ? sh + 'h' + (sm > 0 ? sm + 'm' : '') : '—';
-
-  const spBar = el('sp-bar'); if(spBar) spBar.style.width = durPct + '%';
-  const spDur = el('sp-dur'); if(spDur) spDur.textContent = durStr;
-
-  // Sleep performance % (Garmin sleep score or duration-based)
-  const sleepPctEl = el('sp-sleep-pct');
-  if(sleepPctEl) {
-    if(last.sleep_score) sleepPctEl.textContent = last.sleep_score + '/100';
-    else if(sleepHrs > 0) sleepPctEl.textContent = durPct + '%';
-    else sleepPctEl.textContent = '—';
-  }
-
-  const spScore = el('sp-score'); if(spScore) spScore.textContent = last.sleep_score || '—';
-
-  // 7-day sleep debt (target 8h/night)
-  const spDebt = el('sp-debt');
-  if(spDebt) {
-    const last7 = sorted.slice(0, 7).filter(function(m){return m.sleep && m.sleep > 0;});
-    if(last7.length >= 3) {
-      const totalSlept = last7.reduce(function(s,m){return s+parseFloat(m.sleep);},0);
-      const debt = (8 * last7.length) - totalSlept;
-      spDebt.textContent = (debt > 0 ? '-' : '+') + Math.abs(debt).toFixed(1) + 'h';
-      spDebt.style.color = debt > 4 ? 'var(--rd)' : debt > 1 ? 'var(--or)' : 'var(--gn)';
-    } else { spDebt.textContent = '—'; }
-  }
-
-  // ── Personal banding for RHR + HRV ───────────────────
-  // Use trailing 60 days, exclude last 2 days, require min 20 entries
-  const today60 = new Date(); today60.setDate(today60.getDate() - 2);
-  const cutoff60 = new Date(today60); cutoff60.setDate(today60.getDate() - 60);
-  const baseline = sorted.filter(function(m){
-    const d = new Date(m.date+'T12:00:00');
-    return d >= cutoff60 && d <= today60;
-  });
-
-  function bandBadge(val, mean, sd, higherBetter) {
-    if(!val || !mean || !sd || baseline.length < 20) return {color:'var(--mt)',bg:'rgba(255,255,255,.05)',label:'—'};
-    const diff = higherBetter ? (val - mean) / sd : (mean - val) / sd;
-    if(diff >= -0.5) return {color:'var(--gn)',bg:'rgba(31,122,69,.15)',label:'Good'};
-    if(diff >= -1.5) return {color:'var(--or)',bg:'rgba(168,101,48,.15)',label:'Fair'};
-    return {color:'var(--rd)',bg:'rgba(160,40,32,.15)',label:'Low'};
-  }
-
-  // RHR banding
-  const rhrVals = baseline.map(function(m){return parseFloat(m.resting_hr);}).filter(function(v){return v>30&&v<120;});
-  const rhrMean = rhrVals.length ? rhrVals.reduce(function(a,b){return a+b;},0)/rhrVals.length : null;
-  const rhrSd = rhrVals.length > 1 ? Math.sqrt(rhrVals.reduce(function(s,v){return s+Math.pow(v-rhrMean,2);},0)/rhrVals.length) : null;
-  const curRhr = parseFloat(last.resting_hr) || null;
-
-  const spRhr = el('sp-rhr'); if(spRhr) spRhr.textContent = curRhr || '—';
-  const rhrBand = bandBadge(curRhr, rhrMean, rhrSd, false);
-  const spRhrBadge = el('sp-rhr-badge');
-  if(spRhrBadge && curRhr) { spRhrBadge.textContent = rhrBand.label; spRhrBadge.style.cssText = 'background:'+rhrBand.bg+';color:'+rhrBand.color+';font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-  const spRhrCtx = el('sp-rhr-ctx');
-  if(spRhrCtx && rhrMean) spRhrCtx.textContent = '60d avg ' + rhrMean.toFixed(0) + 'bpm ± ' + (rhrSd||0).toFixed(1);
-
-  // Overnight HRV banding
-  const ohrvVals = baseline.map(function(m){return parseFloat(m.overnight_hrv||m.hrv);}).filter(function(v){return v>10&&v<200;});
-  const ohrvMean = ohrvVals.length ? ohrvVals.reduce(function(a,b){return a+b;},0)/ohrvVals.length : null;
-  const ohrvSd = ohrvVals.length > 1 ? Math.sqrt(ohrvVals.reduce(function(s,v){return s+Math.pow(v-ohrvMean,2);},0)/ohrvVals.length) : null;
-  const curOhrv = parseFloat(last.overnight_hrv) || parseFloat(last.hrv) || null;
-
-  const spOhrv = el('sp-ohrv'); if(spOhrv) spOhrv.textContent = curOhrv ? curOhrv.toFixed(0) : '—';
-  const ohrvBand = bandBadge(curOhrv, ohrvMean, ohrvSd, true);
-  const spOhrvBadge = el('sp-ohrv-badge');
-  if(spOhrvBadge && curOhrv) { spOhrvBadge.textContent = ohrvBand.label; spOhrvBadge.style.cssText = 'background:'+ohrvBand.bg+';color:'+ohrvBand.color+';font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-  const spOhrvCtx = el('sp-ohrv-ctx');
-  if(spOhrvCtx && ohrvMean) spOhrvCtx.textContent = '60d avg ' + ohrvMean.toFixed(0) + 'ms ± ' + (ohrvSd||0).toFixed(1);
-
-  // Update header score
-  const recDashScore = el('rec-dash-score');
-  if(recDashScore) recDashScore.textContent = readiness !== null ? readiness + '%' : '—';
-}
-
-function setDowMetric(metric) {
-  dowMetric = metric;
-  ['rec','hrv','rhr'].forEach(m => {
-    const btn = el('dow-btn-' + m);
-    if(btn) { btn.style.color='var(--mt)'; btn.style.borderColor='var(--bd)'; }
-  });
-  const activeId = metric==='recovery'?'dow-btn-rec':metric==='hrv'?'dow-btn-hrv':'dow-btn-rhr';
-  const activeBtn = el(activeId);
-  if(activeBtn) { activeBtn.style.color='var(--cy)'; activeBtn.style.borderColor='var(--cy)'; }
-  renderDow(metric);
-}
-
-function setDowTimeFilter(tf, btn) {
-  dowTimeFilter = tf;
-  ['all','ytd','6m','3m'].forEach(t => {
-    const b = el('dow-tf-'+t);
-    if(b) { b.style.color='var(--mt)'; b.style.borderColor='var(--bd)'; }
-  });
-  if(btn) { btn.style.color='var(--cy)'; btn.style.borderColor='var(--cy)'; }
-  renderDow(dowMetric);
-}
-
-function renderDow(metric) {
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const dayData = {0:[],1:[],2:[],3:[],4:[],5:[],6:[]};
-
-  // Apply time filter
-  const now = new Date();
-  const cutoff = new Date(now);
-  if(dowTimeFilter === 'ytd') cutoff.setMonth(0, 1);
-  else if(dowTimeFilter === '6m') cutoff.setMonth(now.getMonth()-6);
-  else if(dowTimeFilter === '3m') cutoff.setMonth(now.getMonth()-3);
-  else cutoff.setFullYear(2000); // all time
-
-  const filteredMetrics = metrics.filter(m => new Date(m.date+'T12:00:00') >= cutoff);
-
-  filteredMetrics.forEach(m => {
-    const d = new Date(m.date + 'T12:00:00');
-    const dow = (d.getDay() + 6) % 7; // 0=Mon, 6=Sun
-    let val = null;
-    if(metric === 'recovery') val = m.recovery;
-    else if(metric === 'hrv') val = m.hrv_7day || m.hrv || null;
-    else if(metric === 'rhr') val = m.resting_hr || null;
-    if(val) dayData[dow].push(val);
-  });
-
-  const avgs = days.map((_, i) => {
-    const arr = dayData[i];
-    return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : null;
-  });
-
-  const validAvgs = avgs.filter(v => v !== null);
-  if(!validAvgs.length) return;
-  const maxVal = Math.max(...validAvgs);
-  const minVal = Math.min(...validAvgs);
-  const range = maxVal - minVal || 1;
-  const units = { recovery:'%', hrv:'ms', rhr:'bpm' };
-
-  // Worst day index
-  const worstIdx = metric === 'rhr'
-    ? avgs.indexOf(Math.max(...avgs.filter(v=>v!==null)))
-    : avgs.indexOf(Math.min(...avgs.filter(v=>v!==null)));
-
-  const chart = el('dow-chart');
-  const labels = el('dow-labels');
-  if(!chart || !labels) return;
-
-  chart.innerHTML = days.map((d, i) => {
-    if(avgs[i] === null) return `<div style="display:flex;align-items:flex-end;justify-content:center;"><div style="width:100%;height:20px;background:var(--sf2);border-radius:4px 4px 0 0;opacity:.3;"></div></div>`;
-    const pct = metric === 'rhr'
-      ? (1 - (avgs[i] - minVal) / range) * 75 + 15
-      : ((avgs[i] - minVal) / range) * 75 + 15;
-    const isWorst = i === worstIdx;
-    const col = isWorst ? 'var(--rd)' : i >= 3 ? 'var(--or)' : 'var(--cy)';
-    return `<div style="display:flex;align-items:flex-end;justify-content:center;">
-      <div style="width:100%;height:${Math.round(pct)}px;background:${col};border-radius:4px 4px 0 0;opacity:${isWorst?1:.7};"></div>
-    </div>`;
-  }).join('');
-
-  labels.innerHTML = days.map((d, i) => {
-    const isWorst = i === worstIdx;
-    return `<div style="text-align:center;">
-      <div style="font-size:.6rem;color:${isWorst?'var(--rd)':'var(--mt)'};font-weight:${isWorst?'700':'400'};">${d}</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:${isWorst?'var(--rd)':'var(--tx)'};">${avgs[i]!==null?avgs[i]+units[metric]:'—'}</div>
-    </div>`;
-  }).join('');
-
-  // Insight text
-  const insight = el('dow-insight');
-  if(insight) {
-    const worstDay = days[worstIdx];
-    const bestIdx = metric === 'rhr'
-      ? avgs.indexOf(Math.min(...avgs.filter(v=>v!==null)))
-      : avgs.indexOf(Math.max(...avgs.filter(v=>v!==null)));
-    const bestDay = days[bestIdx];
-    insight.innerHTML = `<span style="color:var(--rd);">${worstDay}</span> is consistently your lowest ${metric === 'recovery' ? 'recovery' : metric.toUpperCase()} day · <span style="color:var(--cy);">${bestDay}</span> is your best · Based on ${metrics.filter(m=>m.recovery).length} logged days`;
-  }
-}
-
-function renderMultiYear() {
-  if(typeof Chart === "undefined") { ensureChartJs(renderMultiYear); return; }
-  const yearMap = {};
-  // Sort metrics by date ascending for correct year grouping
-  const sorted = [...metrics].sort((a,b) => a.date.localeCompare(b.date));
-  sorted.forEach(m => {
-    const yr = m.date.slice(0,4);
-    if(!yr || yr === '0001') return; // skip reserved rows
-    if(!yearMap[yr]) yearMap[yr] = { hrv:[], rhr:[] };
-    const hrv = parseFloat(m.hrv_7day || m.hrv || 0);
-    const rhr = parseFloat(m.resting_hr || 0);
-    if(hrv > 0 && hrv < 300) yearMap[yr].hrv.push(hrv);
-    if(rhr > 30 && rhr < 120) yearMap[yr].rhr.push(rhr);
-  });
-
-  const years = Object.keys(yearMap).sort().filter(y => yearMap[y].hrv.length >= 3);
-  const avgHrv = years.map(y => { const a = yearMap[y].hrv; return Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10; });
-  const avgRhr = years.map(y => { const a = yearMap[y].rhr; return a.length ? Math.round(a.reduce((s,v)=>s+v,0)/a.length*10)/10 : null; });
-
-  if(years.length < 2) return;
-
-  // Stats
-  const firstHrv = avgHrv[0], lastHrv = avgHrv[avgHrv.length-1];
-  const firstRhr = avgRhr.find(v=>v), lastRhr = [...avgRhr].reverse().find(v=>v);
-  const bestYrIdx = avgHrv.indexOf(Math.max(...avgHrv));
-
-  el('hrv-gained').textContent = '+' + (lastHrv - firstHrv).toFixed(1) + 'ms';
-  el('rhr-dropped').textContent = firstRhr && lastRhr ? '−' + (firstRhr - lastRhr).toFixed(1) + 'bpm' : '—';
-  el('hrv-best').textContent = years[bestYrIdx];
-  el('hrv-best-year').textContent = years[bestYrIdx] + ' best HRV on record';
-
-  const canvas = el('multiYearChart');
-  if(!canvas) return;
-
-  if(multiYearChart) { multiYearChart.destroy(); multiYearChart = null; }
-
-  multiYearChart = new Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: years,
-      datasets: [
-        {
-          label: 'HRV (ms)',
-          data: avgHrv,
-          borderColor: '#097a8a',
-          backgroundColor: 'rgba(9,122,138,0.08)',
-          borderWidth: 2.5,
-          pointBackgroundColor: '#097a8a',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          tension: 0.35,
-          fill: true,
-          yAxisID: 'y',
-        },
-        {
-          label: 'RHR (bpm)',
-          data: avgRhr,
-          borderColor: '#a86530',
-          borderWidth: 2.5,
-          pointBackgroundColor: '#a86530',
-          pointRadius: 5,
-          pointHoverRadius: 7,
-          borderDash: [5,3],
-          tension: 0.35,
-          fill: false,
-          yAxisID: 'y2',
-          spanGaps: true,
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode:'index', intersect:false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0c0c0c',
-          borderColor: '#1e1e1e',
-          borderWidth: 1,
-          titleColor: '#707070',
-          bodyColor: '#d0d0d0',
-          titleFont: { family:'JetBrains Mono', size:10 },
-          bodyFont: { family:'JetBrains Mono', size:11 },
-          callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.parsed.y }
-        }
-      },
-      scales: {
-        x: { grid:{ color:'#1e1e1e' }, ticks:{ color:'#707070', font:{family:'JetBrains Mono',size:10} }, border:{display:false} },
-        y: { position:'left', grid:{ color:'#1e1e1e' }, ticks:{ color:'#707070', font:{family:'JetBrains Mono',size:10}, callback: v=>v+'ms' }, border:{display:false} },
-        y2: { position:'right', grid:{ display:false }, ticks:{ color:'#707070', font:{family:'JetBrains Mono',size:10}, callback: v=>v+'bpm' }, border:{display:false} }
-      }
+    const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
+    grad.addColorStop(0, hexColor + '30');
+    grad.addColorStop(1, hexColor + '05');
+    // Clip to chart area so fill never bleeds below x-axis
+    ctx.save();
+    ctx.rect(pad.l, pad.t, cW, cH);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.moveTo(px(0), py(vals[0]));
+    for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
+    ctx.lineTo(px(vals.length-1), pad.t + cH);
+    ctx.lineTo(px(0), pad.t + cH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.restore();
+    ctx.beginPath();
+    ctx.strokeStyle = hexColor;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.moveTo(px(0), py(vals[0]));
+    for (let i = 1; i < vals.length; i++) ctx.lineTo(px(i), py(vals[i]));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(px(vals.length-1), py(vals[vals.length-1]), 4, 0, Math.PI*2);
+    ctx.fillStyle = hexColor;
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '9px DM Sans, sans-serif';
+    ctx.textAlign = 'center';
+    const step = Math.max(1, Math.floor(dates.length / 5));
+    for (let i = 0; i < dates.length; i += step) {
+      ctx.fillText(dates[i], px(i), H - 6);
     }
   });
 }
@@ -3121,7 +1746,7 @@ async function sbPull() {
   toast('Syncing...');
   try {
     const [sbMetrics, sbLifts, sbCardio] = await Promise.all([
-      sbFetch('metrics', 'GET', null, '?order=date.desc&limit=2000'),
+      sbFetch('metrics', 'GET', null, '?order=date.desc&limit=500'),
       sbFetch('lifts',   'GET', null, '?order=date.desc&limit=400'),
       sbFetch('cardio_log','GET',null,'?order=date.desc&limit=400'),
     ]);
@@ -3146,16 +1771,13 @@ async function sbPull() {
             const remoteUpdated = row.updated_at || '';
             if (!remoteUpdated) {
               // Remote has no updated_at — skip, local wins
-            } else {
-              // Always merge remote fields on top of local — remote is source of truth
-              // for new columns (sleep_score, overnight_hrv, resting_hr, hrv_7day etc.)
+            } else if (!localUpdated) {
+              // HIST-only local entry — merge fields from remote
               const merged_entry = {...metrics[idx]};
-              Object.keys(row).forEach(k => {
-                if(row[k] !== null && row[k] !== undefined && row[k] !== '') {
-                  merged_entry[k] = row[k];
-                }
-              });
+              Object.keys(row).forEach(k => { if(row[k] !== null && row[k] !== undefined) merged_entry[k] = row[k]; });
               metrics[idx] = merged_entry; merged++;
+            } else if (remoteUpdated > localUpdated) {
+              metrics[idx] = row; merged++;
             }
           }
         }
@@ -3184,7 +1806,7 @@ async function sbPull() {
           }
         } catch(e){ console.warn('[MS] restore error',e); }
       }
-      metrics = metrics.filter(m => m.date !== '0001-01-01' && m.date !== '0001-01-02' && /^\d{4}-\d{2}-\d{2}$/.test(m.date));
+      metrics = metrics.filter(m => m.date !== '0001-01-01' && m.date !== '0001-01-02');
       metrics.sort((a,b) => new Date(b.date) - new Date(a.date));
     }
 
@@ -3222,8 +1844,6 @@ async function sbPull() {
     refresh();
     const newestDate = metrics.filter(m=>m.updated_at).sort((a,b)=>b.date.localeCompare(a.date))[0]?.date||'none';
     toast('Synced ✓ — ' + metrics.filter(m=>m.updated_at).length + ' saved entries, newest: ' + newestDate);
-    if(document.getElementById('pg-recovery')?.classList.contains('active')) { renderRecoveryDash(); }
-    if(document.getElementById('pg-program')?.classList.contains('active')) { renderMaxesList(); renderInjuryList(); }
   } catch(e) {
     console.error('Sync error', e);
     toast('Sync failed — offline?');
@@ -3425,8 +2045,10 @@ function renderWeightSparkline(){
     return win.reduce((a,b)=>a+b,0)/win.length;
   });
   const maLine = maPoints.map((v,i)=>xS(i).toFixed(1)+','+yS(v).toFixed(1)).join(' ');
+  const goalLine = PAD+' '+gy+' '+(W-PAD)+' '+gy;
   svg.innerHTML='<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+(trend<=0?'rgba(31,122,69,.2)':'rgba(160,40,32,.12)')+'"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></linearGradient></defs>'
     +'<path d="'+areaD+'" fill="url(#wg)"/>'
+    +'<line x1="'+PAD+'" y1="'+gy+'" x2="'+(W-PAD)+'" y2="'+gy+'" stroke="rgba(61,107,158,.3)" stroke-width="1" stroke-dasharray="2,3"/>'
     +'<polyline points="'+linePoints+'" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="1" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<polyline points="'+maLine+'" fill="none" stroke="'+lc+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<circle cx="'+lx+'" cy="'+ly+'" r="2.5" fill="'+lc+'"/>';
@@ -3732,23 +2354,13 @@ updateWhoopBtn();
 refresh();
 // Pull from Supabase on load (merge remote → local)
 // Small delay so page renders first
-setTimeout(async ()=>{
-  await sbPull();
-  // Auto-render tabs that need post-pull data
-  setTimeout(() => {
-    loadPRsFromSupabase();
-    loadInjuriesFromSupabase();
-    loadAnomalyTagsFromSupabase();
-    renderRecoveryDash();
-  }, 300);
-}, 1500);
+setTimeout(()=>sbPull(),1500);
 setTimeout(()=>{
   // Show upload-all prompt if we have local historical data
   const hasHist = metrics.filter(m => !m.id).length > 0 || lifts.filter(l => !l.id).length > 0;
   const banner = document.getElementById('sb-status');
   if(banner && hasHist) banner.style.display = 'block';
 });
-
 
 </script>
 </body>
