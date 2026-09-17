@@ -677,22 +677,69 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     </div>
   </div>
 
-  <!-- SLEEP PERFORMANCE -->
+  <!-- RECOVERY CARD -->
   <div class="cd" style="margin-bottom:1rem;">
-    <div class="ct">Last Night's Sleep Performance</div>
-    <div style="display:flex;align-items:flex-end;gap:.75rem;margin-bottom:.6rem;">
+    <div class="ct">Recovery</div>
+
+    <!-- Training Readiness headline -->
+    <div style="display:flex;align-items:flex-end;gap:.75rem;margin-bottom:.75rem;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;line-height:1;color:var(--cy);" id="sp-pct">—</div>
-      <div style="padding-bottom:.4rem;">
+      <div style="padding-bottom:.5rem;">
         <div id="sp-badge" style="font-size:.7rem;font-family:'JetBrains Mono',monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;"></div>
-        <div style="font-size:.68rem;color:var(--mt);margin-top:.2rem;">vs 8h target</div>
+        <div style="font-size:.65rem;color:var(--mt);margin-top:.2rem;font-family:'JetBrains Mono',monospace;">training readiness</div>
       </div>
     </div>
-    <div style="height:6px;background:var(--sf2);border-radius:999px;overflow:hidden;margin-bottom:.85rem;">
-      <div id="sp-bar" style="height:100%;border-radius:999px;background:var(--cy);transition:width .6s ease;width:0%;"></div>
+
+    <!-- Sleep section -->
+    <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;margin-bottom:.65rem;">
+      <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.5rem;">Sleep</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
+        <div>
+          <div style="font-size:.62rem;color:var(--mt);">Duration vs 8h target</div>
+          <div style="display:flex;align-items:center;gap:.5rem;margin-top:.25rem;">
+            <div style="flex:1;height:4px;background:var(--bd);border-radius:999px;overflow:hidden;">
+              <div id="sp-bar" style="height:100%;border-radius:999px;background:var(--cy);transition:width .6s ease;width:0%;"></div>
+            </div>
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);" id="sp-dur">—</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:.62rem;color:var(--mt);">Sleep performance</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-sleep-pct">—</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
+        <div>
+          <div style="font-size:.62rem;color:var(--mt);">Sleep score</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-score">—</div>
+        </div>
+        <div>
+          <div style="font-size:.62rem;color:var(--mt);">7-day sleep debt</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--mt);margin-top:.25rem;" id="sp-debt">—</div>
+        </div>
+      </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;" id="sp-stats"></div>
-    <div style="margin-top:.85rem;padding-top:.75rem;border-top:1px solid var(--bd);font-size:.7rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">
-      r=0.56 correlation with next-day recovery · stronger signal than sleep debt (r=-0.10)
+
+    <!-- RHR + HRV with personal banding -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;">
+      <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;">
+        <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.4rem;">Resting HR</div>
+        <div style="display:flex;align-items:baseline;gap:.3rem;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1;" id="sp-rhr">—</div>
+          <div style="font-size:.65rem;color:var(--mt);">bpm</div>
+          <div id="sp-rhr-badge" style="margin-left:auto;font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;"></div>
+        </div>
+        <div style="font-size:.6rem;color:var(--mt);margin-top:.3rem;font-family:'JetBrains Mono',monospace;" id="sp-rhr-ctx"></div>
+      </div>
+      <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;">
+        <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.4rem;">Overnight HRV</div>
+        <div style="display:flex;align-items:baseline;gap:.3rem;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1;" id="sp-ohrv">—</div>
+          <div style="font-size:.65rem;color:var(--mt);">ms</div>
+          <div id="sp-ohrv-badge" style="margin-left:auto;font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;"></div>
+        </div>
+        <div style="font-size:.6rem;color:var(--mt);margin-top:.3rem;font-family:'JetBrains Mono',monospace;" id="sp-ohrv-ctx"></div>
+      </div>
     </div>
   </div>
 
@@ -2477,42 +2524,101 @@ function renderRecoveryDash() {
 }
 
 function renderSleepPerformance() {
-  // Find most recent entry that has sleep data — sort by date descending
-  const sorted = [...metrics].sort((a,b) => b.date.localeCompare(a.date));
-  const last = sorted.find(m => m.sleep && m.sleep > 0);
-  if(!last) {
-    el('sp-pct').textContent = '—';
-    return;
-  }
+  const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
+  // Find most recent entry with any recovery/sleep data
+  const last = sorted.find(function(m){return m.recovery||m.sleep||m.sleep_score;});
+  if(!last) return;
 
-  // Use Garmin sleep score directly when available — it's a real composite score
-  // Fall back to duration/8h only when sleep score wasn't logged
-  const sleepScore = last.sleep_score ? parseInt(last.sleep_score) : null;
-  const pct = sleepScore || Math.min(100, Math.round(((last.sleep||0) / 8) * 100));
-  const h = Math.floor(last.sleep||0), mins = Math.round(((last.sleep||0) - h) * 60);
-
-  el('sp-pct').textContent = pct + (sleepScore ? '' : '%');
-  el('sp-bar').style.width = Math.min(100, pct) + '%';
+  // ── Training Readiness headline ──────────────────────
+  const readiness = last.recovery ? parseInt(last.recovery) : null;
+  const pctEl = el('sp-pct');
+  if(pctEl) pctEl.textContent = readiness !== null ? readiness + '%' : '—';
 
   const badge = el('sp-badge');
-  if(pct >= 90) { badge.textContent = 'Excellent'; badge.style.cssText = 'background:rgba(31,122,69,.15);color:var(--gn);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-  else if(pct >= 75) { badge.textContent = 'Good'; badge.style.cssText = 'background:rgba(9,122,138,.15);color:var(--cy);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-  else if(pct >= 60) { badge.textContent = 'Fair'; badge.style.cssText = 'background:rgba(168,101,48,.15);color:var(--or);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
-  else { badge.textContent = 'Low'; badge.style.cssText = 'background:rgba(160,40,32,.15);color:var(--rd);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+  if(badge && readiness !== null) {
+    if(readiness >= 75)      { badge.textContent='Ready'; badge.style.cssText='background:rgba(31,122,69,.15);color:var(--gn);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+    else if(readiness >= 50) { badge.textContent='Moderate'; badge.style.cssText='background:rgba(9,122,138,.15);color:var(--cy);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+    else if(readiness >= 25) { badge.textContent='Low'; badge.style.cssText='background:rgba(168,101,48,.15);color:var(--or);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+    else                     { badge.textContent='Very Low'; badge.style.cssText='background:rgba(160,40,32,.15);color:var(--rd);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+  }
 
-  const stats = el('sp-stats');
-  const rhr = last.resting_hr || null;
-  const ohrv = last.overnight_hrv || null;
-  const durStr = last.sleep ? (h + 'h' + (mins > 0 ? mins + 'm' : '')) : '—';
-  stats.innerHTML = [
-    { label:'duration', val: durStr },
-    { label:'score', val: last.sleep_score || '—' },
-    { label:'resting HR', val: rhr ? rhr + 'bpm' : '—' },
-    { label:'overnight HRV', val: ohrv ? ohrv + 'ms' : '—' },
-  ].map(s => `<div style="text-align:center;padding:.5rem;background:var(--sf2);border-radius:7px;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--tx);">${s.val}</div>
-    <div style="font-size:.6rem;color:var(--mt);text-transform:uppercase;letter-spacing:1px;">${s.label}</div>
-  </div>`).join('');
+  // ── Sleep section ─────────────────────────────────────
+  const sleepHrs = parseFloat(last.sleep) || 0;
+  const durPct = Math.min(100, Math.round((sleepHrs / 8) * 100));
+  const sh = Math.floor(sleepHrs), sm = Math.round((sleepHrs - sh) * 60);
+  const durStr = sleepHrs > 0 ? sh + 'h' + (sm > 0 ? sm + 'm' : '') : '—';
+
+  const spBar = el('sp-bar'); if(spBar) spBar.style.width = durPct + '%';
+  const spDur = el('sp-dur'); if(spDur) spDur.textContent = durStr;
+
+  // Sleep performance % (Garmin sleep score or duration-based)
+  const sleepPctEl = el('sp-sleep-pct');
+  if(sleepPctEl) {
+    if(last.sleep_score) sleepPctEl.textContent = last.sleep_score + '/100';
+    else if(sleepHrs > 0) sleepPctEl.textContent = durPct + '%';
+    else sleepPctEl.textContent = '—';
+  }
+
+  const spScore = el('sp-score'); if(spScore) spScore.textContent = last.sleep_score || '—';
+
+  // 7-day sleep debt (target 8h/night)
+  const spDebt = el('sp-debt');
+  if(spDebt) {
+    const last7 = sorted.slice(0, 7).filter(function(m){return m.sleep && m.sleep > 0;});
+    if(last7.length >= 3) {
+      const totalSlept = last7.reduce(function(s,m){return s+parseFloat(m.sleep);},0);
+      const debt = (8 * last7.length) - totalSlept;
+      spDebt.textContent = (debt > 0 ? '-' : '+') + Math.abs(debt).toFixed(1) + 'h';
+      spDebt.style.color = debt > 4 ? 'var(--rd)' : debt > 1 ? 'var(--or)' : 'var(--gn)';
+    } else { spDebt.textContent = '—'; }
+  }
+
+  // ── Personal banding for RHR + HRV ───────────────────
+  // Use trailing 60 days, exclude last 2 days, require min 20 entries
+  const today60 = new Date(); today60.setDate(today60.getDate() - 2);
+  const cutoff60 = new Date(today60); cutoff60.setDate(today60.getDate() - 60);
+  const baseline = sorted.filter(function(m){
+    const d = new Date(m.date+'T12:00:00');
+    return d >= cutoff60 && d <= today60;
+  });
+
+  function bandBadge(val, mean, sd, higherBetter) {
+    if(!val || !mean || !sd || baseline.length < 20) return {color:'var(--mt)',bg:'rgba(255,255,255,.05)',label:'—'};
+    const diff = higherBetter ? (val - mean) / sd : (mean - val) / sd;
+    if(diff >= -0.5) return {color:'var(--gn)',bg:'rgba(31,122,69,.15)',label:'Good'};
+    if(diff >= -1.5) return {color:'var(--or)',bg:'rgba(168,101,48,.15)',label:'Fair'};
+    return {color:'var(--rd)',bg:'rgba(160,40,32,.15)',label:'Low'};
+  }
+
+  // RHR banding
+  const rhrVals = baseline.map(function(m){return parseFloat(m.resting_hr);}).filter(function(v){return v>30&&v<120;});
+  const rhrMean = rhrVals.length ? rhrVals.reduce(function(a,b){return a+b;},0)/rhrVals.length : null;
+  const rhrSd = rhrVals.length > 1 ? Math.sqrt(rhrVals.reduce(function(s,v){return s+Math.pow(v-rhrMean,2);},0)/rhrVals.length) : null;
+  const curRhr = parseFloat(last.resting_hr) || null;
+
+  const spRhr = el('sp-rhr'); if(spRhr) spRhr.textContent = curRhr || '—';
+  const rhrBand = bandBadge(curRhr, rhrMean, rhrSd, false);
+  const spRhrBadge = el('sp-rhr-badge');
+  if(spRhrBadge && curRhr) { spRhrBadge.textContent = rhrBand.label; spRhrBadge.style.cssText = 'background:'+rhrBand.bg+';color:'+rhrBand.color+';font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+  const spRhrCtx = el('sp-rhr-ctx');
+  if(spRhrCtx && rhrMean) spRhrCtx.textContent = '60d avg ' + rhrMean.toFixed(0) + 'bpm ± ' + (rhrSd||0).toFixed(1);
+
+  // Overnight HRV banding
+  const ohrvVals = baseline.map(function(m){return parseFloat(m.overnight_hrv);}).filter(function(v){return v>10&&v<200;});
+  const ohrvMean = ohrvVals.length ? ohrvVals.reduce(function(a,b){return a+b;},0)/ohrvVals.length : null;
+  const ohrvSd = ohrvVals.length > 1 ? Math.sqrt(ohrvVals.reduce(function(s,v){return s+Math.pow(v-ohrvMean,2);},0)/ohrvVals.length) : null;
+  const curOhrv = parseFloat(last.overnight_hrv) || null;
+
+  const spOhrv = el('sp-ohrv'); if(spOhrv) spOhrv.textContent = curOhrv ? curOhrv.toFixed(0) : '—';
+  const ohrvBand = bandBadge(curOhrv, ohrvMean, ohrvSd, true);
+  const spOhrvBadge = el('sp-ohrv-badge');
+  if(spOhrvBadge && curOhrv) { spOhrvBadge.textContent = ohrvBand.label; spOhrvBadge.style.cssText = 'background:'+ohrvBand.bg+';color:'+ohrvBand.color+';font-size:.6rem;padding:.15rem .45rem;border-radius:999px;font-weight:700;display:inline-block;'; }
+  const spOhrvCtx = el('sp-ohrv-ctx');
+  if(spOhrvCtx && ohrvMean) spOhrvCtx.textContent = '60d avg ' + ohrvMean.toFixed(0) + 'ms ± ' + (ohrvSd||0).toFixed(1);
+
+  // Update header score
+  const recDashScore = el('rec-dash-score');
+  if(recDashScore) recDashScore.textContent = readiness !== null ? readiness + '%' : '—';
 }
 
 function setDowMetric(metric) {
