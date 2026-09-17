@@ -2604,10 +2604,10 @@ function renderSleepPerformance() {
   if(spRhrCtx && rhrMean) spRhrCtx.textContent = '60d avg ' + rhrMean.toFixed(0) + 'bpm ± ' + (rhrSd||0).toFixed(1);
 
   // Overnight HRV banding
-  const ohrvVals = baseline.map(function(m){return parseFloat(m.overnight_hrv);}).filter(function(v){return v>10&&v<200;});
+  const ohrvVals = baseline.map(function(m){return parseFloat(m.overnight_hrv||m.hrv);}).filter(function(v){return v>10&&v<200;});
   const ohrvMean = ohrvVals.length ? ohrvVals.reduce(function(a,b){return a+b;},0)/ohrvVals.length : null;
   const ohrvSd = ohrvVals.length > 1 ? Math.sqrt(ohrvVals.reduce(function(s,v){return s+Math.pow(v-ohrvMean,2);},0)/ohrvVals.length) : null;
-  const curOhrv = parseFloat(last.overnight_hrv) || null;
+  const curOhrv = parseFloat(last.overnight_hrv) || parseFloat(last.hrv) || null;
 
   const spOhrv = el('sp-ohrv'); if(spOhrv) spOhrv.textContent = curOhrv ? curOhrv.toFixed(0) : '—';
   const ohrvBand = bandBadge(curOhrv, ohrvMean, ohrvSd, true);
