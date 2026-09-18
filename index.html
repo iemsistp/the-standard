@@ -316,12 +316,14 @@ if('serviceWorker' in navigator) {
           <div class="ig"><label class="il">Sleep Score</label><input type="number" class="if" id="m-ss" placeholder="78"></div>
           <div class="ig">
             <label class="il">Duration</label>
-            <input type="text" class="if" id="m-sl" placeholder="830" maxlength="5" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)">
+            <input type="text" class="if" id="m-sl" placeholder="8:30" maxlength="5" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
           </div>
-          <div class="ig"><label class="il">Deep</label><input type="text" class="if" id="m-sd" placeholder="130" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
-          <div class="ig"><label class="il">Light</label><input type="text" class="if" id="m-sl2" placeholder="320" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
-          <div class="ig"><label class="il">REM</label><input type="text" class="if" id="m-sr" placeholder="140" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
-          <div class="ig"><label class="il">Awake</label><input type="text" class="if" id="m-saw" placeholder="020" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">Bedtime</label><input type="text" class="if" id="m-bed" placeholder="2230" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">Wake Time</label><input type="text" class="if" id="m-wake" placeholder="730" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">Deep</label><input type="text" class="if" id="m-sd" placeholder="130" maxlength="5" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">Light</label><input type="text" class="if" id="m-sl2" placeholder="320" maxlength="5" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">REM</label><input type="text" class="if" id="m-sr" placeholder="140" maxlength="5" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">Awake</label><input type="text" class="if" id="m-saw" placeholder="020" maxlength="5" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
           <div class="ig"><label class="il">Resting HR</label><input type="number" class="if" id="m-rhr" placeholder="52"></div>
           <div class="ig"><label class="il">Overnight HRV</label><input type="number" class="if" id="m-ohrv" placeholder="62" step="0.1"></div>
         </div>
@@ -693,31 +695,52 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     <!-- Sleep section -->
     <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;margin-bottom:.65rem;">
       <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.5rem;">Sleep</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
+
+      <!-- Row 1: Sleep Score (headline) -->
+      <div style="margin-bottom:.5rem;">
+        <div style="font-size:.62rem;color:var(--mt);">Sleep score</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-score">—</div>
+      </div>
+
+      <!-- Row 2: Duration + performance + debt -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">Duration vs 8h target</div>
-          <div style="display:flex;align-items:center;gap:.5rem;margin-top:.25rem;">
-            <div style="flex:1;height:4px;background:var(--bd);border-radius:999px;overflow:hidden;">
-              <div id="sp-bar" style="height:100%;border-radius:999px;background:var(--cy);transition:width .6s ease;width:0%;"></div>
-            </div>
-            <span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);" id="sp-dur">—</span>
+          <div style="font-size:.62rem;color:var(--mt);">Duration</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-dur">—</div>
+          <div style="height:3px;background:var(--bd);border-radius:999px;overflow:hidden;margin-top:.3rem;">
+            <div id="sp-bar" style="height:100%;border-radius:999px;background:var(--cy);transition:width .6s ease;width:0%;"></div>
           </div>
         </div>
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">Sleep performance</div>
+          <div style="font-size:.62rem;color:var(--mt);">vs 8h target</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-sleep-pct">—</div>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">Sleep score</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-score">—</div>
-        </div>
-        <div>
-          <div style="font-size:.62rem;color:var(--mt);">7-day sleep debt</div>
+          <div style="font-size:.62rem;color:var(--mt);">7-day debt</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--mt);margin-top:.25rem;" id="sp-debt">—</div>
         </div>
       </div>
+
+      <!-- Row 3: Bedtime + wake + consistency -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:.35rem;">
+        <div>
+          <div style="font-size:.62rem;color:var(--mt);">Last night</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-bedtime">—</div>
+          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-avg-bed">avg —</div>
+        </div>
+        <div>
+          <div style="font-size:.62rem;color:var(--mt);">Wake time</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);margin-top:.25rem;" id="sp-waketime">—</div>
+          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-avg-wake">avg —</div>
+        </div>
+        <div>
+          <div style="font-size:.62rem;color:var(--mt);">Consistency</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;margin-top:.25rem;" id="sp-consistency">—</div>
+          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;">bedtime ±</div>
+        </div>
+      </div>
+      <!-- Suggested target -->
+      <div id="sp-suggestion" style="display:none;font-size:.68rem;background:rgba(9,122,138,.08);border:0.5px solid rgba(9,122,138,.2);border-radius:6px;padding:.4rem .65rem;color:var(--cy);margin-top:.35rem;font-family:'JetBrains Mono',monospace;"></div>
     </div>
 
     <!-- RHR + HRV with personal banding -->
@@ -953,7 +976,7 @@ function saveMetrics(){
   const numFields={recovery:'m-re',burned:'m-bu',consumed:'m-co',protein:'m-pr',carbs:'m-ca',fat:'m-fa',sleep_score:'m-ss',overnight_hrv:'m-ohrv',resting_hr:'m-rhr',body_battery:'m-bb',stress:'m-str',hrv_7day:'m-hrv',steps:'m-stp',steps_goal:'m-stg'};
   const explicitlySet={};
   Object.entries(numFields).forEach(([key,id])=>{explicitlySet[key]=v(id).trim()!=='';});
-  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null,sleep_score:n('m-ss'),sleep_deep_min:n('m-sd'),sleep_light_min:n('m-sl2'),sleep_rem_min:n('m-sr'),sleep_awake_min:n('m-saw'),overnight_hrv:n('m-ohrv'),resting_hr:n('m-rhr'),body_battery:n('m-bb'),stress:n('m-str'),hrv_7day:n('m-hrv'),training_status:v('m-ts')||null,steps:n('m-stp'),steps_goal:n('m-stg')};
+  const incoming={date:v('m-date'),weight:weightKg,sleep:sleepHrs,recovery:n('m-re'),hrv:null,burned:n('m-bu'),consumed:n('m-co'),protein:n('m-pr'),carbs:n('m-ca'),fat:n('m-fa'),notes:v('m-no'),tags:v('m-tags')||null,sleep_score:n('m-ss'),sleep_deep_min:n('m-sd'),sleep_light_min:n('m-sl2'),sleep_rem_min:n('m-sr'),sleep_awake_min:n('m-saw'),overnight_hrv:n('m-ohrv'),resting_hr:n('m-rhr'),body_battery:n('m-bb'),stress:n('m-str'),hrv_7day:n('m-hrv'),training_status:v('m-ts')||null,steps:n('m-stp'),steps_goal:n('m-stg'),bedtime:v('m-bed')||null,wake_time:v('m-wake')||null};
   // Parse H:MM stage fields to minutes
   function parseStageToMins(id) {
     const raw = v(id).trim();
@@ -994,25 +1017,10 @@ function updateWeightUnit(){
 }
 
 function fmtSleepInput(el){
-  // Only strip non-numeric/colon chars while typing — format on blur
-  el.value = el.value.replace(/[^0-9:]/g,'');
-}
-
-function fmtSleepBlur(el){
-  // On blur: interpret raw digits as HHMM, format to HH:MM
-  const raw = el.value.replace(/[^0-9]/g,'').slice(0,4);
-  if(!raw){ el.value=''; return; }
-  const padded = raw.padStart(4,'0');
-  const h = padded.slice(0,2), m = padded.slice(2,4);
-  if(parseInt(m) > 59){
-    // Try interpreting as H:MM — e.g. "930" = 9h30m
-    const h2 = raw.slice(0, raw.length-2) || '0';
-    const m2 = raw.slice(-2);
-    if(parseInt(m2) <= 59){ el.value = h2.padStart(2,'0')+':'+m2; return; }
-    el.value = '';
-    return;
-  }
-  el.value = h+':'+m;
+  // Auto-insert colon after 2 digits if user hasn't typed one
+  let val=el.value.replace(/[^0-9:]/g,'');
+  if(val.length===2&&!val.includes(':')&&el._prev&&el._prev.length===1) val=val+':';
+  el._prev=val;el.value=val;
 }
 
 function formatSleep(hrs){
@@ -1050,6 +1058,8 @@ function loadEntryIntoForm(dateStr){
   el('m-sr').value = (() => { const mins = entry.sleep_rem_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
   el('m-saw').value = (() => { const mins = entry.sleep_awake_min; if(mins) { const h=Math.floor(mins/60),m=mins%60; return h+':'+String(m).padStart(2,'0'); } return ''; })();
   el('m-ohrv').value = entry.overnight_hrv || '';
+  el('m-bed').value = entry.bedtime || '';
+  el('m-wake').value = entry.wake_time || '';
   el('m-rhr').value = entry.resting_hr || '';
   el('m-bb').value = entry.body_battery || '';
   el('m-str').value = entry.stress || '';
@@ -1089,7 +1099,7 @@ function toggleTag(btn){
   el('m-tags').value = active.join(',');
 }
 
-function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags','m-ss','m-sd','m-sl2','m-sr','m-saw','m-ohrv','m-rhr','m-bb','m-str','m-hrv','m-stp','m-stg','inj-trigger'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const tsEl=el('m-ts');if(tsEl)tsEl.value='';const injB=el('inj-body');if(injB)injB.value='';injSev='mild';setInjSev('mild',el('sev-mild'));const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
+function clearMetrics(){['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags','m-ss','m-sd','m-sl2','m-sr','m-saw','m-ohrv','m-rhr','m-bb','m-str','m-hrv','m-stp','m-stg','m-bed','m-wake','inj-trigger'].forEach(id=>{const e=el(id);if(e)e.value='';});document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));el('m-fb').innerHTML='';el('m-date').value=today();const tsEl=el('m-ts');if(tsEl)tsEl.value='';const injB=el('inj-body');if(injB)injB.value='';injSev='mild';setInjSev('mild',el('sev-mild'));const btn=el('copy-morning-btn');if(btn)btn.style.display='none';const conf=el('copy-confirm');if(conf)conf.style.display='none';}
 
 function buildEntryText(entry, date, header) {
   const s = entry.burned&&entry.consumed ? entry.consumed-entry.burned : null;
@@ -1107,6 +1117,8 @@ function buildEntryText(entry, date, header) {
       const fmt=function(m){var h=Math.floor(m/60),mn=m%60;return h+'h'+(mn>0?mn+'m':'');};
       text+='Stages:           Deep '+(entry.sleep_deep_min?fmt(entry.sleep_deep_min):'—')+' · REM '+(entry.sleep_rem_min?fmt(entry.sleep_rem_min):'—')+' · Light '+(entry.sleep_light_min?fmt(entry.sleep_light_min):'—')+' · Awake '+(entry.sleep_awake_min?fmt(entry.sleep_awake_min):'—')+'\n';
     }
+    if(entry.bedtime) text += 'Bedtime:          ' + entry.bedtime + '\n';
+    if(entry.wake_time) text += 'Wake time:        ' + entry.wake_time + '\n';
     if(entry.resting_hr) text += 'Resting HR:       ' + entry.resting_hr + 'bpm\n';
     if(entry.overnight_hrv) text += 'Overnight HRV:    ' + entry.overnight_hrv + 'ms\n';
   }
@@ -2768,12 +2780,15 @@ function renderSleepPerformance() {
   const spBar = el('sp-bar'); if(spBar) spBar.style.width = durPct + '%';
   const spDur = el('sp-dur'); if(spDur) spDur.textContent = durStr;
 
-  // Sleep performance = duration vs 8h target (always %)
+  // Sleep performance % (Garmin sleep score or duration-based)
   const sleepPctEl = el('sp-sleep-pct');
-  if(sleepPctEl) sleepPctEl.textContent = sleepHrs > 0 ? durPct + '%' : '—';
+  if(sleepPctEl) {
+    if(last.sleep_score) sleepPctEl.textContent = last.sleep_score + '/100';
+    else if(sleepHrs > 0) sleepPctEl.textContent = durPct + '%';
+    else sleepPctEl.textContent = '—';
+  }
 
-  // Sleep score = Garmin composite 0-100
-  const spScore = el('sp-score'); if(spScore) spScore.textContent = last.sleep_score ? last.sleep_score + '/100' : '—';
+  const spScore = el('sp-score'); if(spScore) spScore.textContent = last.sleep_score || '—';
 
   // 7-day sleep debt (target 8h/night)
   const spDebt = el('sp-debt');
@@ -2785,6 +2800,102 @@ function renderSleepPerformance() {
       spDebt.textContent = (debt > 0 ? '-' : '+') + Math.abs(debt).toFixed(1) + 'h';
       spDebt.style.color = debt > 4 ? 'var(--rd)' : debt > 1 ? 'var(--or)' : 'var(--gn)';
     } else { spDebt.textContent = '—'; }
+  }
+
+  // Helper: time string HH:MM → minutes (normalized so post-4pm = negative)
+  function timeToMins(t) {
+    if(!t) return null;
+    const parts = t.split(':');
+    if(parts.length < 2) return null;
+    let m = parseInt(parts[0])*60 + parseInt(parts[1]);
+    if(m > 16*60) m -= 24*60; // late night normalized
+    return m;
+  }
+  function minsToTime(m) {
+    m = ((m % (24*60)) + 24*60) % (24*60);
+    return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+  }
+
+  // Last night bedtime + wake
+  const spBed = el('sp-bedtime');
+  if(spBed) spBed.textContent = last.bedtime || '—';
+  const spWake = el('sp-waketime');
+  if(spWake) spWake.textContent = last.wake_time || '—';
+
+  // 7-day averages for bedtime + wake
+  const last7withBed = sorted.slice(0,7).filter(function(m){return m.bedtime;});
+  const last7withWake = sorted.slice(0,7).filter(function(m){return m.wake_time;});
+
+  if(last7withBed.length >= 3) {
+    const bedMins = last7withBed.map(function(m){return timeToMins(m.bedtime);}).filter(function(v){return v!==null;});
+    const avgBed = bedMins.reduce(function(a,b){return a+b;},0)/bedMins.length;
+    const spAvgBed = el('sp-avg-bed');
+    if(spAvgBed) spAvgBed.textContent = 'avg ' + minsToTime(avgBed);
+  }
+  if(last7withWake.length >= 3) {
+    const wakeMins = last7withWake.map(function(m){return timeToMins(m.wake_time);}).filter(function(v){return v!==null;});
+    const avgWake = wakeMins.reduce(function(a,b){return a+b;},0)/wakeMins.length;
+    const spAvgWake = el('sp-avg-wake');
+    if(spAvgWake) spAvgWake.textContent = 'avg ' + minsToTime(avgWake);
+  }
+
+  // Consistency — SD of bedtime
+  const spCons = el('sp-consistency');
+  if(spCons) {
+    const bedMins2 = last7withBed.map(function(m){return timeToMins(m.bedtime);}).filter(function(v){return v!==null;});
+    if(bedMins2.length >= 3) {
+      const mean2 = bedMins2.reduce(function(a,b){return a+b;},0)/bedMins2.length;
+      const sd = Math.sqrt(bedMins2.reduce(function(s,v){return s+Math.pow(v-mean2,2);},0)/bedMins2.length);
+      const sdMins = Math.round(sd);
+      spCons.textContent = '±' + sdMins + 'm';
+      spCons.style.color = sdMins <= 20 ? 'var(--gn)' : sdMins <= 45 ? 'var(--or)' : 'var(--rd)';
+    } else { spCons.textContent = '—'; }
+  }
+
+  // Sleep debt — only show if in debt (red), surplus show muted
+  const spDebtEl = el('sp-debt');
+  if(spDebtEl) {
+    const last7sleep = sorted.slice(0,7).filter(function(m){return m.sleep && m.sleep > 0;});
+    if(last7sleep.length >= 3) {
+      const totalSlept = last7sleep.reduce(function(s,m){return s+parseFloat(m.sleep);},0);
+      const debt = (8 * last7sleep.length) - totalSlept;
+      if(debt > 0.5) {
+        // In debt — show red
+        spDebtEl.textContent = '-' + debt.toFixed(1) + 'h';
+        spDebtEl.style.color = debt > 3 ? 'var(--rd)' : 'var(--or)';
+      } else if(debt < -2) {
+        // Significant surplus — show muted, not alarming
+        spDebtEl.textContent = '+' + Math.abs(debt).toFixed(1) + 'h';
+        spDebtEl.style.color = 'var(--mt)';
+      } else {
+        // On track
+        spDebtEl.textContent = '✓';
+        spDebtEl.style.color = 'var(--gn)';
+      }
+    } else { spDebtEl.textContent = '—'; }
+  }
+
+  // Suggested bedtime/wake based on data
+  // From 5yr analysis: bed before 23:18 → avg 74% recovery vs 48% after
+  // Suggested target: bed 22:45–23:00, wake 07:00–08:00 for 8h
+  const suggEl = el('sp-suggestion');
+  if(suggEl) {
+    const bedMins3 = timeToMins(last.bedtime);
+    const wakeMins3 = timeToMins(last.wake_time);
+    const targetBed = 22*60 + 30; // 22:30 — based on 1170-night WHOOP analysis
+    const msgs = [];
+    if(bedMins3 !== null && bedMins3 > 22*60 + 30) {
+      msgs.push('Bed ' + minsToTime(bedMins3) + ' → past optimal. Target: 20:15–22:15 (+30pt recovery lift from 1,170 nights)');
+    }
+    if(wakeMins3 !== null && wakeMins3 < 6*60) {
+      msgs.push('Wake ' + minsToTime(wakeMins3) + ' → early. Aim for 07:00–08:00');
+    }
+    if(msgs.length) {
+      suggEl.style.display = 'block';
+      suggEl.textContent = '💡 ' + msgs[0];
+    } else {
+      suggEl.style.display = 'none';
+    }
   }
 
   // ── Personal banding for RHR + HRV ───────────────────
