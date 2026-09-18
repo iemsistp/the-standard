@@ -664,6 +664,46 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
   </div>
 </div>
 <div id="target-tip" style="display:none;position:fixed;"></div>
+
+<!-- WAKE TIME PICKER MODAL -->
+<div id="wake-picker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:flex-end;justify-content:center;" onclick="closeWakePicker(event)">
+  <div style="background:var(--sf);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:1.25rem 1.5rem 2rem;" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--mt);">Wake time</div>
+      <button onclick="closeWakePicker()" style="background:none;border:none;color:var(--mt);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center;justify-content:center;margin-bottom:1.25rem;">
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:11px;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">hour</div>
+        <div id="wp-hour-drum" style="height:132px;overflow:hidden;position:relative;width:72px;cursor:ns-resize;user-select:none;">
+          <div style="position:absolute;top:50%;transform:translateY(-50%);left:4px;right:4px;height:44px;border-radius:6px;background:var(--sf2);border:0.5px solid var(--bd);pointer-events:none;z-index:1;"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:44px;background:linear-gradient(to bottom,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(to top,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div id="wp-hour-items" style="display:flex;flex-direction:column;align-items:center;"></div>
+        </div>
+      </div>
+      <div style="font-size:28px;font-weight:500;color:var(--tx);padding-top:20px;">:</div>
+      <div style="display:flex;flex-direction:column;align-items:center;">
+        <div style="font-size:11px;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">min</div>
+        <div id="wp-min-drum" style="height:132px;overflow:hidden;position:relative;width:72px;cursor:ns-resize;user-select:none;">
+          <div style="position:absolute;top:50%;transform:translateY(-50%);left:4px;right:4px;height:44px;border-radius:6px;background:var(--sf2);border:0.5px solid var(--bd);pointer-events:none;z-index:1;"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:44px;background:linear-gradient(to bottom,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(to top,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div id="wp-min-items" style="display:flex;flex-direction:column;align-items:center;"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Also allow typing -->
+    <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:1rem;">
+      <input type="text" id="wp-type-input" placeholder="or type e.g. 630" inputmode="numeric" maxlength="5"
+        style="flex:1;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:.5rem .75rem;color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:.85rem;"
+        oninput="this.value=this.value.replace(/[^0-9:]/g,'')"
+        onblur="wpTypeBlur(this)">
+      <span style="font-size:.7rem;color:var(--mt);">H:MM</span>
+    </div>
+    <button onclick="confirmWakeTime()" style="width:100%;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;padding:.65rem;border-radius:8px;border:none;background:var(--cy);color:#000;cursor:pointer;">Set Wake Time</button>
+  </div>
+</div>
 </main>
 
 
@@ -773,6 +813,29 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
   <div class="cd" style="margin-bottom:1rem;" id="anomaly-card" style="display:none;">
     <div class="ct" id="anomaly-title">Recovery anomaly check</div>
     <div id="anomaly-body"></div>
+  </div>
+
+  <!-- TONIGHT SUGGESTION -->
+  <div class="cd" style="margin-bottom:1rem;" id="tonight-card">
+    <div class="ct">Tonight's Target</div>
+    <div style="display:flex;align-items:baseline;gap:.75rem;margin-bottom:.5rem;">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;color:var(--cy);" id="tonight-bed">—</div>
+        <div style="font-size:.62rem;color:var(--mt);text-align:center;">bed</div>
+      </div>
+      <div style="font-size:1.5rem;color:var(--mt);padding-bottom:.4rem;">→</div>
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;color:var(--mt);" id="tonight-wake">—</div>
+        <div style="font-size:.62rem;color:var(--mt);text-align:center;">wake</div>
+      </div>
+      <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;">
+        <button onclick="openWakePicker()" style="font-size:.65rem;padding:.3rem .7rem;border-radius:6px;border:0.5px solid var(--bd);background:none;color:var(--mt);cursor:pointer;font-family:'DM Sans',sans-serif;">Adjust wake time</button>
+        <div style="font-size:.6rem;color:var(--mt);font-family:'JetBrains Mono',monospace;" id="tonight-sleep-hrs">8.5h sleep</div>
+      </div>
+    </div>
+    <div style="height:1px;background:var(--bd);margin-bottom:.6rem;"></div>
+    <div id="tonight-reasons" style="display:flex;flex-direction:column;gap:.3rem;"></div>
+    <div style="margin-top:.65rem;font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">Based on 1,170 nights · bedtime r=-0.527 · optimal duration 8.5–9h</div>
   </div>
 
   <!-- DAY OF WEEK -->
@@ -2747,6 +2810,155 @@ async function acknowledgeAnomaly(date) {
 }
 
 
+// ── WAKE TIME SCROLL PICKER ───────────────────────────────
+const WP_ITEM_H = 44;
+let _wpHour = 6, _wpMin = 30;
+let _wpHourCtrl = null, _wpMinCtrl = null;
+
+function buildWpDrum(drumId, itemsId, count, fmt, initVal) {
+  const items = document.getElementById(itemsId);
+  const drum = document.getElementById(drumId);
+  if(!items || !drum) return { get: () => initVal, reset: () => {} };
+  const pad = 2;
+  const allVals = [];
+  for(let i=-pad; i<count+pad; i++) allVals.push(((i%count)+count)%count);
+  items.innerHTML = allVals.map(function(v,i) {
+    const sel = i === pad + initVal;
+    return '<div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:'+(sel?'26':'20')+'px;font-weight:500;color:'+(sel?'var(--tx)':'var(--mt)')+';width:72px;flex-shrink:0;" data-v="'+v+'">'+fmt(v)+'</div>';
+  }).join('');
+  let current = initVal, offset = -initVal * WP_ITEM_H, startY = null, startOffset = null;
+  function setOffset(o, animate) {
+    items.style.transition = animate ? 'transform 0.2s ease' : 'none';
+    items.style.transform = 'translateY('+(o + pad*WP_ITEM_H)+'px)';
+  }
+  function updateSelected(val) {
+    current = ((val%count)+count)%count;
+    items.querySelectorAll('div[data-v]').forEach(function(el,i) {
+      const sel = i === pad + current;
+      el.style.fontSize = sel ? '26px' : '20px';
+      el.style.color = sel ? 'var(--tx)' : 'var(--mt)';
+    });
+  }
+  function snapTo(rawOff) {
+    const snapped = Math.round(rawOff/WP_ITEM_H)*WP_ITEM_H;
+    offset = snapped; setOffset(offset, true); updateSelected(-snapped/WP_ITEM_H);
+  }
+  setOffset(offset, false);
+  drum.addEventListener('mousedown', function(e){startY=e.clientY;startOffset=offset;});
+  document.addEventListener('mousemove', function(e){if(startY===null)return;offset=startOffset+(e.clientY-startY);setOffset(offset,false);});
+  document.addEventListener('mouseup', function(){if(startY!==null){snapTo(offset);startY=null;}});
+  drum.addEventListener('touchstart', function(e){startY=e.touches[0].clientY;startOffset=offset;e.preventDefault();},{passive:false});
+  drum.addEventListener('touchmove', function(e){offset=startOffset+(e.touches[0].clientY-startY);setOffset(offset,false);e.preventDefault();},{passive:false});
+  drum.addEventListener('touchend', function(){snapTo(offset);startY=null;});
+  drum.addEventListener('wheel', function(e){e.preventDefault();offset-=Math.sign(e.deltaY)*WP_ITEM_H;snapTo(offset);},{passive:false});
+  return {
+    get: function(){ return current; },
+    reset: function(v){ current=v; offset=-v*WP_ITEM_H; setOffset(offset,false); updateSelected(v); }
+  };
+}
+
+function wpTypeBlur(input) {
+  const raw = input.value.replace(/[^0-9]/g,'');
+  if(!raw) return;
+  let h=0, m=0;
+  if(raw.length===1)      { m=parseInt(raw); }
+  else if(raw.length===2) { m=parseInt(raw); }
+  else if(raw.length===3) { h=parseInt(raw[0]); m=parseInt(raw.slice(1)); }
+  else                    { h=parseInt(raw.slice(0,2)); m=parseInt(raw.slice(2)); }
+  if(m>59||h>23){ input.value=''; return; }
+  input.value = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  if(_wpHourCtrl) _wpHourCtrl.reset(h);
+  if(_wpMinCtrl) _wpMinCtrl.reset(m);
+}
+
+function openWakePicker() {
+  const modal = document.getElementById('wake-picker-modal');
+  if(!modal) return;
+  modal.style.display = 'flex';
+  const base = window._tonightBase;
+  const wakeMins = base && base.adjustedWake ? base.adjustedWake : (base ? base.bedMins + base.sleepTarget*60 : 6*60+30);
+  const wakeH = Math.floor(((wakeMins%1440)+1440)%1440/60);
+  const wakeM = Math.round(((wakeMins%60)+60)%60);
+  const typeInput = document.getElementById('wp-type-input');
+  if(typeInput) typeInput.value = String(wakeH).padStart(2,'0')+':'+String(wakeM).padStart(2,'0');
+  if(!_wpHourCtrl) {
+    _wpHourCtrl = buildWpDrum('wp-hour-drum','wp-hour-items',24,function(v){return String(v).padStart(2,'0');},wakeH);
+    _wpMinCtrl = buildWpDrum('wp-min-drum','wp-min-items',60,function(v){return String(v).padStart(2,'0');},wakeM);
+  } else {
+    _wpHourCtrl.reset(wakeH); _wpMinCtrl.reset(wakeM);
+  }
+}
+
+function closeWakePicker(e) {
+  if(!e || e.target===document.getElementById('wake-picker-modal'))
+    document.getElementById('wake-picker-modal').style.display='none';
+}
+
+function confirmWakeTime() {
+  const typeInput = document.getElementById('wp-type-input');
+  let h, m;
+  if(typeInput && typeInput.value.includes(':')) {
+    const p = typeInput.value.split(':');
+    h=parseInt(p[0]); m=parseInt(p[1]);
+  } else {
+    h = _wpHourCtrl ? _wpHourCtrl.get() : 6;
+    m = _wpMinCtrl ? _wpMinCtrl.get() : 30;
+  }
+  const base = window._tonightBase;
+  if(!base) return;
+  base.adjustedWake = h*60+m;
+  const newBed = base.adjustedWake - base.sleepTarget*60;
+  updateTonightDisplay(newBed, base.adjustedWake, base.sleepTarget);
+  document.getElementById('wake-picker-modal').style.display='none';
+}
+
+// ── TONIGHT SUGGESTION ───────────────────────────────────
+function minsToTimeStr(m) {
+  m = ((Math.round(m)%(24*60))+24*60)%(24*60);
+  return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+}
+
+function updateTonightDisplay(bedMins, wakeMins, sleepHrs) {
+  const bedEl = document.getElementById('tonight-bed');
+  const wakeEl = document.getElementById('tonight-wake');
+  const hrsEl = document.getElementById('tonight-sleep-hrs');
+  if(bedEl) bedEl.textContent = minsToTimeStr(bedMins);
+  if(wakeEl) wakeEl.textContent = minsToTimeStr(wakeMins);
+  if(hrsEl) hrsEl.textContent = sleepHrs.toFixed(1)+'h sleep';
+}
+
+function renderTonightSuggestion() {
+  const card = document.getElementById('tonight-card');
+  const reasonsEl = document.getElementById('tonight-reasons');
+  if(!card || !reasonsEl) return;
+  const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
+  const today = sorted[0];
+  let targetMins = 22*60 + 15;
+  const reasons = [];
+  const todayTags = (today?.tags||'').toLowerCase();
+  const isHeavy = todayTags.includes('crossfit')||todayTags.includes('lower')||todayTags.includes('upper');
+  const isModerate = todayTags.includes('swim')||todayTags.includes('bike')||todayTags.includes('run');
+  if(isHeavy)    { targetMins-=15; reasons.push({text:'Heavy training today → bed 15min earlier',col:'var(--or)'}); }
+  else if(isModerate) { targetMins-=10; reasons.push({text:'Moderate training today → bed 10min earlier',col:'var(--or)'}); }
+  const last7 = sorted.slice(0,7).filter(function(m){return m.sleep&&m.sleep>0;});
+  let debtHrs = 0;
+  if(last7.length>=3) {
+    const totalSlept = last7.reduce(function(s,m){return s+parseFloat(m.sleep);},0);
+    debtHrs = (8.5*last7.length)-totalSlept;
+  }
+  if(debtHrs>2)      { targetMins-=15; reasons.push({text:debtHrs.toFixed(1)+'h sleep debt → bed 15min earlier',col:'var(--rd)'}); }
+  else if(debtHrs>1) { targetMins-=10; reasons.push({text:debtHrs.toFixed(1)+'h sleep debt → bed 10min earlier',col:'var(--or)'}); }
+  targetMins = Math.max(21*60, targetMins);
+  const sleepTarget = debtHrs>2 ? 9.0 : debtHrs>1 ? 8.5 : 8.5;
+  const wakeMins = targetMins + sleepTarget*60;
+  if(reasons.length===0) reasons.push({text:'On track — standard target based on your optimal window',col:'var(--gn)'});
+  reasonsEl.innerHTML = reasons.map(function(r){
+    return '<div style="font-size:.72rem;color:'+r.col+';display:flex;align-items:center;gap:.4rem;"><span style="width:5px;height:5px;border-radius:50%;background:'+r.col+';flex-shrink:0;display:inline-block;"></span>'+r.text+'</div>';
+  }).join('');
+  window._tonightBase = {bedMins:targetMins, sleepTarget:sleepTarget};
+  updateTonightDisplay(targetMins, wakeMins, sleepTarget);
+}
+
 // ── RECOVERY DASHBOARD ───────────────────────────────────
 let dowMetric = 'recovery';
 let dowTimeFilter = 'all';
@@ -2754,6 +2966,7 @@ let multiYearChart = null;
 
 function renderRecoveryDash() {
   renderSleepPerformance();
+  renderTonightSuggestion();
   renderAnomalyDetection();
   renderDow('recovery');
   renderMultiYear();
