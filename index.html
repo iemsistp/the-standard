@@ -2768,15 +2768,12 @@ function renderSleepPerformance() {
   const spBar = el('sp-bar'); if(spBar) spBar.style.width = durPct + '%';
   const spDur = el('sp-dur'); if(spDur) spDur.textContent = durStr;
 
-  // Sleep performance % (Garmin sleep score or duration-based)
+  // Sleep performance = duration vs 8h target (always %)
   const sleepPctEl = el('sp-sleep-pct');
-  if(sleepPctEl) {
-    if(last.sleep_score) sleepPctEl.textContent = last.sleep_score + '/100';
-    else if(sleepHrs > 0) sleepPctEl.textContent = durPct + '%';
-    else sleepPctEl.textContent = '—';
-  }
+  if(sleepPctEl) sleepPctEl.textContent = sleepHrs > 0 ? durPct + '%' : '—';
 
-  const spScore = el('sp-score'); if(spScore) spScore.textContent = last.sleep_score || '—';
+  // Sleep score = Garmin composite 0-100
+  const spScore = el('sp-score'); if(spScore) spScore.textContent = last.sleep_score ? last.sleep_score + '/100' : '—';
 
   // 7-day sleep debt (target 8h/night)
   const spDebt = el('sp-debt');
