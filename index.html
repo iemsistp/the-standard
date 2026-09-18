@@ -316,12 +316,12 @@ if('serviceWorker' in navigator) {
           <div class="ig"><label class="il">Sleep Score</label><input type="number" class="if" id="m-ss" placeholder="78"></div>
           <div class="ig">
             <label class="il">Duration</label>
-            <input type="text" class="if" id="m-sl" placeholder="830" maxlength="5" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)">
+            <input type="text" class="if" id="m-sl" placeholder="830" maxlength="5" inputmode="numeric" pattern="[0-9]{1,2}:[0-5][0-9]" style="font-family:'JetBrains Mono',monospace;" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)">
           </div>
-          <div class="ig"><label class="il">Deep</label><input type="text" class="if" id="m-sd" placeholder="130" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)"></div>
-          <div class="ig"><label class="il">Light</label><input type="text" class="if" id="m-sl2" placeholder="320" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)"></div>
-          <div class="ig"><label class="il">REM</label><input type="text" class="if" id="m-sr" placeholder="140" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)"></div>
-          <div class="ig"><label class="il">Awake</label><input type="text" class="if" id="m-saw" placeholder="020" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)"></div>
+          <div class="ig"><label class="il">Deep</label><input type="text" class="if" id="m-sd" placeholder="130" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">Light</label><input type="text" class="if" id="m-sl2" placeholder="320" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">REM</label><input type="text" class="if" id="m-sr" placeholder="140" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
+          <div class="ig"><label class="il">Awake</label><input type="text" class="if" id="m-saw" placeholder="020" maxlength="5" inputmode="numeric" oninput="fmtSleepInput(this)" onblur="fmtSleepBlur(this)"></div>
           <div class="ig"><label class="il">Resting HR</label><input type="number" class="if" id="m-rhr" placeholder="52"></div>
           <div class="ig"><label class="il">Overnight HRV</label><input type="number" class="if" id="m-ohrv" placeholder="62" step="0.1"></div>
         </div>
@@ -994,16 +994,25 @@ function updateWeightUnit(){
 }
 
 function fmtSleepInput(el){
-  // Clock-style masked input — type 830 → 08:30, 30 → 00:30, 5 → 00:05
+  // Only strip non-numeric/colon chars while typing — format on blur
+  el.value = el.value.replace(/[^0-9:]/g,'');
+}
+
+function fmtSleepBlur(el){
+  // On blur: interpret raw digits as HHMM, format to HH:MM
   const raw = el.value.replace(/[^0-9]/g,'').slice(0,4);
   if(!raw){ el.value=''; return; }
   const padded = raw.padStart(4,'0');
   const h = padded.slice(0,2), m = padded.slice(2,4);
-  if(parseInt(m) > 59){ el.value = el._prev||''; return; }
-  el._prev = h+':'+m;
+  if(parseInt(m) > 59){
+    // Try interpreting as H:MM — e.g. "930" = 9h30m
+    const h2 = raw.slice(0, raw.length-2) || '0';
+    const m2 = raw.slice(-2);
+    if(parseInt(m2) <= 59){ el.value = h2.padStart(2,'0')+':'+m2; return; }
+    el.value = '';
+    return;
+  }
   el.value = h+':'+m;
-  const pos = el.value.length;
-  el.setSelectionRange(pos,pos);
 }
 
 function formatSleep(hrs){
