@@ -666,6 +666,38 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
   </div>
 </div>
 <div id="target-tip" style="display:none;position:fixed;"></div>
+
+<!-- WAKE TIME PICKER MODAL -->
+<div id="wake-picker-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;align-items:flex-end;justify-content:center;" onclick="closeWakePicker(event)">
+  <div style="background:var(--sf);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:1.25rem 1.5rem 2rem;" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;color:var(--mt);">Wake time</div>
+      <button onclick="closeWakePicker()" style="background:none;border:none;color:var(--mt);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center;justify-content:center;margin-bottom:1.25rem;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-size:11px;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">hour</div>
+        <div id="wp-hour-drum" style="height:132px;overflow:hidden;position:relative;width:72px;cursor:ns-resize;user-select:none;">
+          <div style="position:absolute;top:50%;transform:translateY(-50%);left:4px;right:4px;height:44px;border-radius:6px;background:var(--sf2);border:0.5px solid var(--bd);pointer-events:none;z-index:1;"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:44px;background:linear-gradient(to bottom,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(to top,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div id="wp-hour-items" style="display:flex;flex-direction:column;align-items:center;"></div>
+        </div>
+      </div>
+      <div style="font-size:28px;font-weight:500;color:var(--tx);padding-top:20px;">:</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div style="font-size:11px;color:var(--mt);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">min</div>
+        <div id="wp-min-drum" style="height:132px;overflow:hidden;position:relative;width:72px;cursor:ns-resize;user-select:none;">
+          <div style="position:absolute;top:50%;transform:translateY(-50%);left:4px;right:4px;height:44px;border-radius:6px;background:var(--sf2);border:0.5px solid var(--bd);pointer-events:none;z-index:1;"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:44px;background:linear-gradient(to bottom,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:44px;background:linear-gradient(to top,var(--sf) 0%,transparent 100%);z-index:2;pointer-events:none;"></div>
+          <div id="wp-min-items" style="display:flex;flex-direction:column;align-items:center;"></div>
+        </div>
+      </div>
+    </div>
+    <button onclick="confirmWakeTime()" style="width:100%;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;padding:.65rem;border-radius:8px;border:none;background:var(--cy);color:#000;cursor:pointer;">Set Wake Time</button>
+  </div>
+</div>
 </main>
 
 
@@ -786,12 +818,9 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
           <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;color:var(--mt);" id="tonight-wake">—</div>
           <div style="font-size:.62rem;color:var(--mt);text-align:center;">wake</div>
         </div>
-        <div style="margin-left:auto;display:flex;flex-direction:column;gap:.3rem;">
+        <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:.2rem;">
           <div style="font-size:.62rem;color:var(--mt);">adjust wake</div>
-          <div style="display:flex;gap:.3rem;">
-            <button onclick="adjustWake(-30)" style="font-size:.7rem;padding:.2rem .5rem;border-radius:5px;border:1px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">-30m</button>
-            <button onclick="adjustWake(30)" style="font-size:.7rem;padding:.2rem .5rem;border-radius:5px;border:1px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">+30m</button>
-          </div>
+          <button onclick="openWakePicker()" id="wake-picker-btn" style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--cy);background:none;border:0.5px solid var(--bd);border-radius:6px;padding:.15rem .6rem;cursor:pointer;letter-spacing:1px;" id="wake-picker-trigger">tap</button>
           <div style="font-size:.6rem;color:var(--mt);font-family:'JetBrains Mono',monospace;" id="tonight-sleep-hrs">8.5h sleep</div>
         </div>
       </div>
@@ -2768,6 +2797,102 @@ async function acknowledgeAnomaly(date) {
   renderAnomalyDetection();
 }
 
+
+// ── WAKE TIME SCROLL PICKER ───────────────────────────────
+const WP_ITEM_H = 44;
+let _wpHour = 6, _wpMin = 30;
+let _wpHourCtrl = null, _wpMinCtrl = null;
+
+function buildWpDrum(drumId, itemsId, count, fmt, initVal) {
+  const items = document.getElementById(itemsId);
+  const drum = document.getElementById(drumId);
+  if(!items || !drum) return { get: () => initVal };
+  const pad = 2;
+  const allVals = [];
+  for(let i=-pad; i<count+pad; i++) allVals.push(((i%count)+count)%count);
+  items.innerHTML = allVals.map((v,i) => {
+    const sel = i === pad + initVal;
+    return '<div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:'+(sel?'26':'20')+'px;font-weight:500;color:'+(sel?'var(--tx)':'var(--mt)')+';width:72px;flex-shrink:0;transition:color .1s,font-size .1s;" data-v="'+v+'">'+fmt(v)+'</div>';
+  }).join('');
+
+  let current = initVal;
+  let offset = -initVal * WP_ITEM_H;
+  let startY = null, startOffset = null;
+
+  function setOffset(o, animate) {
+    items.style.transition = animate ? 'transform 0.2s ease' : 'none';
+    items.style.transform = 'translateY('+(o + pad*WP_ITEM_H)+'px)';
+  }
+
+  function updateSelected(val) {
+    current = ((val%count)+count)%count;
+    items.querySelectorAll('div[data-v]').forEach((el,i) => {
+      const sel = i === pad + current;
+      el.style.fontSize = sel ? '26px' : '20px';
+      el.style.color = sel ? 'var(--tx)' : 'var(--mt)';
+    });
+  }
+
+  function snapTo(rawOff) {
+    const snapped = Math.round(rawOff/WP_ITEM_H)*WP_ITEM_H;
+    offset = snapped;
+    setOffset(offset, true);
+    updateSelected(-snapped/WP_ITEM_H);
+  }
+
+  setOffset(offset, false);
+
+  drum.addEventListener('mousedown', e => { startY=e.clientY; startOffset=offset; });
+  document.addEventListener('mousemove', e => {
+    if(startY===null) return;
+    offset = startOffset + (e.clientY-startY);
+    setOffset(offset, false);
+  });
+  document.addEventListener('mouseup', () => { if(startY!==null){snapTo(offset);startY=null;} });
+  drum.addEventListener('touchstart', e => { startY=e.touches[0].clientY; startOffset=offset; e.preventDefault(); },{passive:false});
+  drum.addEventListener('touchmove', e => { offset=startOffset+(e.touches[0].clientY-startY); setOffset(offset,false); e.preventDefault(); },{passive:false});
+  drum.addEventListener('touchend', () => { snapTo(offset); startY=null; });
+  drum.addEventListener('wheel', e => { e.preventDefault(); offset -= Math.sign(e.deltaY)*WP_ITEM_H; snapTo(offset); },{passive:false});
+
+  return { get: () => current, reset: (v) => { current=v; offset=-v*WP_ITEM_H; setOffset(offset,false); updateSelected(v); } };
+}
+
+function openWakePicker() {
+  const modal = document.getElementById('wake-picker-modal');
+  if(!modal) return;
+  modal.style.display = 'flex';
+  const base = window._tonightBase;
+  const wakeMins = base?.adjustedWake || (base ? base.bedMins + base.sleepTarget*60 : 6*60+30);
+  const wakeH = Math.floor(((wakeMins%1440)+1440)%1440/60);
+  const wakeM = Math.round(((wakeMins%60)+60)%60);
+  _wpHour = wakeH; _wpMin = wakeM;
+  if(!_wpHourCtrl) {
+    _wpHourCtrl = buildWpDrum('wp-hour-drum','wp-hour-items',24,v=>String(v).padStart(2,'0'),wakeH);
+    _wpMinCtrl = buildWpDrum('wp-min-drum','wp-min-items',60,v=>String(v).padStart(2,'0'),wakeM);
+  } else {
+    _wpHourCtrl.reset(wakeH);
+    _wpMinCtrl.reset(wakeM);
+  }
+}
+
+function closeWakePicker(e) {
+  if(!e || e.target===document.getElementById('wake-picker-modal'))
+    document.getElementById('wake-picker-modal').style.display='none';
+}
+
+function confirmWakeTime() {
+  const h = _wpHourCtrl ? _wpHourCtrl.get() : _wpHour;
+  const m = _wpMinCtrl ? _wpMinCtrl.get() : _wpMin;
+  const base = window._tonightBase;
+  if(!base) return;
+  base.adjustedWake = h*60+m;
+  const newBed = base.adjustedWake - base.sleepTarget*60;
+  updateTonightDisplay(newBed, base.adjustedWake, base.sleepTarget);
+  // Update wake btn label
+  const btn = document.getElementById('wake-picker-btn');
+  if(btn) btn.textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  document.getElementById('wake-picker-modal').style.display='none';
+}
 
 // ── TONIGHT SUGGESTION ───────────────────────────────────
 function renderTonightSuggestion() {
