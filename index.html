@@ -772,6 +772,35 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
     <div id="anomaly-body"></div>
   </div>
 
+  <!-- TONIGHT SUGGESTION -->
+  <div class="cd" style="margin-bottom:1rem;" id="tonight-card">
+    <div class="ct">Tonight's Target</div>
+    <div id="tonight-body">
+      <div style="display:flex;align-items:baseline;gap:.75rem;margin-bottom:.5rem;">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;color:var(--cy);" id="tonight-bed">—</div>
+          <div style="font-size:.62rem;color:var(--mt);text-align:center;">bed</div>
+        </div>
+        <div style="font-size:1.5rem;color:var(--mt);padding-bottom:.4rem;">→</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;line-height:1;color:var(--mt);" id="tonight-wake">—</div>
+          <div style="font-size:.62rem;color:var(--mt);text-align:center;">wake</div>
+        </div>
+        <div style="margin-left:auto;display:flex;flex-direction:column;gap:.3rem;">
+          <div style="font-size:.62rem;color:var(--mt);">adjust wake</div>
+          <div style="display:flex;gap:.3rem;">
+            <button onclick="adjustWake(-30)" style="font-size:.7rem;padding:.2rem .5rem;border-radius:5px;border:1px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">-30m</button>
+            <button onclick="adjustWake(30)" style="font-size:.7rem;padding:.2rem .5rem;border-radius:5px;border:1px solid var(--bd);background:none;color:var(--mt);cursor:pointer;">+30m</button>
+          </div>
+          <div style="font-size:.6rem;color:var(--mt);font-family:'JetBrains Mono',monospace;" id="tonight-sleep-hrs">8.5h sleep</div>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--bd);margin-bottom:.6rem;"></div>
+      <div id="tonight-reasons" style="display:flex;flex-direction:column;gap:.3rem;"></div>
+      <div style="margin-top:.65rem;font-size:.65rem;color:var(--mt);font-family:'JetBrains Mono',monospace;">Based on 1,170 nights · bedtime r=-0.527 · optimal duration 8.5–9h</div>
+    </div>
+  </div>
+
   <!-- DAY OF WEEK -->
   <div class="cd" style="margin-bottom:1rem;">
     <div class="ct" style="display:flex;justify-content:space-between;align-items:center;">
@@ -2740,6 +2769,107 @@ async function acknowledgeAnomaly(date) {
 }
 
 
+// ── TONIGHT SUGGESTION ───────────────────────────────────
+function renderTonightSuggestion() {
+  const card = document.getElementById('tonight-card');
+  const bedEl = document.getElementById('tonight-bed');
+  const wakeEl = document.getElementById('tonight-wake');
+  const reasonsEl = document.getElementById('tonight-reasons');
+  if(!card || !bedEl) return;
+
+  const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
+  const today = sorted[0];
+
+  // Base target: 22:15 (optimal window center from 1,170-night analysis)
+  let targetMins = 22*60 + 15;
+  const reasons = [];
+
+  // --- Strain adjustment ---
+  // WHOOP Day Strain isn't in metrics, but we can proxy via workout tags
+  const todayTags = (today?.tags || '').toLowerCase();
+  const isHeavy = todayTags.includes('crossfit') || todayTags.includes('lower') || todayTags.includes('upper');
+  const isModerate = todayTags.includes('swim') || todayTags.includes('bike') || todayTags.includes('run');
+  if(isHeavy) {
+    targetMins -= 15;
+    reasons.push({ text: 'Heavy training today → bed 15min earlier', col: 'var(--or)' });
+  } else if(isModerate) {
+    targetMins -= 10;
+    reasons.push({ text: 'Moderate training today → bed 10min earlier', col: 'var(--or)' });
+  }
+
+  // --- Sleep debt ---
+  const last7 = sorted.slice(0, 7).filter(function(m){ return m.sleep && m.sleep > 0; });
+  let debtHrs = 0;
+  if(last7.length >= 3) {
+    const totalSlept = last7.reduce(function(s,m){ return s + parseFloat(m.sleep); }, 0);
+    debtHrs = (8 * last7.length) - totalSlept;
+  }
+  if(debtHrs > 2) {
+    targetMins -= 15;
+    reasons.push({ text: debtHrs.toFixed(1) + 'h sleep debt → bed 15min earlier', col: 'var(--rd)' });
+  } else if(debtHrs > 1) {
+    targetMins -= 10;
+    reasons.push({ text: debtHrs.toFixed(1) + 'h sleep debt → bed 10min earlier', col: 'var(--or)' });
+  }
+
+  // Stress adjustment removed — not enough Garmin stress data yet to validate
+  // Will re-add once we have 90+ days of Garmin stress scores
+
+  // Cap at 21:00
+  targetMins = Math.max(21*60, targetMins);
+
+  // Wake time: bedtime + 8h (or 8.5h if in debt)
+  const sleepTarget = debtHrs > 2 ? 9.0 : debtHrs > 1 ? 8.5 : 8.5; // your data: 8.5-9h optimal (r=0.417, n=1167)
+  const wakeMins = targetMins + sleepTarget * 60;
+
+  function mT(m) {
+    m = ((Math.round(m) % (24*60)) + 24*60) % (24*60);
+    return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+  }
+
+  bedEl.textContent = mT(targetMins);
+  wakeEl.textContent = mT(wakeMins);
+
+  if(reasons.length === 0) {
+    reasons.push({ text: 'On track — standard target based on your optimal window', col: 'var(--gn)' });
+  }
+
+  reasonsEl.innerHTML = reasons.map(function(r) {
+    return '<div style="font-size:.72rem;color:' + r.col + ';display:flex;align-items:center;gap:.4rem;">'
+      + '<span style="width:5px;height:5px;border-radius:50%;background:' + r.col + ';flex-shrink:0;display:inline-block;"></span>'
+      + r.text + '</div>';
+  }).join('');
+
+  // Store base values for wake adjuster
+  window._tonightBase = { bedMins: targetMins, sleepTarget: sleepTarget };
+  updateTonightDisplay(targetMins, wakeMins, sleepTarget);
+}
+
+function minsToTimeStr(m) {
+  m = ((Math.round(m) % (24*60)) + 24*60) % (24*60);
+  return String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0');
+}
+
+function updateTonightDisplay(bedMins, wakeMins, sleepHrs) {
+  const bedEl = document.getElementById('tonight-bed');
+  const wakeEl = document.getElementById('tonight-wake');
+  const hrsEl = document.getElementById('tonight-sleep-hrs');
+  if(bedEl) bedEl.textContent = minsToTimeStr(bedMins);
+  if(wakeEl) wakeEl.textContent = minsToTimeStr(wakeMins);
+  if(hrsEl) hrsEl.textContent = sleepHrs.toFixed(1) + 'h sleep';
+}
+
+function adjustWake(deltaMins) {
+  const base = window._tonightBase;
+  if(!base) return;
+  // Shift wake time — adjust bedtime to maintain sleep duration
+  // Wake time barely affects recovery (r=-0.06) so we lock sleep hrs and shift both
+  base.adjustedWake = (base.adjustedWake || (base.bedMins + base.sleepTarget*60)) + deltaMins;
+  const newBed = base.adjustedWake - base.sleepTarget*60;
+  const newSleep = (base.adjustedWake - newBed) / 60;
+  updateTonightDisplay(newBed, base.adjustedWake, newSleep);
+}
+
 // ── RECOVERY DASHBOARD ───────────────────────────────────
 let dowMetric = 'recovery';
 let dowTimeFilter = 'all';
@@ -2747,6 +2877,7 @@ let multiYearChart = null;
 
 function renderRecoveryDash() {
   renderSleepPerformance();
+  renderTonightSuggestion();
   renderAnomalyDetection();
   renderDow('recovery');
   renderMultiYear();
@@ -2796,7 +2927,7 @@ function renderSleepPerformance() {
     const last7 = sorted.slice(0, 7).filter(function(m){return m.sleep && m.sleep > 0;});
     if(last7.length >= 3) {
       const totalSlept = last7.reduce(function(s,m){return s+parseFloat(m.sleep);},0);
-      const debt = (8 * last7.length) - totalSlept;
+      const debt = (8.5 * last7.length) - totalSlept; // 8.5h target from data (n=1167)
       spDebt.textContent = (debt > 0 ? '-' : '+') + Math.abs(debt).toFixed(1) + 'h';
       spDebt.style.color = debt > 4 ? 'var(--rd)' : debt > 1 ? 'var(--or)' : 'var(--gn)';
     } else { spDebt.textContent = '—'; }
