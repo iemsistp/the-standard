@@ -3003,9 +3003,8 @@ function renderRecoveryDash() {
 function renderSleepPerformance() {
   // ── Week helpers (Sun–Sat) ─────────────────────────────
   function getWeekBounds(offset) {
-    // offset=0 = this week (Sun–today), offset=-1 = last week (prev Sun–Sat)
     const now = new Date();
-    const dow = now.getDay(); // 0=Sun
+    const dow = now.getDay();
     const thisSun = new Date(now); thisSun.setDate(now.getDate() - dow); thisSun.setHours(0,0,0,0);
     const start = new Date(thisSun); start.setDate(thisSun.getDate() + offset*7);
     const end = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23,59,59,999);
@@ -3018,6 +3017,8 @@ function renderSleepPerformance() {
   const thisWeek = getWeekBounds(0);
   const lastWeek = getWeekBounds(-1);
   const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
+  const last = sorted.find(function(m){return m.recovery||m.sleep||m.sleep_score;});
+  if(!last) return;
   const thisWkEntries = sorted.filter(m => inWeek(m.date, thisWeek));
   const lastWkEntries = sorted.filter(m => inWeek(m.date, lastWeek));
   // ── Helpers ───────────────────────────────────────────
@@ -3051,8 +3052,6 @@ function renderSleepPerformance() {
   }
 
   // ── Sleep score: this week avg vs last week avg ────────
-  const last = sorted.find(function(m){return m.recovery||m.sleep||m.sleep_score;});
-  if(!last) return;
   function avgField(entries, field) {
     const vals = entries.map(m=>parseFloat(m[field])||0).filter(Boolean);
     return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
@@ -3065,84 +3064,63 @@ function renderSleepPerformance() {
   if(spScoreAvg) spScoreAvg.textContent = lastScore ? 'last wk avg '+Math.round(lastScore) : 'last wk —';
 
   // ── Duration: this week avg vs last week avg ────────────
-  const OPTIMAL = 8.5; // data-backed optimal (r=0.417, n=1167)
+  const OPTIMAL = 8.5;
   const thisDur = avgField(thisWkEntries, 'sleep');
   const lastDur = avgField(lastWkEntries, 'sleep');
   const spDur = el('sp-dur');
   if(spDur) spDur.textContent = thisDur ? hrsToHM(thisDur) : '—';
   const spDurAvg = el('sp-dur-avg');
   if(spDurAvg) spDurAvg.textContent = lastDur ? 'last wk avg '+hrsToHM(lastDur) : 'last wk —';
-
-  // ── vs optimal bar: use this week avg ─────────────────
   const durForBar = thisDur || (parseFloat(last.sleep)||0);
   const durPct = durForBar>0 ? Math.min(100,Math.round((durForBar/OPTIMAL)*100)) : 0;
   const spBar = el('sp-bar'); if(spBar) spBar.style.width=durPct+'%';
   const spPct = el('sp-sleep-pct'); if(spPct) spPct.textContent = durForBar>0 ? durPct+'%' : '—';
 
   // ── Sleep debt: this week vs last week (Sun–Sat) ────────
-  const thisWkSleep = thisWkEntries.filter(m=>m.sleep&&m.sleep>0);
-  const lastWkSleep = lastWkEntries.filter(m=>m.sleep&&m.sleep>0);
-  const spDebt = el('sp-debt');
   function calcDebt(entries) {
-    if(!entries.length) return null;
-    const total = entries.reduce((s,m)=>s+parseFloat(m.sleep),0);
-    return (OPTIMAL * entries.length) - total;
+    const sl = entries.filter(m=>m.sleep&&m.sleep>0);
+    if(!sl.length) return null;
+    return (OPTIMAL * sl.length) - sl.reduce((s,m)=>s+parseFloat(m.sleep),0);
   }
-  const thisDebt = calcDebt(thisWkSleep);
-  const lastDebt = calcDebt(lastWkSleep);
+  const thisDebt = calcDebt(thisWkEntries);
+  const lastDebt = calcDebt(lastWkEntries);
+  const spDebt = el('sp-debt');
   if(spDebt && thisDebt !== null) {
-    if(thisDebt > 0.25) {
-      spDebt.textContent = '-'+hrsToHM(thisDebt);
-      spDebt.style.color = thisDebt>3?'var(--rd)':thisDebt>1?'var(--or)':'var(--mt)';
-    } else if(thisDebt < -1) {
-      spDebt.textContent = '+'+hrsToHM(Math.abs(thisDebt));
-      spDebt.style.color = 'var(--mt)';
-    } else {
-      spDebt.textContent = '✓ on track';
-      spDebt.style.color = 'var(--gn)';
-    }
+    if(thisDebt>0.25){spDebt.textContent='-'+hrsToHM(thisDebt);spDebt.style.color=thisDebt>3?'var(--rd)':thisDebt>1?'var(--or)':'var(--mt)';}
+    else if(thisDebt<-1){spDebt.textContent='+'+hrsToHM(Math.abs(thisDebt));spDebt.style.color='var(--mt)';}
+    else{spDebt.textContent='✓ on track';spDebt.style.color='var(--gn)';}
     const spDebtPrev = el('sp-debt-prev');
-    if(spDebtPrev && lastDebt !== null) {
-      spDebtPrev.textContent = 'last wk: '+(lastDebt>0?'-':'+')+(hrsToHM(Math.abs(lastDebt)));
-    } else if(spDebtPrev) spDebtPrev.textContent = 'last wk —';
+    if(spDebtPrev) spDebtPrev.textContent = lastDebt!==null ? 'last wk: '+(lastDebt>0?'-':'+')+hrsToHM(Math.abs(lastDebt)) : 'last wk —';
   } else if(spDebt) spDebt.textContent='—';
 
   // ── Bedtime + wake: last night + last week avg ──────────
   const spBed = el('sp-bedtime'); if(spBed) spBed.textContent=last.bedtime||'—';
   const spWake = el('sp-waketime'); if(spWake) spWake.textContent=last.wake_time||'—';
-
-  // Last week avg bedtime
   const lastWkBedMins = lastWkEntries.filter(m=>m.bedtime).map(m=>timeToMins(m.bedtime)).filter(v=>v!==null);
   const spAvgBed = el('sp-avg-bed');
-  if(spAvgBed && lastWkBedMins.length>=2) {
-    const avgBed = lastWkBedMins.reduce((a,b)=>a+b,0)/lastWkBedMins.length;
-    spAvgBed.textContent = 'last wk avg '+minsToTime(avgBed);
-  } else if(spAvgBed) spAvgBed.textContent='last wk —';
-
-  // Last week avg wake time
+  if(spAvgBed && lastWkBedMins.length>=2) { const ab=lastWkBedMins.reduce((a,b)=>a+b,0)/lastWkBedMins.length; spAvgBed.textContent='last wk avg '+minsToTime(ab); }
+  else if(spAvgBed) spAvgBed.textContent='last wk —';
   const lastWkWakeMins = lastWkEntries.filter(m=>m.wake_time).map(m=>timeToMins(m.wake_time)).filter(v=>v!==null);
   const spAvgWake = el('sp-avg-wake');
-  if(spAvgWake && lastWkWakeMins.length>=2) {
-    const avgWake = lastWkWakeMins.reduce((a,b)=>a+b,0)/lastWkWakeMins.length;
-    spAvgWake.textContent = 'last wk avg '+minsToTime(avgWake);
-  } else if(spAvgWake) spAvgWake.textContent='last wk —';
+  if(spAvgWake && lastWkWakeMins.length>=2) { const aw=lastWkWakeMins.reduce((a,b)=>a+b,0)/lastWkWakeMins.length; spAvgWake.textContent='last wk avg '+minsToTime(aw); }
+  else if(spAvgWake) spAvgWake.textContent='last wk —';
 
   // ── Consistency: this week vs last week ─────────────────
   const spCons = el('sp-consistency');
   const spConsCtx = el('sp-cons-ctx');
   function calcConsistency(entries) {
     const beds = entries.filter(m=>m.bedtime).map(m=>timeToMins(m.bedtime)).filter(v=>v!==null);
-    if(beds.length < 2) return null;
+    if(beds.length<2) return null;
     const mean = beds.reduce((a,b)=>a+b,0)/beds.length;
     const sd = Math.sqrt(beds.reduce((s,v)=>s+Math.pow(v-mean,2),0)/beds.length);
     return Math.max(0, Math.round(100-(sd/90)*100));
   }
   const thisCons = calcConsistency(thisWkEntries);
   const lastCons = calcConsistency(lastWkEntries);
-  if(spCons && thisCons !== null) {
+  if(spCons && thisCons!==null) {
     spCons.textContent = thisCons+'%';
     spCons.style.color = thisCons>=80?'var(--gn)':thisCons>=60?'var(--or)':'var(--rd)';
-    if(spConsCtx) spConsCtx.textContent = lastCons !== null ? 'last wk '+lastCons+'%' : 'last wk —';
+    if(spConsCtx) spConsCtx.textContent = lastCons!==null ? 'last wk '+lastCons+'%' : 'last wk —';
   } else if(spCons) { spCons.textContent='—'; if(spConsCtx) spConsCtx.textContent=''; }
 
   // ── Personal banding RHR + HRV ────────────────────────
