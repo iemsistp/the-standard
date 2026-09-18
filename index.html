@@ -297,7 +297,7 @@ if('serviceWorker' in navigator) {
   <div class="cd" style="margin-bottom:1.1rem;">
     <div class="ct">Daily Log</div>
     <div class="lg">
-      <div class="ig ig-date"><label class="il">Date</label><input type="date" class="if" id="m-date" style="width:100%;min-width:0;"></div>
+      <div class="ig ig-date"><label class="il">Date</label><input type="date" class="if" id="m-date" style="width:100%;min-width:0;" onchange="loadEntryIntoForm(this.value, true)"></div>
       <div class="ig" style="position:relative;">
         <label class="il">Weight</label>
         <div style="display:flex;gap:.4rem;align-items:stretch;">
@@ -1105,9 +1105,15 @@ function formatSleep(hrs){
   return h+':'+(m<10?'0':'')+m;
 }
 
-function loadEntryIntoForm(dateStr){
+function loadEntryIntoForm(dateStr, silent){
   const entry = metrics.find(m => m.date === dateStr);
-  if(!entry) return;
+  if(!entry) {
+    // Clear fields if no entry for this date
+    ['m-wt','m-sl','m-re','m-bu','m-co','m-pr','m-ca','m-fa','m-no','m-tags'].forEach(id=>{const e=el(id);if(e)e.value='';});
+    document.querySelectorAll('#tag-picker .tag-btn').forEach(b=>b.classList.remove('active'));
+    const btn=el('copy-morning-btn');if(btn)btn.style.display='none';
+    return;
+  }
   el('m-date').value = dateStr;
   // Weight — show in current unit
   const unit = v('m-wt-unit') || 'kg';
@@ -1166,7 +1172,7 @@ function loadEntryIntoForm(dateStr){
   if(btn) btn.style.display = 'inline-flex';
   // Scroll to form
   el('m-date').scrollIntoView({behavior:'smooth', block:'center'});
-  toast('Loaded ' + dateStr + ' — edit and Save to update');
+  if(!silent) toast('Loaded ' + dateStr + ' — edit and Save to update');
 }
 
 function toggleTag(btn){
