@@ -734,17 +734,17 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
 
     <!-- Sleep section -->
     <div style="background:var(--sf2);border-radius:8px;padding:.7rem .9rem;margin-bottom:.65rem;">
-      <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.6rem;">Sleep</div>
+      <div style="font-size:.62rem;color:var(--mt);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.6rem;font-weight:700;">Sleep</div>
 
       <!-- Row 1: Score (number only) + vs optimal bar (with duration below) -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">Sleep score</div>
+          <div style="font-size:.62rem;color:var(--mt);font-weight:700;">Sleep score</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--tx);margin-top:.15rem;" id="sp-score">—</div>
-          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-score-avg">7d avg —</div>
+          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-score-avg">last wk —</div>
         </div>
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">vs 8.5h optimal</div>
+          <div style="font-size:.62rem;color:var(--mt);font-weight:700;">vs 8.5h optimal</div>
           <div style="display:flex;align-items:center;gap:.4rem;margin-top:.25rem;">
             <div style="flex:1;height:3px;background:var(--bd);border-radius:999px;overflow:hidden;">
               <div id="sp-bar" style="height:100%;border-radius:999px;background:var(--cy);transition:width .6s ease;width:0%;"></div>
@@ -753,7 +753,7 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
           </div>
           <div style="display:flex;gap:.4rem;align-items:baseline;margin-top:.2rem;">
             <span style="font-family:'Bebas Neue',sans-serif;font-size:.9rem;color:var(--tx);" id="sp-dur">—</span>
-            <span style="font-size:.6rem;color:var(--mt);" id="sp-dur-avg">7d avg —</span>
+            <span style="font-size:.6rem;color:var(--mt);" id="sp-dur-avg">last wk —</span>
           </div>
         </div>
       </div>
@@ -761,12 +761,12 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
       <!-- Row 2: 7-day debt -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem;">
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">7-day debt</div>
+          <div style="font-size:.62rem;color:var(--mt);font-weight:700;">7-day debt</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;margin-top:.15rem;" id="sp-debt">—</div>
           <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-debt-prev">prev week —</div>
         </div>
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">Consistency</div>
+          <div style="font-size:.62rem;color:var(--mt);font-weight:700;">Consistency</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;margin-top:.15rem;" id="sp-consistency">—</div>
           <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-cons-ctx">30d bedtime regularity</div>
         </div>
@@ -775,14 +775,14 @@ Add any notes: planning upper hypertrophy after, shoulder felt good..."></textar
       <!-- Row 3: Bedtime + Wake Time -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">Bedtime</div>
+          <div style="font-size:.62rem;color:var(--mt);font-weight:700;">Bedtime</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--tx);margin-top:.15rem;" id="sp-bedtime">—</div>
-          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-avg-bed">7d avg —</div>
+          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-avg-bed">last wk —</div>
         </div>
         <div>
-          <div style="font-size:.62rem;color:var(--mt);">Wake time</div>
+          <div style="font-size:.62rem;color:var(--mt);font-weight:700;">Wake time</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--tx);margin-top:.15rem;" id="sp-waketime">—</div>
-          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-avg-wake">7d avg —</div>
+          <div style="font-size:.6rem;color:var(--mt);margin-top:.1rem;" id="sp-avg-wake">last wk —</div>
         </div>
       </div>
     </div>
@@ -3001,10 +3001,25 @@ function renderRecoveryDash() {
 }
 
 function renderSleepPerformance() {
+  // ── Week helpers (Sun–Sat) ─────────────────────────────
+  function getWeekBounds(offset) {
+    // offset=0 = this week (Sun–today), offset=-1 = last week (prev Sun–Sat)
+    const now = new Date();
+    const dow = now.getDay(); // 0=Sun
+    const thisSun = new Date(now); thisSun.setDate(now.getDate() - dow); thisSun.setHours(0,0,0,0);
+    const start = new Date(thisSun); start.setDate(thisSun.getDate() + offset*7);
+    const end = new Date(start); end.setDate(start.getDate() + 6); end.setHours(23,59,59,999);
+    return {start, end};
+  }
+  function inWeek(dateStr, bounds) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return d >= bounds.start && d <= bounds.end;
+  }
+  const thisWeek = getWeekBounds(0);
+  const lastWeek = getWeekBounds(-1);
   const sorted = [...metrics].sort(function(a,b){return b.date.localeCompare(a.date);});
-  const last = sorted.find(function(m){return m.recovery||m.sleep||m.sleep_score;});
-  if(!last) return;
-
+  const thisWkEntries = sorted.filter(m => inWeek(m.date, thisWeek));
+  const lastWkEntries = sorted.filter(m => inWeek(m.date, lastWeek));
   // ── Helpers ───────────────────────────────────────────
   function hrsToHM(h) {
     if(!h||h<=0) return '—';
@@ -3035,87 +3050,100 @@ function renderSleepPerformance() {
     else                   {badge.textContent='Very Low';badge.style.cssText='background:rgba(160,40,32,.15);color:var(--rd);font-size:.65rem;font-family:JetBrains Mono,monospace;padding:.2rem .6rem;border-radius:999px;font-weight:700;display:inline-block;';}
   }
 
-  // ── Sleep score + 7d avg ──────────────────────────────
+  // ── Sleep score: this week avg vs last week avg ────────
+  const last = sorted.find(function(m){return m.recovery||m.sleep||m.sleep_score;});
+  if(!last) return;
+  function avgField(entries, field) {
+    const vals = entries.map(m=>parseFloat(m[field])||0).filter(Boolean);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  }
+  const thisScore = avgField(thisWkEntries, 'sleep_score');
+  const lastScore = avgField(lastWkEntries, 'sleep_score');
   const spScore = el('sp-score');
-  if(spScore) spScore.textContent = last.sleep_score ? String(last.sleep_score) : '—';
-  const scoreAvg7 = sorted.slice(0,7).map(function(m){return parseFloat(m.sleep_score)||0;}).filter(Boolean);
+  if(spScore) spScore.textContent = thisScore ? Math.round(thisScore).toString() : '—';
   const spScoreAvg = el('sp-score-avg');
-  if(spScoreAvg) spScoreAvg.textContent = scoreAvg7.length>=3 ? '7d avg '+(Math.round(scoreAvg7.reduce(function(a,b){return a+b;},0)/scoreAvg7.length))+'/100' : '7d avg —';
+  if(spScoreAvg) spScoreAvg.textContent = lastScore ? 'last wk avg '+Math.round(lastScore) : 'last wk —';
 
-  // ── Duration + 7d avg ─────────────────────────────────
+  // ── Duration: this week avg vs last week avg ────────────
   const OPTIMAL = 8.5; // data-backed optimal (r=0.417, n=1167)
-  const sleepHrs = parseFloat(last.sleep)||0;
+  const thisDur = avgField(thisWkEntries, 'sleep');
+  const lastDur = avgField(lastWkEntries, 'sleep');
   const spDur = el('sp-dur');
-  if(spDur) spDur.textContent = hrsToHM(sleepHrs);
-  const dur7 = sorted.slice(0,7).map(function(m){return parseFloat(m.sleep)||0;}).filter(Boolean);
+  if(spDur) spDur.textContent = thisDur ? hrsToHM(thisDur) : '—';
   const spDurAvg = el('sp-dur-avg');
-  if(spDurAvg) spDurAvg.textContent = dur7.length>=3 ? '7d avg '+hrsToHM(dur7.reduce(function(a,b){return a+b;},0)/dur7.length) : '7d avg —';
+  if(spDurAvg) spDurAvg.textContent = lastDur ? 'last wk avg '+hrsToHM(lastDur) : 'last wk —';
 
-  // ── vs optimal bar + % ────────────────────────────────
-  const durPct = sleepHrs>0 ? Math.min(100,Math.round((sleepHrs/OPTIMAL)*100)) : 0;
+  // ── vs optimal bar: use this week avg ─────────────────
+  const durForBar = thisDur || (parseFloat(last.sleep)||0);
+  const durPct = durForBar>0 ? Math.min(100,Math.round((durForBar/OPTIMAL)*100)) : 0;
   const spBar = el('sp-bar'); if(spBar) spBar.style.width=durPct+'%';
-  const spPct = el('sp-sleep-pct'); if(spPct) spPct.textContent = sleepHrs>0 ? durPct+'%' : '—';
+  const spPct = el('sp-sleep-pct'); if(spPct) spPct.textContent = durForBar>0 ? durPct+'%' : '—';
 
-  // ── 7-day debt (rolling, vs 8.5h target) ─────────────
-  const last7sleep = sorted.slice(0,7).filter(function(m){return m.sleep&&m.sleep>0;});
-  const prev7sleep = sorted.slice(7,14).filter(function(m){return m.sleep&&m.sleep>0;});
+  // ── Sleep debt: this week vs last week (Sun–Sat) ────────
+  const thisWkSleep = thisWkEntries.filter(m=>m.sleep&&m.sleep>0);
+  const lastWkSleep = lastWkEntries.filter(m=>m.sleep&&m.sleep>0);
   const spDebt = el('sp-debt');
-  if(spDebt && last7sleep.length>=3) {
-    const totalSlept = last7sleep.reduce(function(s,m){return s+parseFloat(m.sleep);},0);
-    const debt = (OPTIMAL*last7sleep.length)-totalSlept;
-    if(debt>0.25) {
-      spDebt.textContent = '-'+hrsToHM(debt);
-      spDebt.style.color = debt>3?'var(--rd)':debt>1?'var(--or)':'var(--mt)';
-    } else if(debt<-1) {
-      spDebt.textContent = '+'+hrsToHM(Math.abs(debt));
+  function calcDebt(entries) {
+    if(!entries.length) return null;
+    const total = entries.reduce((s,m)=>s+parseFloat(m.sleep),0);
+    return (OPTIMAL * entries.length) - total;
+  }
+  const thisDebt = calcDebt(thisWkSleep);
+  const lastDebt = calcDebt(lastWkSleep);
+  if(spDebt && thisDebt !== null) {
+    if(thisDebt > 0.25) {
+      spDebt.textContent = '-'+hrsToHM(thisDebt);
+      spDebt.style.color = thisDebt>3?'var(--rd)':thisDebt>1?'var(--or)':'var(--mt)';
+    } else if(thisDebt < -1) {
+      spDebt.textContent = '+'+hrsToHM(Math.abs(thisDebt));
       spDebt.style.color = 'var(--mt)';
     } else {
       spDebt.textContent = '✓ on track';
       spDebt.style.color = 'var(--gn)';
     }
-    // Prev week debt
     const spDebtPrev = el('sp-debt-prev');
-    if(spDebtPrev && prev7sleep.length>=3) {
-      const prevTotal = prev7sleep.reduce(function(s,m){return s+parseFloat(m.sleep);},0);
-      const prevDebt = (OPTIMAL*prev7sleep.length)-prevTotal;
-      spDebtPrev.textContent = 'prev week: '+(prevDebt>0?'-':'+')+(hrsToHM(Math.abs(prevDebt)));
-    }
+    if(spDebtPrev && lastDebt !== null) {
+      spDebtPrev.textContent = 'last wk: '+(lastDebt>0?'-':'+')+(hrsToHM(Math.abs(lastDebt)));
+    } else if(spDebtPrev) spDebtPrev.textContent = 'last wk —';
   } else if(spDebt) spDebt.textContent='—';
 
-  // ── Bedtime + wake + avg ──────────────────────────────
+  // ── Bedtime + wake: last night + last week avg ──────────
   const spBed = el('sp-bedtime'); if(spBed) spBed.textContent=last.bedtime||'—';
-  const spWake = el('sp-waketime'); if(spWake) spWake.textContent=last.wake_time||'—'; // wake time
+  const spWake = el('sp-waketime'); if(spWake) spWake.textContent=last.wake_time||'—';
 
-  const last7bed = sorted.slice(0,7).filter(function(m){return m.bedtime;});
-  const last7wake = sorted.slice(0,7).filter(function(m){return m.wake_time;});
+  // Last week avg bedtime
+  const lastWkBedMins = lastWkEntries.filter(m=>m.bedtime).map(m=>timeToMins(m.bedtime)).filter(v=>v!==null);
+  const spAvgBed = el('sp-avg-bed');
+  if(spAvgBed && lastWkBedMins.length>=2) {
+    const avgBed = lastWkBedMins.reduce((a,b)=>a+b,0)/lastWkBedMins.length;
+    spAvgBed.textContent = 'last wk avg '+minsToTime(avgBed);
+  } else if(spAvgBed) spAvgBed.textContent='last wk —';
 
-  if(last7bed.length>=3) {
-    const bedMins = last7bed.map(function(m){return timeToMins(m.bedtime);}).filter(function(v){return v!==null;});
-    const avgBed = bedMins.reduce(function(a,b){return a+b;},0)/bedMins.length;
-    const spAvgBed = el('sp-avg-bed');
-    if(spAvgBed) spAvgBed.textContent='7d avg '+minsToTime(avgBed);
-  }
-  if(last7wake.length>=3) {
-    const wakeMins = last7wake.map(function(m){return timeToMins(m.wake_time);}).filter(function(v){return v!==null;});
-    const avgWake = wakeMins.reduce(function(a,b){return a+b;},0)/wakeMins.length;
-    const spAvgWake = el('sp-avg-wake');
-    if(spAvgWake) spAvgWake.textContent='7d avg '+minsToTime(avgWake);
-  }
+  // Last week avg wake time
+  const lastWkWakeMins = lastWkEntries.filter(m=>m.wake_time).map(m=>timeToMins(m.wake_time)).filter(v=>v!==null);
+  const spAvgWake = el('sp-avg-wake');
+  if(spAvgWake && lastWkWakeMins.length>=2) {
+    const avgWake = lastWkWakeMins.reduce((a,b)=>a+b,0)/lastWkWakeMins.length;
+    spAvgWake.textContent = 'last wk avg '+minsToTime(avgWake);
+  } else if(spAvgWake) spAvgWake.textContent='last wk —';
 
-  // ── Consistency — WHOOP-style % (100% = zero variance) ─
-  // Consistency — use 30-day window for a meaningful regularity signal
+  // ── Consistency: this week vs last week ─────────────────
   const spCons = el('sp-consistency');
   const spConsCtx = el('sp-cons-ctx');
-  const last30bed = sorted.slice(0,30).filter(function(m){return m.bedtime;});
-  if(spCons && last30bed.length>=7) {
-    const bedMins2 = last30bed.map(function(m){return timeToMins(m.bedtime);}).filter(function(v){return v!==null;});
-    const mean2 = bedMins2.reduce(function(a,b){return a+b;},0)/bedMins2.length;
-    const sd = Math.sqrt(bedMins2.reduce(function(s,v){return s+Math.pow(v-mean2,2);},0)/bedMins2.length);
-    const pct = Math.max(0, Math.round(100 - (sd/90)*100));
-    spCons.textContent = pct+'%';
-    spCons.style.color = pct>=80?'var(--gn)':pct>=60?'var(--or)':'var(--rd)';
-    if(spConsCtx) spConsCtx.textContent = '30d bedtime regularity (n='+last30bed.length+')';
-  } else if(spCons) { spCons.textContent='—'; }
+  function calcConsistency(entries) {
+    const beds = entries.filter(m=>m.bedtime).map(m=>timeToMins(m.bedtime)).filter(v=>v!==null);
+    if(beds.length < 2) return null;
+    const mean = beds.reduce((a,b)=>a+b,0)/beds.length;
+    const sd = Math.sqrt(beds.reduce((s,v)=>s+Math.pow(v-mean,2),0)/beds.length);
+    return Math.max(0, Math.round(100-(sd/90)*100));
+  }
+  const thisCons = calcConsistency(thisWkEntries);
+  const lastCons = calcConsistency(lastWkEntries);
+  if(spCons && thisCons !== null) {
+    spCons.textContent = thisCons+'%';
+    spCons.style.color = thisCons>=80?'var(--gn)':thisCons>=60?'var(--or)':'var(--rd)';
+    if(spConsCtx) spConsCtx.textContent = lastCons !== null ? 'last wk '+lastCons+'%' : 'last wk —';
+  } else if(spCons) { spCons.textContent='—'; if(spConsCtx) spConsCtx.textContent=''; }
 
   // ── Personal banding RHR + HRV ────────────────────────
   const today60=new Date(); today60.setDate(today60.getDate()-2);
